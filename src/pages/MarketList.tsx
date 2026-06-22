@@ -4,6 +4,7 @@ import { Search } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import MarketCard from '../components/MarketCard'
 import AdCard from '../components/AdCard'
+import FeaturedCarousel from '../components/FeaturedCarousel'
 import type { Category } from '../types'
 
 const CATEGORIES: Category[] = ['All', 'Politics', 'Crypto', 'Sports', 'AI', 'Tech', 'Science', 'Entertainment']
@@ -47,7 +48,7 @@ export default function MarketList() {
   })
 
   const isDefaultView = cat === 'All' && !query && statusFilter === 'open'
-  const featured = isDefaultView ? [...open].sort((a, b) => b.volume - a.volume).slice(0, 3) : []
+  const featured = isDefaultView ? [...open].sort((a, b) => b.volume - a.volume).slice(0, 7) : []
   const featuredIds = new Set(featured.map((m) => m.id))
   const rest = open.filter((m) => !featuredIds.has(m.id))
 
@@ -127,16 +128,7 @@ export default function MarketList() {
         ))}
       </div>
 
-      {featured.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-text mb-3">注目のマーケット</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featured.map((m) => (
-              <MarketCard key={m.id} market={m} />
-            ))}
-          </div>
-        </div>
-      )}
+      {featured.length > 0 && <FeaturedCarousel markets={featured} />}
 
       {open.length === 0 ? (
         <div className="text-center py-20 text-text-muted">
