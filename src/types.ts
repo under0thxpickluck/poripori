@@ -34,6 +34,7 @@ export type Market = {
   createdAt: string
   category: Category
   volume: number
+  imageUrl?: string
   priceHistory: Array<{ t: string; yes: number }>
 }
 
