@@ -93,3 +93,22 @@ input[type='number']::-webkit-outer-spin-button {
 .animate-ls-pop {
   animation: ls-pop 1.1s ease-out forwards;
 }
+
+/* ライブ価格ティッカー（端末風の自動スクロール） */
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  animation: ticker-scroll 45s linear infinite;
+}
+
+.ticker-mask {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}

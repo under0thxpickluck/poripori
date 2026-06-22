@@ -5,6 +5,7 @@ import { useStore } from '../store/useStore'
 import MarketCard from '../components/MarketCard'
 import AdCard from '../components/AdCard'
 import FeaturedCarousel from '../components/FeaturedCarousel'
+import LiveTicker from '../components/LiveTicker'
 import type { Category } from '../types'
 
 const CATEGORIES: Category[] = ['All', 'Politics', 'Crypto', 'Sports', 'AI', 'Tech', 'Science', 'Entertainment']
@@ -58,8 +59,14 @@ export default function MarketList() {
     setQuery((q) => (q === topic ? '' : topic))
   }
 
+  const tickerMarkets = [...markets]
+    .filter((m) => m.status === 'open')
+    .sort((a, b) => b.volume - a.volume)
+
   return (
     <div>
+      <LiveTicker markets={tickerMarkets} />
+
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-text mb-1">予測市場</h1>
       </div>
