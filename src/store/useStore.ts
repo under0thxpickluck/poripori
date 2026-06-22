@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { User, Market, Position, Trade, Category, Ad } from '../types'
+import type { User, Market, Position, Trade, Category, Ad, Comment } from '../types'
 import { buyCost, sellRefund, costFn, currentPrice, resolvePayouts } from '../lib/lmsr'
 
 const STORAGE_KEY = 'poripori-v1'
@@ -226,6 +226,12 @@ const SEED_ADS: Ad[] = [
   },
 ]
 
+const SEED_COMMENTS: Comment[] = [
+  { id: 'c1', marketId: 'm1', userId: 'u3', body: '直近の親善試合を見る限り、ベスト4は厳しいと思う。NO寄り。', createdAt: '2026-06-10T09:00:00Z' },
+  { id: 'c2', marketId: 'm1', userId: 'u2', body: 'グループ次第では十分あり得る。YESを少し持っておく。', createdAt: '2026-06-12T14:30:00Z' },
+  { id: 'c3', marketId: 'm2', userId: 'u1', body: '出来高が伸びてきた。価格の動きが面白い。', createdAt: '2026-06-15T20:10:00Z' },
+]
+
 function loadState() {
   try {
     const s = localStorage.getItem(STORAGE_KEY)
@@ -240,6 +246,7 @@ type StoreState = {
   positions: Position[]
   trades: Trade[]
   ads: Ad[]
+  comments: Comment[]
   currentUserId: string | null
 }
 
@@ -294,6 +301,9 @@ type StoreActions = {
   getPosition: (userId: string, marketId: string) => Position
   getMarketTrades: (marketId: string) => Trade[]
   getUserTrades: (userId: string) => Trade[]
+
+  addComment: (marketId: string, body: string) => void
+  getMarketComments: (marketId: string) => Comment[]
 }
 
 type Store = StoreState & StoreActions
@@ -307,9 +317,12 @@ export const useStore = create<Store>((set, get) => {
     positions: SEED_POSITIONS,
     trades: SEED_TRADES,
     ads: SEED_ADS,
+    comments: SEED_COMMENTS,
     currentUserId: null,
   }
-  const initial: StoreState = saved ? { ...base, ...saved, ads: saved.ads ?? SEED_ADS } : base
+  const initial: StoreState = saved
+    ? { ...base, ...saved, ads: saved.ads ?? SEED_ADS, comments: saved.comments ?? SEED_COMMENTS }
+    : base
 
   const persist = (state: StoreState) => {
     try {
@@ -631,5 +644,28 @@ export const useStore = create<Store>((set, get) => {
 
     getMarketTrades: (marketId) => get().trades.filter((t) => t.marketId === marketId),
     getUserTrades: (userId) => get().trades.filter((t) => t.userId === userId),
+
+    addComment: (marketId, body) => {
+      const { currentUserId } = get()
+      const text = body.trim()
+      if (!currentUserId || !text) return
+      update((s) => ({
+        comments: [
+          ...s.comments,
+          {
+            id: genId(),
+            marketId,
+            userId: currentUserId,
+            body: text,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      }))
+    },
+
+    getMarketComments: (marketId) =>
+      get()
+        .comments.filter((c) => c.marketId === marketId)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
   }
 })

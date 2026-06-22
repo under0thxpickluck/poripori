@@ -5,6 +5,9 @@ import { marketPrice } from '../lib/lmsr'
 import TradePanel from '../components/TradePanel'
 import PriceChart from '../components/PriceChart'
 import MarketImage from '../components/MarketImage'
+import OrderBook from '../components/OrderBook'
+import TopHolders from '../components/TopHolders'
+import Comments from '../components/Comments'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 
@@ -123,8 +126,13 @@ export default function MarketDetail() {
           </div>
 
           <div className="bg-surface border border-border rounded-lg p-5">
-            <h2 className="text-sm font-semibold text-text mb-2">解決条件</h2>
+            <h2 className="text-sm font-semibold text-text mb-2">ルール</h2>
             <p className="text-sm text-text-muted leading-relaxed">{market.description}</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <OrderBook market={market} />
+            <TopHolders marketId={market.id} />
           </div>
 
           {trades.length > 0 && (
@@ -167,6 +175,8 @@ export default function MarketDetail() {
               </div>
             </div>
           )}
+
+          <Comments marketId={market.id} />
         </div>
 
         <div className="lg:col-span-1">

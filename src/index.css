@@ -20,17 +20,17 @@
 }
 
 :root.light {
-  --c-bg: 244 245 247;
+  --c-bg: 255 255 255;
   --c-surface: 255 255 255;
-  --c-surface-hover: 237 239 242;
-  --c-border: 226 229 234;
+  --c-surface-hover: 241 243 245;
+  --c-border: 229 231 235;
   --c-accent: 45 156 219;
   --c-accent-hover: 37 137 196;
   --c-yes: 22 163 74;
   --c-no: 220 38 38;
   --c-text: 17 24 39;
   --c-text-muted: 107 114 128;
-  --c-scrollbar-track: 237 239 242;
+  --c-scrollbar-track: 241 243 245;
   --c-scrollbar-thumb: 209 213 219;
   --c-scrollbar-thumb-hover: 156 163 175;
 }

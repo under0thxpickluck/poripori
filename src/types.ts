@@ -65,3 +65,11 @@ export type Ad = {
   active: boolean
   createdAt: string
 }
+
+export type Comment = {
+  id: string
+  marketId: string
+  userId: string
+  body: string
+  createdAt: string
+}

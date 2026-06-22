@@ -8,6 +8,8 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { Market } from '../types'
+import { marketPrice } from '../lib/lmsr'
+import { useTheme } from '../store/useTheme'
 
 type Props = { market: Market; height?: number }
 
@@ -33,22 +35,33 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null
 }
 
-export default function PriceChart({ market, height = 200 }: Props) {
-  const data = market.priceHistory.map((p) => ({
-    t: formatTime(p.t),
-    yes: p.yes,
-  }))
+// データが乏しいマーケットでも線が描けるよう補完する
+function buildSeries(market: Market) {
+  const pts = market.priceHistory ?? []
+  if (pts.length >= 2) return pts.map((p) => ({ t: formatTime(p.t), yes: p.yes }))
 
-  if (data.length < 2) {
-    return (
-      <div
-        className="flex items-center justify-center rounded-lg bg-surface-hover text-text-muted text-sm"
-        style={{ height }}
-      >
-        チャートデータなし
-      </div>
-    )
-  }
+  const end = marketPrice(market).yes
+  const start = 0.5
+  const created = new Date(market.createdAt).getTime()
+  const now = Date.now()
+  const steps = 8
+  return Array.from({ length: steps + 1 }, (_, i) => {
+    const r = i / steps
+    return {
+      t: formatTime(new Date(created + (now - created) * r).toISOString()),
+      yes: start + (end - start) * r,
+    }
+  })
+}
+
+export default function PriceChart({ market, height = 200 }: Props) {
+  const theme = useTheme((s) => s.theme)
+  const grid = theme === 'light' ? '#E5E7EB' : '#222632'
+  const axis = theme === 'light' ? '#6B7280' : '#8A8F98'
+  const dotStroke = theme === 'light' ? '#FFFFFF' : '#0E1117'
+  const yes = '#27AE60'
+
+  const data = buildSeries(market)
 
   return (
     <div style={{ height }}>
@@ -56,14 +69,14 @@ export default function PriceChart({ market, height = 200 }: Props) {
         <AreaChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="yesGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#27AE60" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#27AE60" stopOpacity={0.02} />
+              <stop offset="5%" stopColor={yes} stopOpacity={0.3} />
+              <stop offset="95%" stopColor={yes} stopOpacity={0.02} />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="#222632" strokeDasharray="3 3" vertical={false} />
+          <CartesianGrid stroke={grid} strokeDasharray="3 3" vertical={false} />
           <XAxis
             dataKey="t"
-            tick={{ fill: '#8A8F98', fontSize: 10 }}
+            tick={{ fill: axis, fontSize: 10 }}
             tickLine={false}
             axisLine={false}
             interval="preserveStartEnd"
@@ -71,7 +84,7 @@ export default function PriceChart({ market, height = 200 }: Props) {
           <YAxis
             domain={[0, 1]}
             tickFormatter={(v) => `${Math.round(v * 100)}%`}
-            tick={{ fill: '#8A8F98', fontSize: 10 }}
+            tick={{ fill: axis, fontSize: 10 }}
             tickLine={false}
             axisLine={false}
           />
@@ -79,11 +92,11 @@ export default function PriceChart({ market, height = 200 }: Props) {
           <Area
             type="monotone"
             dataKey="yes"
-            stroke="#27AE60"
+            stroke={yes}
             strokeWidth={2}
             fill="url(#yesGradient)"
             dot={false}
-            activeDot={{ r: 4, fill: '#27AE60', stroke: '#0E1117', strokeWidth: 2 }}
+            activeDot={{ r: 4, fill: yes, stroke: dotStroke, strokeWidth: 2 }}
           />
         </AreaChart>
       </ResponsiveContainer>
