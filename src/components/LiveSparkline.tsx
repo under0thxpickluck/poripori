@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const N = 28 // 表示する点数（1分足の直近イメージ）
 const TICK_MS = 700
@@ -23,13 +23,28 @@ function makeInitial() {
   return arr
 }
 
+type Pop = { id: number; delta: number; up: boolean; yPct: number }
+
 // 画像のないマーケットのアイコン枠で、中央を0とした基準線つきの動く1分足チャート風表示
 export default function LiveSparkline({ className = '' }: { className?: string }) {
   const [vals, setVals] = useState<number[]>(makeInitial)
+  const valsRef = useRef(vals)
+  const [pops, setPops] = useState<Pop[]>([])
+  const popId = useRef(0)
 
   useEffect(() => {
     const id = setInterval(() => {
-      setVals((prev) => [...prev.slice(1), step(prev[prev.length - 1])])
+      const prev = valsRef.current
+      const next = step(prev[prev.length - 1])
+      const arr = [...prev.slice(1), next]
+      valsRef.current = arr
+      setVals(arr)
+
+      const delta = Math.round((next - BASE) * 200)
+      const pid = popId.current++
+      const pop: Pop = { id: pid, delta, up: next >= BASE, yPct: (1 - next) * 100 }
+      setPops((p) => [...p.slice(-2), pop])
+      setTimeout(() => setPops((p) => p.filter((x) => x.id !== pid)), 1100)
     }, TICK_MS)
     return () => clearInterval(id)
   }, [])
@@ -44,14 +59,12 @@ export default function LiveSparkline({ className = '' }: { className?: string }
   const line = pts
     .map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`)
     .join(' ')
-  // 折れ線と基準線の間を塗る（上側は緑・下側は赤にクリップ）
   const area = `${line} L${W} ${mid} L0 ${mid} Z`
   const lastY = pts[pts.length - 1][1]
 
   const yesFill = 'rgb(var(--c-yes) / 0.22)'
   const noFill = 'rgb(var(--c-no) / 0.22)'
   const dotColor = up ? 'rgb(var(--c-yes))' : 'rgb(var(--c-no))'
-  const delta = Math.round((last - BASE) * 200) // 基準線からの位置 (-90〜+90)
 
   return (
     <div className={`relative overflow-hidden bg-surface-hover ${className}`}>
@@ -104,10 +117,18 @@ export default function LiveSparkline({ className = '' }: { className?: string }
       </svg>
 
       <span className="absolute top-0.5 left-1 text-[8px] font-medium text-text-muted">1m</span>
-      <span className="absolute top-0.5 right-1 text-[8px] font-bold" style={{ color: dotColor }}>
-        {delta >= 0 ? '+' : ''}
-        {delta}
-      </span>
+
+      {/* ポロンポロンと浮き出る数値 */}
+      {pops.map((p) => (
+        <span
+          key={p.id}
+          className="animate-ls-pop pointer-events-none absolute right-1.5 text-sm font-extrabold tabular-nums drop-shadow"
+          style={{ top: `${p.yPct}%`, color: p.up ? 'rgb(var(--c-yes))' : 'rgb(var(--c-no))' }}
+        >
+          {p.delta >= 0 ? '+' : ''}
+          {p.delta}
+        </span>
+      ))}
     </div>
   )
 }
