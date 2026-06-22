@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { TrendingUp } from 'lucide-react'
 
 type FooterLink = { label: string; href: string }
 
@@ -64,11 +63,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center">
-                <TrendingUp size={14} className="text-white" />
-              </div>
-              <span className="font-bold text-text tracking-tight text-lg">ポリぽり</span>
+            <Link to="/" className="inline-block">
+              <img src="/logo.png" alt="MIRAIX" className="h-10 w-auto" />
             </Link>
             <p className="text-xs text-text-muted mt-3 leading-relaxed">
               みんなの予測でつくる、新しい情報市場。
@@ -90,7 +86,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-border mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-xs text-text-muted">© 2026 ポリぽり. すべて仮データです。</p>
+          <p className="text-xs text-text-muted">© 2026 MIRAIX. すべて仮データです。</p>
           <p className="text-xs text-text-muted">本サイトはデモであり、実際の取引は行われません。</p>
         </div>
       </div>

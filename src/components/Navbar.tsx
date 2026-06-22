@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { TrendingUp, BarChart2, Trophy, PlusCircle, Settings, LogOut, ChevronDown } from 'lucide-react'
+import { BarChart2, Trophy, PlusCircle, Settings, LogOut, ChevronDown } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import LoginModal from './LoginModal'
 
@@ -32,10 +32,8 @@ export default function Navbar() {
       <nav className="sticky top-0 z-40 border-b border-border bg-bg/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 flex items-center h-14 gap-4">
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center">
-              <TrendingUp size={14} className="text-white" />
-            </div>
-            <span className="font-bold text-text tracking-tight text-lg">ポリぽり</span>
+            <img src="/logo-mark.png" alt="MIRAIX" className="h-8 w-auto" />
+            <span className="font-bold text-text tracking-tight text-lg">MIRAIX</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-1 ml-2">
