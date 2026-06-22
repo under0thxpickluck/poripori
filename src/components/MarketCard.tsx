@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Clock, BarChart2 } from 'lucide-react'
 import { marketPrice } from '../lib/lmsr'
 import type { Market } from '../types'
+import MarketImage from './MarketImage'
 
 const CATEGORY_COLORS: Record<string, string> = {
   Politics: 'text-blue-400 bg-blue-400/10',
@@ -54,9 +55,16 @@ export default function MarketCard({ market }: Props) {
         )}
       </div>
 
-      <p className="text-sm font-medium text-text leading-snug line-clamp-2 mb-4 group-hover:text-text transition-colors">
-        {market.question}
-      </p>
+      <div className="flex gap-3 mb-4">
+        <MarketImage
+          src={market.imageUrl}
+          category={market.category}
+          className="w-12 h-12 rounded-md shrink-0"
+        />
+        <p className="text-sm font-medium text-text leading-snug line-clamp-3 group-hover:text-text transition-colors">
+          {market.question}
+        </p>
+      </div>
 
       {market.status === 'pending' ? (
         <div className="text-xs text-text-muted italic mb-4">承認待ちのため価格は未確定</div>

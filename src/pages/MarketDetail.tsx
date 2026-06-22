@@ -4,6 +4,7 @@ import { useStore } from '../store/useStore'
 import { marketPrice } from '../lib/lmsr'
 import TradePanel from '../components/TradePanel'
 import PriceChart from '../components/PriceChart'
+import MarketImage from '../components/MarketImage'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 
@@ -58,6 +59,11 @@ export default function MarketDetail() {
               )}
             </div>
 
+            <MarketImage
+              src={market.imageUrl}
+              category={market.category}
+              className="w-full h-40 rounded-lg mb-4"
+            />
             <h1 className="text-xl font-bold text-text mb-4">{market.question}</h1>
 
             {market.status !== 'pending' && (

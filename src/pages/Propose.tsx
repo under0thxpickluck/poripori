@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { CheckCircle2, AlertTriangle } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import type { Category } from '../types'
+import ImagePicker from '../components/ImagePicker'
 
 const CATEGORIES: Exclude<Category, 'All'>[] = [
   'Politics', 'Crypto', 'Sports', 'AI', 'Tech', 'Science', 'Entertainment',
@@ -23,6 +24,7 @@ export default function Propose() {
     description: '',
     deadline: '',
     category: 'AI' as Exclude<Category, 'All'>,
+    imageUrl: '',
   })
   const [submitted, setSubmitted] = useState(false)
 
@@ -128,6 +130,11 @@ export default function Propose() {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text mb-2">画像（任意）</label>
+            <ImagePicker value={form.imageUrl} onChange={(v) => setForm((f) => ({ ...f, imageUrl: v }))} />
           </div>
         </div>
 
