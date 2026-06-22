@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTheme } from '../store/useTheme'
 
 type FooterLink = { label: string; href: string }
 
@@ -58,13 +59,15 @@ function FooterLinkItem({ label, href }: FooterLink) {
 }
 
 export default function Footer() {
+  const theme = useTheme((s) => s.theme)
+  const logo = theme === 'light' ? '/logo-light.png' : '/logo.png'
   return (
     <footer className="border-t border-border mt-12">
       <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="inline-block">
-              <img src="/logo.png" alt="MIRAIX" className="h-10 w-auto" />
+              <img src={logo} alt="MIRAIX" className="h-10 w-auto" />
             </Link>
             <p className="text-xs text-text-muted mt-3 leading-relaxed">
               みんなの予測でつくる、新しい情報市場。

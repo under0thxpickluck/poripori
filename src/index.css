@@ -2,13 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Dark theme (default) — space-separated RGB channels */
+  --c-bg: 14 17 23;
+  --c-surface: 26 29 41;
+  --c-surface-hover: 34 38 50;
+  --c-border: 34 38 50;
+  --c-accent: 45 156 219;
+  --c-accent-hover: 37 137 196;
+  --c-yes: 39 174 96;
+  --c-no: 235 87 87;
+  --c-text: 230 232 236;
+  --c-text-muted: 138 143 152;
+  --c-scrollbar-track: 26 29 41;
+  --c-scrollbar-thumb: 34 38 50;
+  --c-scrollbar-thumb-hover: 45 49 61;
+}
+
+:root.light {
+  --c-bg: 244 245 247;
+  --c-surface: 255 255 255;
+  --c-surface-hover: 237 239 242;
+  --c-border: 226 229 234;
+  --c-accent: 45 156 219;
+  --c-accent-hover: 37 137 196;
+  --c-yes: 22 163 74;
+  --c-no: 220 38 38;
+  --c-text: 17 24 39;
+  --c-text-muted: 107 114 128;
+  --c-scrollbar-track: 237 239 242;
+  --c-scrollbar-thumb: 209 213 219;
+  --c-scrollbar-thumb-hover: 156 163 175;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
-  background-color: #0E1117;
-  color: #E6E8EC;
+  background-color: rgb(var(--c-bg));
+  color: rgb(var(--c-text));
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -19,16 +52,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1A1D29;
+  background: rgb(var(--c-scrollbar-track));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #222632;
+  background: rgb(var(--c-scrollbar-thumb));
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2D313D;
+  background: rgb(var(--c-scrollbar-thumb-hover));
 }
 
 input[type='number']::-webkit-inner-spin-button,

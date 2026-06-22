@@ -4,16 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#0E1117',
-        surface: '#1A1D29',
-        'surface-hover': '#222632',
-        border: '#222632',
-        accent: '#2D9CDB',
-        'accent-hover': '#2589C4',
-        yes: '#27AE60',
-        no: '#EB5757',
-        text: '#E6E8EC',
-        'text-muted': '#8A8F98',
+        bg: 'rgb(var(--c-bg) / <alpha-value>)',
+        surface: 'rgb(var(--c-surface) / <alpha-value>)',
+        'surface-hover': 'rgb(var(--c-surface-hover) / <alpha-value>)',
+        border: 'rgb(var(--c-border) / <alpha-value>)',
+        accent: 'rgb(var(--c-accent) / <alpha-value>)',
+        'accent-hover': 'rgb(var(--c-accent-hover) / <alpha-value>)',
+        yes: 'rgb(var(--c-yes) / <alpha-value>)',
+        no: 'rgb(var(--c-no) / <alpha-value>)',
+        text: 'rgb(var(--c-text) / <alpha-value>)',
+        'text-muted': 'rgb(var(--c-text-muted) / <alpha-value>)',
       },
       borderRadius: {
         lg: '8px',

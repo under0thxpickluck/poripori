@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { BarChart2, Trophy, PlusCircle, Settings, LogOut, ChevronDown } from 'lucide-react'
 import { useStore } from '../store/useStore'
+import { useTheme } from '../store/useTheme'
 import LoginModal from './LoginModal'
+import ThemeToggle from './ThemeToggle'
 
 const NAV_LINKS = [
   { to: '/', label: 'マーケット' },
@@ -23,7 +25,9 @@ const ADMIN_LINKS = [
 export default function Navbar() {
   const location = useLocation()
   const { currentUser, logout } = useStore()
+  const theme = useTheme((s) => s.theme)
   const user = currentUser()
+  const logoMark = theme === 'light' ? '/logo-mark-light.png' : '/logo-mark.png'
   const [showLogin, setShowLogin] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
@@ -32,7 +36,7 @@ export default function Navbar() {
       <nav className="sticky top-0 z-40 border-b border-border bg-bg/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 flex items-center h-14 gap-4">
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <img src="/logo-mark.png" alt="MIRAIX" className="h-8 w-auto" />
+            <img src={logoMark} alt="MIRAIX" className="h-8 w-auto" />
             <span className="font-bold text-text tracking-tight text-lg">MIRAIX</span>
           </Link>
 
@@ -70,6 +74,7 @@ export default function Navbar() {
           </div>
 
           <div className="ml-auto flex items-center gap-3">
+            <ThemeToggle />
             {user ? (
               <div className="relative">
                 <button
