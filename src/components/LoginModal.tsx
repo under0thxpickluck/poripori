@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Plus, ChevronRight } from 'lucide-react'
+import { X, Plus, ChevronRight, LogIn, ShieldCheck } from 'lucide-react'
 import { useStore } from '../store/useStore'
 
 type Props = { onClose: () => void }
@@ -8,6 +8,9 @@ export default function LoginModal({ onClose }: Props) {
   const { users, login, registerUser } = useStore()
   const [newName, setNewName] = useState('')
   const [showNew, setShowNew] = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
 
   function handleLogin(id: string) {
     login(id)
@@ -21,18 +24,69 @@ export default function LoginModal({ onClose }: Props) {
     onClose()
   }
 
+  function handleCredential(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    const u = username.trim().toLowerCase()
+    if (u === 'admin' && password === 'admin') {
+      login('admin')
+      onClose()
+      return
+    }
+    const match = users.find((x) => x.name.toLowerCase() === username.trim().toLowerCase())
+    if (match && match.role !== 'admin') {
+      login(match.id)
+      onClose()
+      return
+    }
+    setError('ユーザー名またはパスワードが違います')
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md mx-4 bg-surface border border-border rounded-lg overflow-hidden">
+      <div className="relative z-10 w-full max-w-md mx-4 bg-surface border border-border rounded-lg overflow-hidden max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-          <h2 className="text-lg font-semibold text-text">アカウントを選択</h2>
+          <h2 className="text-lg font-semibold text-text">ログイン</h2>
           <button onClick={onClose} className="text-text-muted hover:text-text transition-colors">
             <X size={20} />
           </button>
         </div>
 
-        <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
+        {/* ユーザー名 / パスワードでログイン */}
+        <form onSubmit={handleCredential} className="p-4 border-b border-border space-y-2">
+          <input
+            type="text"
+            placeholder="ユーザー名"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full px-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-lg text-sm text-text placeholder-text-muted outline-none transition-colors"
+          />
+          <input
+            type="password"
+            placeholder="パスワード"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-lg text-sm text-text placeholder-text-muted outline-none transition-colors"
+          />
+          {error && <p className="text-xs text-no">{error}</p>}
+          <button
+            type="submit"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-sm text-white font-medium transition-colors"
+          >
+            <LogIn size={16} />
+            ログイン
+          </button>
+          <p className="flex items-center gap-1.5 text-[11px] text-text-muted pt-1">
+            <ShieldCheck size={12} className="text-accent" />
+            管理者はデモ用に <span className="font-mono text-text">admin / admin</span> でログインできます
+          </p>
+        </form>
+
+        <div className="px-4 pt-4 pb-1">
+          <p className="text-xs font-semibold text-text-muted">アカウントを選択</p>
+        </div>
+        <div className="px-4 pb-2 space-y-2 max-h-64 overflow-y-auto">
           {users.map((u) => (
             <button
               key={u.id}

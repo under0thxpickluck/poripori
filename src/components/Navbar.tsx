@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { BarChart2, Trophy, PlusCircle, Settings, LogOut, ChevronDown, Search } from 'lucide-react'
+import { BarChart2, Trophy, PlusCircle, Settings, LogOut, ChevronDown, Search, ShieldCheck } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useTheme } from '../store/useTheme'
 import LoginModal from './LoginModal'
@@ -74,6 +74,15 @@ export default function Navbar() {
           </div>
 
           <div className="ml-auto flex items-center gap-3">
+            {user?.role === 'admin' && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-1.5 h-9 px-3 rounded-lg bg-accent/15 border border-accent/40 text-accent hover:bg-accent/25 transition-colors"
+              >
+                <ShieldCheck size={15} />
+                <span className="text-xs font-semibold hidden sm:inline">管理ダッシュボード</span>
+              </Link>
+            )}
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
               aria-label="コマンドパレットを開く"

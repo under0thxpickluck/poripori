@@ -2,7 +2,18 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { marketPrice, sellRefund } from '../lib/lmsr'
 import { format } from 'date-fns'
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, PieChart, Layers, Activity } from 'lucide-react'
+import CountUp from '../components/CountUp'
+
+const CAT_BAR: Record<string, string> = {
+  Politics: 'bg-blue-400',
+  Crypto: 'bg-orange-400',
+  Sports: 'bg-green-400',
+  AI: 'bg-purple-400',
+  Tech: 'bg-cyan-400',
+  Science: 'bg-sky-400',
+  Entertainment: 'bg-pink-400',
+}
 
 export default function Portfolio() {
   const { currentUser, markets, positions, getUserTrades } = useStore()
@@ -55,40 +66,127 @@ export default function Portfolio() {
     return [{ pos, market, currentValue, pnl, price }]
   })
 
-  const totalValue = positionsWithValue.reduce((s: number, p: PosWithValue) => s + p.currentValue, 0)
-  const totalPnl = positionsWithValue.reduce((s: number, p: PosWithValue) => s + p.pnl, 0)
+  positionsWithValue.sort((a, b) => b.currentValue - a.currentValue)
+
+  const totalValue = positionsWithValue.reduce((s, p) => s + p.currentValue, 0)
+  const totalPnl = positionsWithValue.reduce((s, p) => s + p.pnl, 0)
+  const totalAssets = user.points + totalValue
+
+  // 取引サマリー
+  const winners = positionsWithValue.filter((p) => p.pnl > 0).length
+  const losers = positionsWithValue.filter((p) => p.pnl < 0).length
+  const winRate = winners + losers > 0 ? Math.round((winners / (winners + losers)) * 100) : 0
+
+  // カテゴリ別の保有内訳
+  const allocMap = new Map<string, number>()
+  positionsWithValue.forEach((p) => {
+    allocMap.set(p.market.category, (allocMap.get(p.market.category) ?? 0) + p.currentValue)
+  })
+  const alloc = [...allocMap.entries()]
+    .map(([category, value]) => ({ category, value }))
+    .sort((a, b) => b.value - a.value)
+  const allocTotal = alloc.reduce((s, a) => s + a.value, 0)
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-text mb-1">ポートフォリオ</h1>
-        <p className="text-text-muted text-sm">保有シェアと取引履歴</p>
+        <p className="text-text-muted text-sm">資産・保有シェア・取引履歴</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* サマリー4カード */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-surface border border-border rounded-lg p-5">
-          <p className="text-xs text-text-muted mb-2">現在のポイント残高</p>
-          <p className="text-3xl font-bold text-text">{user.points.toLocaleString()}</p>
-          <p className="text-xs text-text-muted mt-1">pt</p>
+          <Wallet size={16} className="text-accent mb-2" />
+          <p className="text-2xl font-bold text-text">
+            <CountUp value={Math.round(user.points)} />
+          </p>
+          <p className="text-xs text-text-muted mt-1">残高 (pt)</p>
         </div>
         <div className="bg-surface border border-border rounded-lg p-5">
-          <p className="text-xs text-text-muted mb-2">ポジション現在価値</p>
-          <p className="text-3xl font-bold text-text">{totalValue.toFixed(0)}</p>
-          <p className="text-xs text-text-muted mt-1">pt</p>
+          <Layers size={16} className="text-accent mb-2" />
+          <p className="text-2xl font-bold text-text">
+            <CountUp value={Math.round(totalValue)} />
+          </p>
+          <p className="text-xs text-text-muted mt-1">ポジション価値 (pt)</p>
         </div>
         <div className="bg-surface border border-border rounded-lg p-5">
-          <p className="text-xs text-text-muted mb-2">含み損益</p>
-          <div className="flex items-center gap-2">
-            <p className={`text-3xl font-bold ${totalPnl >= 0 ? 'text-yes' : 'text-no'}`}>
-              {totalPnl >= 0 ? '+' : ''}{totalPnl.toFixed(0)}
-            </p>
-            {totalPnl >= 0 ? (
-              <TrendingUp size={20} className="text-yes" />
-            ) : (
-              <TrendingDown size={20} className="text-no" />
-            )}
+          {totalPnl >= 0 ? (
+            <TrendingUp size={16} className="text-yes mb-2" />
+          ) : (
+            <TrendingDown size={16} className="text-no mb-2" />
+          )}
+          <p className={`text-2xl font-bold ${totalPnl >= 0 ? 'text-yes' : 'text-no'}`}>
+            <CountUp value={Math.round(totalPnl)} format={(n) => `${n >= 0 ? '+' : ''}${n.toLocaleString()}`} />
+          </p>
+          <p className="text-xs text-text-muted mt-1">含み損益 (pt)</p>
+        </div>
+        <div className="bg-surface border border-border rounded-lg p-5">
+          <PieChart size={16} className="text-accent mb-2" />
+          <p className="text-2xl font-bold text-text">
+            <CountUp value={Math.round(totalAssets)} />
+          </p>
+          <p className="text-xs text-text-muted mt-1">総資産 (pt)</p>
+        </div>
+      </div>
+
+      {/* 取引サマリー + 保有内訳 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-surface border border-border rounded-lg p-5">
+          <h2 className="text-sm font-semibold text-text mb-4 flex items-center gap-1.5">
+            <Activity size={14} />
+            取引サマリー
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <p className="text-xl font-bold text-text">
+                <CountUp value={myTrades.length} />
+              </p>
+              <p className="text-xs text-text-muted mt-0.5">取引回数</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-text">
+                <CountUp value={positionsWithValue.length} />
+              </p>
+              <p className="text-xs text-text-muted mt-0.5">保有マーケット</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-text">
+                <CountUp value={winRate} format={(n) => `${n}%`} />
+              </p>
+              <p className="text-xs text-text-muted mt-0.5">勝率（{winners}勝{losers}敗）</p>
+            </div>
           </div>
-          <p className="text-xs text-text-muted mt-1">pt</p>
+        </div>
+
+        <div className="bg-surface border border-border rounded-lg p-5">
+          <h2 className="text-sm font-semibold text-text mb-4 flex items-center gap-1.5">
+            <PieChart size={14} />
+            保有内訳（カテゴリ別）
+          </h2>
+          {alloc.length === 0 ? (
+            <p className="text-sm text-text-muted py-2">保有ポジションがありません</p>
+          ) : (
+            <div className="space-y-2.5">
+              {alloc.map((a) => {
+                const pct = allocTotal > 0 ? Math.round((a.value / allocTotal) * 100) : 0
+                return (
+                  <div key={a.category}>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-text">{a.category}</span>
+                      <span className="text-text-muted">{pct}% ・ {a.value.toFixed(0)} pt</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-surface-hover overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${CAT_BAR[a.category] ?? 'bg-accent'}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 
