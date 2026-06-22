@@ -1,4 +1,4 @@
-import { X, LogIn, Search, TrendingUp, RefreshCw, Trophy, Lightbulb, FilePlus2 } from 'lucide-react'
+import { X, LogIn, Search, TrendingUp, RefreshCw, Trophy, Lightbulb, FilePlus2, Coins, Scale } from 'lucide-react'
 
 type Props = { onClose: () => void }
 
@@ -83,6 +83,57 @@ export default function HelpModal({ onClose }: Props) {
               </li>
               <li>売買が増えるほど価格が動く <span className="text-text font-medium">LMSR 方式</span> を採用しています。</li>
             </ul>
+          </section>
+
+          {/* ポイント制 */}
+          <section className="flex gap-3">
+            <div className="w-9 h-9 rounded-lg bg-accent/15 text-accent flex items-center justify-center shrink-0">
+              <Coins size={17} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-text">ポイント（pt）制について</p>
+              <p className="text-xs text-text-muted leading-relaxed mt-0.5">
+                取引はすべて仮想ポイントで行います。新規アカウントには <span className="text-text font-medium">1,000pt</span> が付与されます。
+                ポイントでシェアを購入し、的中すると増え、外すと減ります。残高や総資産はランキング・レベル・ランクに反映されます（実際のお金は一切使いません）。
+              </p>
+            </div>
+          </section>
+
+          {/* 勝ち負けの仕組み */}
+          <section className="bg-surface-hover rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-text mb-2 flex items-center gap-1.5">
+              <Scale size={14} className="text-accent" />
+              勝ち負けの仕組み
+            </h3>
+            <p className="text-xs text-text-muted leading-relaxed mb-3">
+              締切後、結果が <span className="text-yes font-medium">YES</span> か{' '}
+              <span className="text-no font-medium">NO</span> に確定します。
+              <span className="text-text font-medium">的中した側のシェアは 1 枚 = 100¢（1pt）</span>で精算され、
+              外した側のシェアは <span className="text-text font-medium">0pt</span> になります。
+            </p>
+
+            <p className="text-[11px] text-text-muted mb-1.5">例：YES を 60¢ で 10 シェア購入（= 600pt 支払い）</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-md border border-yes/30 bg-yes/10 p-2.5">
+                <p className="text-xs font-semibold text-yes mb-0.5">結果が YES（的中）</p>
+                <p className="text-[11px] text-text-muted leading-relaxed">
+                  10 枚 × 100¢ = <span className="text-text font-medium">1,000pt</span> 受取
+                  <br />
+                  損益 <span className="text-yes font-bold">+400pt</span>
+                </p>
+              </div>
+              <div className="rounded-md border border-no/30 bg-no/10 p-2.5">
+                <p className="text-xs font-semibold text-no mb-0.5">結果が NO（外れ）</p>
+                <p className="text-[11px] text-text-muted leading-relaxed">
+                  受取 <span className="text-text font-medium">0pt</span>
+                  <br />
+                  損益 <span className="text-no font-bold">−600pt</span>
+                </p>
+              </div>
+            </div>
+            <p className="text-[11px] text-text-muted leading-relaxed mt-3">
+              締切前に価格が上がったところで <span className="text-text font-medium">途中売却</span> すれば、結果を待たずに利益確定（または損切り）もできます。
+            </p>
           </section>
 
           {/* 提案 */}
