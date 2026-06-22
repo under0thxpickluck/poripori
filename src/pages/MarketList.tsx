@@ -1,10 +1,14 @@
 import { useState } from 'react'
+import type React from 'react'
 import { Search } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import MarketCard from '../components/MarketCard'
+import AdCard from '../components/AdCard'
 import type { Category } from '../types'
 
 const CATEGORIES: Category[] = ['All', 'Politics', 'Crypto', 'Sports', 'AI', 'Tech', 'Science', 'Entertainment']
+
+const AD_INTERVAL = 6
 
 const CAT_LABELS: Record<Category, string> = {
   All: 'すべて',
@@ -18,7 +22,7 @@ const CAT_LABELS: Record<Category, string> = {
 }
 
 export default function MarketList() {
-  const { markets } = useStore()
+  const { markets, ads } = useStore()
   const [cat, setCat] = useState<Category>('All')
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'open' | 'closed' | 'resolved' | 'all'>('open')
@@ -89,9 +93,18 @@ export default function MarketList() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {open.map((m) => (
-            <MarketCard key={m.id} market={m} />
-          ))}
+          {(() => {
+            const activeAds = ads.filter((a) => a.active)
+            const cells: React.ReactNode[] = []
+            open.forEach((m, i) => {
+              cells.push(<MarketCard key={m.id} market={m} />)
+              if (activeAds.length > 0 && (i + 1) % AD_INTERVAL === 0) {
+                const ad = activeAds[Math.floor(i / AD_INTERVAL) % activeAds.length]
+                cells.push(<AdCard key={`ad-${i}-${ad.id}`} ad={ad} />)
+              }
+            })
+            return cells
+          })()}
         </div>
       )}
     </div>
