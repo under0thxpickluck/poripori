@@ -3,6 +3,7 @@ import { Clock, BarChart2 } from 'lucide-react'
 import { marketPrice } from '../lib/lmsr'
 import type { Market } from '../types'
 import MarketImage from './MarketImage'
+import { useTilt } from '../hooks/useTilt'
 
 const CATEGORY_COLORS: Record<string, string> = {
   Politics: 'text-blue-400 bg-blue-400/10',
@@ -38,12 +39,25 @@ export default function MarketCard({ market }: Props) {
   const yesPct = Math.round(price.yes * 100)
   const noPct = 100 - yesPct
   const catColor = CATEGORY_COLORS[market.category] ?? 'text-text-muted bg-surface-hover'
+  const tilt = useTilt<HTMLAnchorElement>(7)
 
   return (
     <Link
+      ref={tilt.ref}
+      onMouseMove={tilt.onMouseMove}
+      onMouseLeave={tilt.onMouseLeave}
       to={`/market/${market.id}`}
-      className="block bg-surface hover:bg-surface-hover border border-border hover:border-accent/40 rounded-lg p-5 transition-colors duration-200 group"
+      style={{ transition: 'transform 150ms ease-out, border-color 200ms, background-color 200ms', willChange: 'transform' }}
+      className="relative block overflow-hidden bg-surface hover:bg-surface-hover border border-border hover:border-accent/40 rounded-lg p-5 group"
     >
+      <span
+        className="pointer-events-none absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        style={{
+          background:
+            'radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgb(var(--c-accent) / 0.12), transparent 60%)',
+        }}
+      />
+      <div className="relative z-10">
       <div className="flex items-start justify-between gap-3 mb-3">
         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}>
           {market.category}
@@ -108,6 +122,7 @@ export default function MarketCard({ market }: Props) {
           結果: {market.resolved}
         </div>
       )}
+      </div>
     </Link>
   )
 }

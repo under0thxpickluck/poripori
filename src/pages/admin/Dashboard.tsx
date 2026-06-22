@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { BarChart3, Users, TrendingUp, Clock } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { marketPrice } from '../../lib/lmsr'
+import CountUp from '../../components/CountUp'
 
 export default function Dashboard() {
   const { markets, users, currentUser } = useStore()
@@ -13,10 +14,10 @@ export default function Dashboard() {
   const totalVolume = markets.reduce((s, m) => s + m.volume, 0)
   const pending = markets.filter((m) => m.status === 'pending').length
   const stats = [
-    { label: '総マーケット数', value: markets.length.toLocaleString(), Icon: BarChart3 },
-    { label: '総ユーザー数', value: users.length.toLocaleString(), Icon: Users },
-    { label: '総出来高', value: `${totalVolume.toLocaleString()} pt`, Icon: TrendingUp },
-    { label: '承認待ち', value: pending.toLocaleString(), Icon: Clock },
+    { label: '総マーケット数', value: markets.length, suffix: '', Icon: BarChart3 },
+    { label: '総ユーザー数', value: users.length, suffix: '', Icon: Users },
+    { label: '総出来高', value: totalVolume, suffix: ' pt', Icon: TrendingUp },
+    { label: '承認待ち', value: pending, suffix: '', Icon: Clock },
   ]
   const recent = [...markets].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5)
 
@@ -25,10 +26,13 @@ export default function Dashboard() {
       <h1 className="text-2xl font-bold text-text">管理ダッシュボード</h1>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map(({ label, value, Icon }) => (
+        {stats.map(({ label, value, suffix, Icon }) => (
           <div key={label} className="bg-surface border border-border rounded-lg p-4">
             <Icon size={18} className="text-accent mb-2" />
-            <div className="text-2xl font-bold text-text">{value}</div>
+            <div className="text-2xl font-bold text-text">
+              <CountUp value={value} />
+              {suffix}
+            </div>
             <div className="text-xs text-text-muted mt-1">{label}</div>
           </div>
         ))}
