@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import type React from 'react'
-import { Search } from 'lucide-react'
+import { Search, Flame, Sparkles, BarChart2, Clock, MessageSquare } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import MarketCard from '../components/MarketCard'
 import AdCard from '../components/AdCard'
 import FeaturedCarousel from '../components/FeaturedCarousel'
 import LiveTicker from '../components/LiveTicker'
-import type { Category } from '../types'
+import type { Category, Market } from '../types'
 
 const CATEGORIES: Category[] = ['All', 'Politics', 'Crypto', 'Sports', 'AI', 'Tech', 'Science', 'Entertainment']
 
@@ -34,13 +34,35 @@ const TRENDING_TOPICS = [
   '宇宙',
 ]
 
+type SortKey = 'volume' | 'trending' | 'new' | 'ending' | 'discussed'
+
+const SORTS: { key: SortKey; label: string; Icon: typeof Flame }[] = [
+  { key: 'volume', label: '出来高', Icon: BarChart2 },
+  { key: 'trending', label: '急上昇', Icon: Flame },
+  { key: 'new', label: '新着', Icon: Sparkles },
+  { key: 'ending', label: '終了間近', Icon: Clock },
+  { key: 'discussed', label: '話題', Icon: MessageSquare },
+]
+
+// 直近の価格上昇幅（急上昇の指標）
+function momentum(m: Market): number {
+  const h = m.priceHistory
+  if (!h || h.length < 2) return 0
+  const last = h[h.length - 1].yes
+  const idx = Math.max(0, h.length - 6)
+  return last - h[idx].yes
+}
+
 export default function MarketList() {
-  const { markets, ads } = useStore()
+  const { markets, ads, comments } = useStore()
   const [cat, setCat] = useState<Category>('All')
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'open' | 'closed' | 'resolved' | 'all'>('open')
+  const [sort, setSort] = useState<SortKey>('volume')
 
-  const open = markets.filter((m) => {
+  const commentCount = (id: string) => comments.filter((c) => c.marketId === id).length
+
+  const filtered = markets.filter((m) => {
     if (statusFilter !== 'all' && m.status !== statusFilter) return false
     if (m.status === 'pending') return false
     if (cat !== 'All' && m.category !== cat) return false
@@ -48,8 +70,23 @@ export default function MarketList() {
     return true
   })
 
-  const isDefaultView = cat === 'All' && !query && statusFilter === 'open'
-  const featured = isDefaultView ? [...open].sort((a, b) => b.volume - a.volume).slice(0, 7) : []
+  const open = [...filtered].sort((a, b) => {
+    switch (sort) {
+      case 'trending':
+        return momentum(b) - momentum(a)
+      case 'new':
+        return b.createdAt.localeCompare(a.createdAt)
+      case 'ending':
+        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+      case 'discussed':
+        return commentCount(b.id) - commentCount(a.id)
+      default:
+        return b.volume - a.volume
+    }
+  })
+
+  const isDefaultView = cat === 'All' && !query && statusFilter === 'open' && sort === 'volume'
+  const featured = isDefaultView ? open.slice(0, 7) : []
   const featuredIds = new Set(featured.map((m) => m.id))
   const rest = open.filter((m) => !featuredIds.has(m.id))
 
@@ -66,10 +103,6 @@ export default function MarketList() {
   return (
     <div>
       <LiveTicker markets={tickerMarkets} />
-
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text mb-1">予測市場</h1>
-      </div>
 
       <div className="relative mb-5">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
@@ -117,6 +150,21 @@ export default function MarketList() {
             </button>
           ))}
         </div>
+
+        <div className="flex gap-1 p-1 bg-surface border border-border rounded-lg ml-auto overflow-x-auto scrollbar-none">
+          {SORTS.map(({ key, label, Icon }) => (
+            <button
+              key={key}
+              onClick={() => setSort(key)}
+              className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+                sort === key ? 'bg-accent text-white' : 'text-text-muted hover:text-text'
+              }`}
+            >
+              <Icon size={12} />
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
@@ -144,7 +192,11 @@ export default function MarketList() {
         </div>
       ) : rest.length > 0 ? (
         <div>
-          <h2 className="text-lg font-bold text-text mb-3">すべてのマーケット</h2>
+          <h2 className="text-lg font-bold text-text mb-3">
+            {sort === 'volume'
+              ? 'すべてのマーケット'
+              : `${SORTS.find((s) => s.key === sort)?.label}のマーケット`}
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {(() => {
               const cells: React.ReactNode[] = []
