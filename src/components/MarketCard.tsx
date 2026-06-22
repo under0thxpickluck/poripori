@@ -3,6 +3,7 @@ import { Clock, BarChart2, Flame } from 'lucide-react'
 import { marketPrice } from '../lib/lmsr'
 import type { Market } from '../types'
 import MarketImage from './MarketImage'
+import Countdown from './Countdown'
 import { useTilt } from '../hooks/useTilt'
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -119,7 +120,11 @@ export default function MarketCard({ market, hot = false, enterDelay = 0 }: Prop
         </div>
         <div className="flex items-center gap-1">
           <Clock size={11} />
-          <span>{formatDeadline(market.deadline)}</span>
+          {market.status === 'open' ? (
+            <Countdown deadline={market.deadline} />
+          ) : (
+            <span>{formatDeadline(market.deadline)}</span>
+          )}
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import MarketImage from '../components/MarketImage'
 import OrderBook from '../components/OrderBook'
 import TopHolders from '../components/TopHolders'
 import Comments from '../components/Comments'
+import Countdown from '../components/Countdown'
 import { usePriceFlash } from '../hooks/usePriceFlash'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
@@ -113,6 +114,9 @@ export default function MarketDetail() {
                 <p className="text-sm font-semibold text-text">
                   {format(new Date(market.deadline), 'yyyy/MM/dd', { locale: ja })}
                 </p>
+                {market.status === 'open' && (
+                  <Countdown deadline={market.deadline} className="text-xs" />
+                )}
               </div>
               <div>
                 <p className="text-xs text-text-muted mb-1 flex items-center gap-1">
