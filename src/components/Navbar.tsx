@@ -12,8 +12,11 @@ const NAV_LINKS = [
 ]
 
 const ADMIN_LINKS = [
+  { to: '/admin', label: 'ダッシュボード' },
   { to: '/admin/proposals', label: '承認待ち' },
   { to: '/admin/markets', label: 'マーケット管理' },
+  { to: '/admin/markets/new', label: '新規作成' },
+  { to: '/admin/ads', label: '広告管理' },
   { to: '/admin/users', label: 'ユーザー管理' },
 ]
 
