@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { BarChart2, Trophy, PlusCircle, Settings, LogOut, ChevronDown, Search, ShieldCheck } from 'lucide-react'
+import { BarChart2, Trophy, PlusCircle, Settings, LogOut, ChevronDown, Search, ShieldCheck, HelpCircle } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useTheme } from '../store/useTheme'
 import { levelInfo, winStreak } from '../lib/gamification'
 import LoginModal from './LoginModal'
+import HelpModal from './HelpModal'
 import ThemeToggle from './ThemeToggle'
 
 const NAV_LINKS = [
@@ -33,6 +34,13 @@ export default function Navbar() {
   const streak = user ? winStreak(positions, markets, user.id) : 0
   const [showLogin, setShowLogin] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
+
+  useEffect(() => {
+    const open = () => setShowHelp(true)
+    window.addEventListener('open-help', open)
+    return () => window.removeEventListener('open-help', open)
+  }, [])
 
   return (
     <>
@@ -94,6 +102,14 @@ export default function Navbar() {
               <Search size={14} />
               <span className="text-xs">検索</span>
               <kbd className="text-[10px] border border-border rounded px-1 py-0.5 bg-surface">⌘K</kbd>
+            </button>
+            <button
+              onClick={() => setShowHelp(true)}
+              aria-label="使い方"
+              title="使い方"
+              className="w-9 h-9 rounded-lg bg-surface-hover border border-border text-text-muted hover:text-text hover:border-accent/50 flex items-center justify-center transition-colors"
+            >
+              <HelpCircle size={16} />
             </button>
             <ThemeToggle />
             {user ? (
@@ -167,6 +183,7 @@ export default function Navbar() {
       </nav>
 
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
     </>
   )
 }

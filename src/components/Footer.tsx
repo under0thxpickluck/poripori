@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTheme } from '../store/useTheme'
 
-type FooterLink = { label: string; href: string }
+type FooterLink = { label: string; href: string; action?: 'help' }
 
 const SOCIAL: FooterLink[] = [
   { label: 'X (Twitter)', href: '#' },
@@ -11,10 +11,10 @@ const SOCIAL: FooterLink[] = [
 ]
 
 const SUPPORT: FooterLink[] = [
-  { label: '学習', href: '#' },
+  { label: '使い方ガイド', href: '#', action: 'help' },
   { label: 'ニュース', href: '#' },
   { label: 'お問い合わせ', href: '#' },
-  { label: 'ヘルプセンター', href: '#' },
+  { label: 'ヘルプセンター', href: '#', action: 'help' },
   { label: 'ステータス', href: '#' },
 ]
 
@@ -43,7 +43,17 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   { title: '法的事項', links: LEGAL },
 ]
 
-function FooterLinkItem({ label, href }: FooterLink) {
+function FooterLinkItem({ label, href, action }: FooterLink) {
+  if (action === 'help') {
+    return (
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent('open-help'))}
+        className="text-sm text-text-muted hover:text-text transition-colors"
+      >
+        {label}
+      </button>
+    )
+  }
   if (href.startsWith('/')) {
     return (
       <Link to={href} className="text-sm text-text-muted hover:text-text transition-colors">
