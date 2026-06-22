@@ -1,0 +1,99 @@
+import { Link } from 'react-router-dom'
+import { TrendingUp } from 'lucide-react'
+
+type FooterLink = { label: string; href: string }
+
+const SOCIAL: FooterLink[] = [
+  { label: 'X (Twitter)', href: '#' },
+  { label: 'Instagram', href: '#' },
+  { label: 'Discord', href: '#' },
+  { label: 'TikTok', href: '#' },
+]
+
+const SUPPORT: FooterLink[] = [
+  { label: '学習', href: '#' },
+  { label: 'ニュース', href: '#' },
+  { label: 'お問い合わせ', href: '#' },
+  { label: 'ヘルプセンター', href: '#' },
+  { label: 'ステータス', href: '#' },
+]
+
+const RESOURCES: FooterLink[] = [
+  { label: '報酬', href: '#' },
+  { label: 'API', href: '#' },
+  { label: 'ランキング', href: '/ranking' },
+  { label: '正確さ', href: '#' },
+  { label: 'ブランド', href: '#' },
+  { label: 'アクティビティ', href: '#' },
+  { label: '採用情報', href: '#' },
+  { label: 'プレス', href: '#' },
+]
+
+const LEGAL: FooterLink[] = [
+  { label: 'プライバシー', href: '#' },
+  { label: '利用規約', href: '#' },
+  { label: '市場の健全性', href: '#' },
+  { label: 'ドキュメント', href: '#' },
+]
+
+const COLUMNS: { title: string; links: FooterLink[] }[] = [
+  { title: 'ソーシャル', links: SOCIAL },
+  { title: 'サポート', links: SUPPORT },
+  { title: 'リソース', links: RESOURCES },
+  { title: '法的事項', links: LEGAL },
+]
+
+function FooterLinkItem({ label, href }: FooterLink) {
+  if (href.startsWith('/')) {
+    return (
+      <Link to={href} className="text-sm text-text-muted hover:text-text transition-colors">
+        {label}
+      </Link>
+    )
+  }
+  return (
+    <a href={href} className="text-sm text-text-muted hover:text-text transition-colors">
+      {label}
+    </a>
+  )
+}
+
+export default function Footer() {
+  return (
+    <footer className="border-t border-border mt-12">
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+          <div className="col-span-2 md:col-span-1">
+            <Link to="/" className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center">
+                <TrendingUp size={14} className="text-white" />
+              </div>
+              <span className="font-bold text-text tracking-tight text-lg">ポリぽり</span>
+            </Link>
+            <p className="text-xs text-text-muted mt-3 leading-relaxed">
+              みんなの予測でつくる、新しい情報市場。
+            </p>
+          </div>
+
+          {COLUMNS.map((col) => (
+            <div key={col.title}>
+              <h3 className="text-xs font-semibold text-text mb-3">{col.title}</h3>
+              <ul className="space-y-2">
+                {col.links.map((link) => (
+                  <li key={link.label}>
+                    <FooterLinkItem {...link} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-border mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-xs text-text-muted">© 2026 ポリぽり. すべて仮データです。</p>
+          <p className="text-xs text-text-muted">本サイトはデモであり、実際の取引は行われません。</p>
+        </div>
+      </div>
+    </footer>
+  )
+}
