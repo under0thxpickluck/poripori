@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { X } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { format } from 'date-fns'
 
@@ -9,7 +10,7 @@ export default function AdminUsers() {
   const [addAmount, setAddAmount] = useState('')
 
   if (user?.role !== 'admin') {
-    return <div className="text-center py-20 text-red-400">管理者権限が必要です</div>
+    return <div className="text-center py-20 text-no">管理者権限が必要です</div>
   }
 
   function handleAdd(userId: string) {
@@ -23,14 +24,14 @@ export default function AdminUsers() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-1">ユーザー管理</h1>
-        <p className="text-slate-400 text-sm">ポイント付与・ロール変更</p>
+        <h1 className="text-2xl font-bold text-text mb-1">ユーザー管理</h1>
+        <p className="text-text-muted text-sm">ポイント付与・ロール変更</p>
       </div>
 
-      <div className="bg-[#13162d] border border-[#2a2d4a] rounded-2xl overflow-hidden">
+      <div className="bg-surface border border-border rounded-lg overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#2a2d4a] text-xs text-slate-500">
+            <tr className="border-b border-border text-xs text-text-muted">
               <th className="text-left px-5 py-3 font-medium">ユーザー</th>
               <th className="text-right px-4 py-3 font-medium">ポイント</th>
               <th className="text-center px-4 py-3 font-medium hidden md:table-cell">ロール</th>
@@ -38,27 +39,27 @@ export default function AdminUsers() {
               <th className="text-right px-5 py-3 font-medium">操作</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#1e2244]">
+          <tbody className="divide-y divide-border">
             {users.map((u) => (
-              <tr key={u.id} className="hover:bg-[#1e2244] transition-colors">
+              <tr key={u.id} className="hover:bg-surface-hover transition-colors">
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                         u.role === 'admin'
                           ? 'bg-amber-500/20 text-amber-400'
-                          : 'bg-indigo-500/20 text-indigo-400'
+                          : 'bg-accent/20 text-accent'
                       }`}
                     >
                       {u.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-white font-medium">{u.name}</p>
-                      <p className="text-xs text-slate-500">{u.id}</p>
+                      <p className="text-text font-medium">{u.name}</p>
+                      <p className="text-xs text-text-muted">{u.id}</p>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-4 text-right font-semibold text-white">
+                <td className="px-4 py-4 text-right font-semibold text-text">
                   {u.points.toLocaleString()} pt
                 </td>
                 <td className="px-4 py-4 text-center hidden md:table-cell">
@@ -66,13 +67,13 @@ export default function AdminUsers() {
                     className={`text-xs px-2 py-0.5 rounded-full ${
                       u.role === 'admin'
                         ? 'bg-amber-500/20 text-amber-400'
-                        : 'bg-slate-500/20 text-slate-400'
+                        : 'bg-surface-hover text-text-muted'
                     }`}
                   >
                     {u.role}
                   </span>
                 </td>
-                <td className="px-4 py-4 text-center text-slate-500 text-xs hidden md:table-cell">
+                <td className="px-4 py-4 text-center text-text-muted text-xs hidden md:table-cell">
                   {format(new Date(u.createdAt), 'yyyy/MM/dd')}
                 </td>
                 <td className="px-5 py-4">
@@ -87,26 +88,26 @@ export default function AdminUsers() {
                           onChange={(e) => setAddAmount(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && handleAdd(u.id)}
                           placeholder="100"
-                          className="w-20 px-2 py-1 bg-[#1e2244] border border-[#2a2d4a] rounded text-xs text-white outline-none"
+                          className="w-20 px-2 py-1 bg-surface-hover border border-border rounded text-xs text-text outline-none"
                         />
                         <button
                           onClick={() => handleAdd(u.id)}
-                          className="text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors"
+                          className="text-xs px-2 py-1 rounded bg-yes/20 text-yes border border-yes/30 hover:bg-yes/30 transition-colors"
                         >
                           付与
                         </button>
                         <button
                           onClick={() => { setAddingTo(null); setAddAmount('') }}
-                          className="text-xs px-1.5 py-1 text-slate-500 hover:text-slate-300"
+                          className="text-xs px-1.5 py-1 text-text-muted hover:text-text"
                         >
-                          ✕
+                          <X size={12} />
                         </button>
                       </div>
                     ) : (
                       <>
                         <button
                           onClick={() => setAddingTo(u.id)}
-                          className="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+                          className="text-xs px-2.5 py-1 rounded-lg bg-yes/10 text-yes border border-yes/20 hover:bg-yes/20 transition-colors"
                         >
                           + ポイント
                         </button>

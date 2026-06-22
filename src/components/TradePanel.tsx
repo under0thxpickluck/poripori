@@ -79,16 +79,16 @@ export default function TradePanel({ market }: Props) {
   const notEnoughShares = tab === 'sell' && amtNum > held
 
   return (
-    <div className="bg-[#13162d] border border-[#2a2d4a] rounded-2xl overflow-hidden">
-      <div className="flex border-b border-[#2a2d4a]">
+    <div className="bg-surface border border-border rounded-lg overflow-hidden">
+      <div className="flex border-b border-border">
         {(['buy', 'sell'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => { setTab(t); setAmount('') }}
             className={`flex-1 py-3 text-sm font-semibold transition-colors ${
               tab === t
-                ? 'text-white border-b-2 border-indigo-500 bg-indigo-500/10'
-                : 'text-slate-400 hover:text-white'
+                ? 'text-text border-b-2 border-accent bg-accent/10'
+                : 'text-text-muted hover:text-text'
             }`}
           >
             {t === 'buy' ? '購入' : '売却'}
@@ -98,7 +98,7 @@ export default function TradePanel({ market }: Props) {
 
       <div className="p-4 space-y-4">
         {!canTrade && (
-          <div className="text-center py-4 text-slate-400 text-sm">
+          <div className="text-center py-4 text-text-muted text-sm">
             {market.status === 'pending' && '承認待ちのためトレード不可'}
             {market.status === 'closed' && '締切済み・解決待ち'}
             {market.status === 'resolved' && `解決済み: ${market.resolved}`}
@@ -110,20 +110,20 @@ export default function TradePanel({ market }: Props) {
             <div className="flex gap-2">
               <button
                 onClick={() => { setSide('YES'); setAmount('') }}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all border ${
+                className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-colors border ${
                   side === 'YES'
-                    ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
-                    : 'border-[#2a2d4a] text-slate-400 hover:border-emerald-500/30 hover:text-emerald-400'
+                    ? 'bg-yes/20 border-yes/60 text-yes'
+                    : 'border-border text-text-muted hover:border-yes/30 hover:text-yes'
                 }`}
               >
                 YES {Math.round(price.yes * 100)}%
               </button>
               <button
                 onClick={() => { setSide('NO'); setAmount('') }}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all border ${
+                className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-colors border ${
                   side === 'NO'
-                    ? 'bg-red-500/20 border-red-500/60 text-red-400 shadow-[0_0_12px_rgba(239,68,68,0.15)]'
-                    : 'border-[#2a2d4a] text-slate-400 hover:border-red-500/30 hover:text-red-400'
+                    ? 'bg-no/20 border-no/60 text-no'
+                    : 'border-border text-text-muted hover:border-no/30 hover:text-no'
                 }`}
               >
                 NO {Math.round(price.no * 100)}%
@@ -132,7 +132,7 @@ export default function TradePanel({ market }: Props) {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs text-slate-400">
+                <label className="text-xs text-text-muted">
                   {tab === 'buy'
                     ? inputMode === 'points'
                       ? 'ポイント額'
@@ -143,12 +143,12 @@ export default function TradePanel({ market }: Props) {
                   {tab === 'buy' && (
                     <button
                       onClick={() => setInputMode(inputMode === 'points' ? 'shares' : 'points')}
-                      className="text-xs text-indigo-400 hover:text-indigo-300"
+                      className="text-xs text-accent hover:text-accent-hover"
                     >
                       {inputMode === 'points' ? 'シェア数で入力' : 'ポイントで入力'}
                     </button>
                   )}
-                  <button onClick={handleMax} className="text-xs text-indigo-400 hover:text-indigo-300">
+                  <button onClick={handleMax} className="text-xs text-accent hover:text-accent-hover">
                     MAX
                   </button>
                 </div>
@@ -160,61 +160,61 @@ export default function TradePanel({ market }: Props) {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder={tab === 'buy' ? (inputMode === 'points' ? '100' : '1.00') : '1.00'}
-                className="w-full px-4 py-2.5 bg-[#1e2244] border border-[#2a2d4a] focus:border-indigo-500 rounded-xl text-white text-sm outline-none transition-colors placeholder-slate-600"
+                className="w-full px-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-lg text-text text-sm outline-none transition-colors placeholder-text-muted"
               />
               {user && tab === 'buy' && (
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-text-muted mt-1">
                   残高: {user.points.toLocaleString()} pt
                 </p>
               )}
               {tab === 'sell' && (
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-text-muted mt-1">
                   保有: {held.toFixed(2)} {side} シェア
                 </p>
               )}
             </div>
 
             {pv && !notEnoughShares && (
-              <div className="bg-[#1e2244] rounded-xl p-3 space-y-2">
+              <div className="bg-surface-hover rounded-lg p-3 space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-400">取引シェア数</span>
-                  <span className="text-white font-medium">{pv.shares.toFixed(2)}</span>
+                  <span className="text-text-muted">取引シェア数</span>
+                  <span className="text-text font-medium">{pv.shares.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-400">平均単価</span>
-                  <span className="text-white font-medium">{(pv.pricePerShare * 100).toFixed(1)}¢</span>
+                  <span className="text-text-muted">平均単価</span>
+                  <span className="text-text font-medium">{(pv.pricePerShare * 100).toFixed(1)}¢</span>
                 </div>
-                <div className="flex justify-between text-xs border-t border-[#2a2d4a] pt-2">
-                  <span className="text-slate-400">{tab === 'buy' ? '支払い' : '受取'}</span>
-                  <span className={`font-semibold ${tab === 'buy' ? 'text-red-400' : 'text-emerald-400'}`}>
+                <div className="flex justify-between text-xs border-t border-border pt-2">
+                  <span className="text-text-muted">{tab === 'buy' ? '支払い' : '受取'}</span>
+                  <span className={`font-semibold ${tab === 'buy' ? 'text-no' : 'text-yes'}`}>
                     {tab === 'buy' ? '-' : '+'}{pv.cost.toFixed(2)} pt
                   </span>
                 </div>
                 {tab === 'buy' && (
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">最大利益 (的中時)</span>
-                    <span className="text-emerald-400 font-medium">+{pv.shares.toFixed(2)} pt</span>
+                    <span className="text-text-muted">最大利益 (的中時)</span>
+                    <span className="text-yes font-medium">+{pv.shares.toFixed(2)} pt</span>
                   </div>
                 )}
               </div>
             )}
 
             {notEnoughShares && (
-              <p className="text-xs text-red-400 text-center">保有シェア数が不足しています</p>
+              <p className="text-xs text-no text-center">保有シェア数が不足しています</p>
             )}
 
             {!user ? (
-              <div className="text-center py-2 text-sm text-slate-400">
+              <div className="text-center py-2 text-sm text-text-muted">
                 トレードするにはログインしてください
               </div>
             ) : (
               <button
                 onClick={handleExecute}
                 disabled={!pv || insufficient || notEnoughShares || amtNum <= 0}
-                className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                className={`w-full py-3 rounded-lg text-sm font-bold transition-colors ${
                   side === 'YES'
-                    ? 'bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900/40 disabled:text-emerald-700'
-                    : 'bg-red-600 hover:bg-red-500 disabled:bg-red-900/40 disabled:text-red-700'
+                    ? 'bg-yes hover:bg-yes/90 disabled:bg-yes/30 disabled:text-yes/50'
+                    : 'bg-no hover:bg-no/90 disabled:bg-no/30 disabled:text-no/50'
                 } text-white disabled:cursor-not-allowed`}
               >
                 {tab === 'buy' ? `${side} を購入` : `${side} を売却`}
@@ -224,7 +224,7 @@ export default function TradePanel({ market }: Props) {
             {result && (
               <div
                 className={`text-sm text-center py-2 rounded-lg ${
-                  result.success ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+                  result.success ? 'bg-yes/15 text-yes' : 'bg-no/15 text-no'
                 }`}
               >
                 {result.message}
@@ -235,17 +235,17 @@ export default function TradePanel({ market }: Props) {
       </div>
 
       {(pos.yesShares > 0 || pos.noShares > 0) && (
-        <div className="border-t border-[#2a2d4a] px-4 py-3">
-          <p className="text-xs text-slate-400 mb-2">保有ポジション</p>
+        <div className="border-t border-border px-4 py-3">
+          <p className="text-xs text-text-muted mb-2">保有ポジション</p>
           <div className="flex gap-3">
             {pos.yesShares > 0 && (
               <div className="text-xs">
-                <span className="text-emerald-400 font-medium">{pos.yesShares.toFixed(2)} YES</span>
+                <span className="text-yes font-medium">{pos.yesShares.toFixed(2)} YES</span>
               </div>
             )}
             {pos.noShares > 0 && (
               <div className="text-xs">
-                <span className="text-red-400 font-medium">{pos.noShares.toFixed(2)} NO</span>
+                <span className="text-no font-medium">{pos.noShares.toFixed(2)} NO</span>
               </div>
             )}
           </div>

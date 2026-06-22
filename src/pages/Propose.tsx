@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CheckCircle2, AlertTriangle } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import type { Category } from '../types'
 
@@ -27,7 +28,7 @@ export default function Propose() {
 
   if (!user) {
     return (
-      <div className="text-center py-20 text-slate-400">
+      <div className="text-center py-20 text-text-muted">
         マーケットを提案するにはログインしてください
       </div>
     )
@@ -44,9 +45,9 @@ export default function Propose() {
   if (submitted) {
     return (
       <div className="max-w-lg mx-auto text-center py-20">
-        <div className="text-5xl mb-4">✅</div>
-        <h2 className="text-xl font-bold text-white mb-2">提案を送信しました！</h2>
-        <p className="text-slate-400 text-sm">管理者が承認すると、マーケットが公開されます。</p>
+        <CheckCircle2 size={48} className="text-yes mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-text mb-2">提案を送信しました！</h2>
+        <p className="text-text-muted text-sm">管理者が承認すると、マーケットが公開されます。</p>
       </div>
     )
   }
@@ -58,17 +59,17 @@ export default function Propose() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-1">マーケットを提案する</h1>
-        <p className="text-slate-400 text-sm">
+        <h1 className="text-2xl font-bold text-text mb-1">マーケットを提案する</h1>
+        <p className="text-text-muted text-sm">
           提案は管理者が審査後、承認されると公開されます
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="bg-[#13162d] border border-[#2a2d4a] rounded-2xl p-5 space-y-5">
+        <div className="bg-surface border border-border rounded-lg p-5 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              質問 <span className="text-red-400">*</span>
+            <label className="block text-sm font-medium text-text mb-2">
+              質問 <span className="text-no">*</span>
             </label>
             <input
               type="text"
@@ -77,14 +78,14 @@ export default function Propose() {
               value={form.question}
               onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
               placeholder="例：2026年内にAGIは実現するか？"
-              className="w-full px-4 py-2.5 bg-[#1e2244] border border-[#2a2d4a] focus:border-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 outline-none transition-colors"
+              className="w-full px-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-lg text-sm text-text placeholder-text-muted outline-none transition-colors"
             />
-            <p className="text-xs text-slate-500 mt-1">{form.question.length}/100</p>
+            <p className="text-xs text-text-muted mt-1">{form.question.length}/100</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              解決条件 <span className="text-red-400">*</span>
+            <label className="block text-sm font-medium text-text mb-2">
+              解決条件 <span className="text-no">*</span>
             </label>
             <textarea
               required
@@ -93,15 +94,15 @@ export default function Propose() {
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               placeholder="「誰が見ても明確な条件」を詳しく書いてください。&#10;例：〇〇社が公式に△△を発表した場合にYES。&#10;判断の根拠となる情報源も記載してください。"
-              className="w-full px-4 py-2.5 bg-[#1e2244] border border-[#2a2d4a] focus:border-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 outline-none transition-colors resize-none"
+              className="w-full px-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-lg text-sm text-text placeholder-text-muted outline-none transition-colors resize-none"
             />
-            <p className="text-xs text-slate-500 mt-1">{form.description.length}/500</p>
+            <p className="text-xs text-text-muted mt-1">{form.description.length}/500</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                賭け締切日 <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-text mb-2">
+                賭け締切日 <span className="text-no">*</span>
               </label>
               <input
                 type="date"
@@ -109,18 +110,18 @@ export default function Propose() {
                 min={minDateStr}
                 value={form.deadline}
                 onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value + 'T23:59:59Z' }))}
-                className="w-full px-4 py-2.5 bg-[#1e2244] border border-[#2a2d4a] focus:border-indigo-500 rounded-xl text-sm text-white outline-none transition-colors"
+                className="w-full px-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-lg text-sm text-text outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                カテゴリ <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-text mb-2">
+                カテゴリ <span className="text-no">*</span>
               </label>
               <select
                 value={form.category}
                 onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as any }))}
-                className="w-full px-4 py-2.5 bg-[#1e2244] border border-[#2a2d4a] focus:border-indigo-500 rounded-xl text-sm text-white outline-none transition-colors"
+                className="w-full px-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-lg text-sm text-text outline-none transition-colors"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c} value={c}>{CAT_LABELS[c]}</option>
@@ -130,15 +131,16 @@ export default function Propose() {
           </div>
         </div>
 
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3">
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-4 py-3 flex items-start gap-2">
+          <AlertTriangle size={14} className="text-yellow-400 mt-0.5 shrink-0" />
           <p className="text-xs text-yellow-400">
-            ⚠ 解決条件が曖昧な提案は却下されることがあります。「誰が見ても明確」な条件を書いてください。
+            解決条件が曖昧な提案は却下されることがあります。「誰が見ても明確」な条件を書いてください。
           </p>
         </div>
 
         <button
           type="submit"
-          className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors"
+          className="w-full py-3 rounded-lg bg-accent hover:bg-accent-hover text-white font-semibold transition-colors"
         >
           提案を送信する
         </button>

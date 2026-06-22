@@ -25,8 +25,8 @@ function formatDeadline(iso: string) {
 
 const STATUS_BADGE: Record<string, string> = {
   open: '',
-  closed: 'bg-slate-500/20 text-slate-400',
-  resolved: 'bg-emerald-500/20 text-emerald-400',
+  closed: 'bg-surface-hover text-text-muted',
+  resolved: 'bg-yes/20 text-yes',
   pending: 'bg-yellow-500/20 text-yellow-400',
 }
 
@@ -36,12 +36,12 @@ export default function MarketCard({ market }: Props) {
   const price = marketPrice(market)
   const yesPct = Math.round(price.yes * 100)
   const noPct = 100 - yesPct
-  const catColor = CATEGORY_COLORS[market.category] ?? 'text-slate-400 bg-slate-400/10'
+  const catColor = CATEGORY_COLORS[market.category] ?? 'text-text-muted bg-surface-hover'
 
   return (
     <Link
       to={`/market/${market.id}`}
-      className="block bg-[#13162d] hover:bg-[#1a1d3e] border border-[#2a2d4a] hover:border-indigo-500/40 rounded-2xl p-5 transition-all duration-200 hover:shadow-[0_0_20px_rgba(99,102,241,0.08)] group"
+      className="block bg-surface hover:bg-surface-hover border border-border hover:border-accent/40 rounded-lg p-5 transition-colors duration-200 group"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}>
@@ -54,31 +54,31 @@ export default function MarketCard({ market }: Props) {
         )}
       </div>
 
-      <p className="text-sm font-medium text-white leading-snug line-clamp-2 mb-4 group-hover:text-indigo-100 transition-colors">
+      <p className="text-sm font-medium text-text leading-snug line-clamp-2 mb-4 group-hover:text-text transition-colors">
         {market.question}
       </p>
 
       {market.status === 'pending' ? (
-        <div className="text-xs text-slate-500 italic mb-4">承認待ちのため価格は未確定</div>
+        <div className="text-xs text-text-muted italic mb-4">承認待ちのため価格は未確定</div>
       ) : (
         <>
           <div className="flex gap-2 mb-3">
-            <button className="flex-1 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold hover:bg-emerald-500/20 transition-colors">
+            <button className="flex-1 py-2 rounded-lg bg-yes/10 border border-yes/20 text-yes text-sm font-semibold hover:bg-yes/20 transition-colors">
               YES {yesPct}¢
             </button>
-            <button className="flex-1 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-semibold hover:bg-red-500/20 transition-colors">
+            <button className="flex-1 py-2 rounded-lg bg-no/10 border border-no/20 text-no text-sm font-semibold hover:bg-no/20 transition-colors">
               NO {noPct}¢
             </button>
           </div>
 
           <div className="flex rounded-full overflow-hidden h-1 mb-4">
-            <div className="bg-emerald-500 transition-all duration-300" style={{ width: `${yesPct}%` }} />
-            <div className="bg-red-500 flex-1" />
+            <div className="bg-yes transition-all duration-300" style={{ width: `${yesPct}%` }} />
+            <div className="bg-no flex-1" />
           </div>
         </>
       )}
 
-      <div className="flex items-center justify-between text-xs text-slate-500">
+      <div className="flex items-center justify-between text-xs text-text-muted">
         <div className="flex items-center gap-1">
           <BarChart2 size={11} />
           <span>{market.volume.toLocaleString()} pt</span>
@@ -93,8 +93,8 @@ export default function MarketCard({ market }: Props) {
         <div
           className={`mt-3 text-center text-xs font-bold py-1.5 rounded-lg ${
             market.resolved === 'YES'
-              ? 'bg-emerald-500/15 text-emerald-400'
-              : 'bg-red-500/15 text-red-400'
+              ? 'bg-yes/15 text-yes'
+              : 'bg-no/15 text-no'
           }`}
         >
           結果: {market.resolved}

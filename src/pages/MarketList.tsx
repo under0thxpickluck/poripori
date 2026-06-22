@@ -34,31 +34,30 @@ export default function MarketList() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-1">予測市場</h1>
-        <p className="text-slate-400 text-sm">結果を予測してポイントを稼ごう</p>
+        <h1 className="text-2xl font-bold text-text mb-1">予測市場</h1>
       </div>
 
       <div className="relative mb-4">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
         <input
           type="text"
           placeholder="マーケットを検索..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 bg-[#13162d] border border-[#2a2d4a] focus:border-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 outline-none transition-colors"
+          className="w-full pl-9 pr-4 py-2.5 bg-surface border border-border focus:border-accent rounded-lg text-sm text-text placeholder-text-muted outline-none transition-colors"
         />
       </div>
 
       <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <div className="flex gap-1 p-1 bg-[#13162d] border border-[#2a2d4a] rounded-xl">
+        <div className="flex gap-1 p-1 bg-surface border border-border rounded-lg">
           {(['open', 'closed', 'resolved', 'all'] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                 statusFilter === s
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-accent text-white'
+                  : 'text-text-muted hover:text-text'
               }`}
             >
               {s === 'open' ? '受付中' : s === 'closed' ? '締切済み' : s === 'resolved' ? '解決済み' : 'すべて'}
@@ -74,8 +73,8 @@ export default function MarketList() {
             onClick={() => setCat(c)}
             className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
               cat === c
-                ? 'bg-indigo-600/20 border-indigo-500/60 text-indigo-400'
-                : 'border-[#2a2d4a] text-slate-400 hover:text-white hover:border-slate-500'
+                ? 'bg-accent/20 border-accent/60 text-accent'
+                : 'border-border text-text-muted hover:text-text hover:border-border'
             }`}
           >
             {CAT_LABELS[c]}
@@ -84,7 +83,7 @@ export default function MarketList() {
       </div>
 
       {open.length === 0 ? (
-        <div className="text-center py-20 text-slate-500">
+        <div className="text-center py-20 text-text-muted">
           <p className="text-lg">マーケットが見つかりません</p>
           <p className="text-sm mt-1">別のカテゴリやキーワードで検索してみてください</p>
         </div>
