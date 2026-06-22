@@ -1,0 +1,542 @@
+import { create } from 'zustand'
+import type { User, Market, Position, Trade, Category } from '../types'
+import { buyCost, sellRefund, costFn, currentPrice, resolvePayouts } from '../lib/lmsr'
+
+const STORAGE_KEY = 'poripori-v1'
+
+function genId() {
+  return Math.random().toString(36).slice(2, 10)
+}
+
+function priceAt(qYes: number, qNo: number, b: number) {
+  return currentPrice(qYes, qNo, b).yes
+}
+
+function generateHistory(
+  qYes: number,
+  qNo: number,
+  b: number,
+  createdAt: string,
+  steps = 30
+): Array<{ t: string; yes: number }> {
+  const created = new Date(createdAt).getTime()
+  const now = Date.now()
+  const history: Array<{ t: string; yes: number }> = []
+  for (let i = 0; i <= steps; i++) {
+    const ratio = i / steps
+    const t = new Date(created + (now - created) * ratio).toISOString()
+    const qy = qYes * ratio
+    const qn = qNo * ratio
+    history.push({ t, yes: priceAt(qy, qn, b) })
+  }
+  return history
+}
+
+const SEED_USERS: User[] = [
+  { id: 'admin', name: 'Admin', points: 50000, role: 'admin', createdAt: '2026-01-01T00:00:00Z' },
+  { id: 'u1', name: '田中 太郎', points: 1240, role: 'user', createdAt: '2026-01-10T00:00:00Z' },
+  { id: 'u2', name: '鈴木 花子', points: 890, role: 'user', createdAt: '2026-01-12T00:00:00Z' },
+  { id: 'u3', name: '山田 次郎', points: 1580, role: 'user', createdAt: '2026-01-15T00:00:00Z' },
+  { id: 'u4', name: '佐藤 美咲', points: 720, role: 'user', createdAt: '2026-01-20T00:00:00Z' },
+]
+
+const SEED_MARKETS: Market[] = [
+  {
+    id: 'm1',
+    question: '2026年FIFAワールドカップで日本がベスト4に入るか？',
+    description:
+      '2026年6月〜7月に開催されるFIFAワールドカップ（北米開催）において、日本代表チームがベスト4（準決勝進出）を達成するか。公式の大会結果に基づき判定する。',
+    deadline: '2026-07-15T00:00:00Z',
+    status: 'open',
+    q_yes: 180,
+    q_no: 120,
+    b: 100,
+    resolved: null,
+    createdBy: 'u2',
+    createdAt: '2026-01-10T00:00:00Z',
+    category: 'Sports',
+    volume: 18500,
+    priceHistory: generateHistory(180, 120, 100, '2026-01-10T00:00:00Z'),
+  },
+  {
+    id: 'm2',
+    question: 'ChatGPT-5は2026年内にリリースされるか？',
+    description:
+      'OpenAIが「ChatGPT-5」または同等の次世代モデルを2026年12月31日までに一般公開するか。研究プレビューや限定アクセスは含まず、一般向け公開が条件。',
+    deadline: '2026-12-31T00:00:00Z',
+    status: 'open',
+    q_yes: 240,
+    q_no: 160,
+    b: 100,
+    resolved: null,
+    createdBy: 'u3',
+    createdAt: '2026-02-01T00:00:00Z',
+    category: 'AI',
+    volume: 31200,
+    priceHistory: generateHistory(240, 160, 100, '2026-02-01T00:00:00Z'),
+  },
+  {
+    id: 'm3',
+    question: '2026年東京都知事選で現職が再選するか？',
+    description:
+      '2026年に行われる東京都知事選挙において、現職の都知事が再選を果たすか。選挙管理委員会の正式な開票結果に基づき判定する。',
+    deadline: '2026-08-01T00:00:00Z',
+    status: 'open',
+    q_yes: 90,
+    q_no: 210,
+    b: 100,
+    resolved: null,
+    createdBy: 'u1',
+    createdAt: '2026-03-05T00:00:00Z',
+    category: 'Politics',
+    volume: 14800,
+    priceHistory: generateHistory(90, 210, 100, '2026-03-05T00:00:00Z'),
+  },
+  {
+    id: 'm4',
+    question: 'ビットコインは2026年末までに$200,000を超えるか？',
+    description:
+      'BTC/USDの価格が2026年12月31日23:59（UTC）時点で$200,000を超えているか。CoinGeckoのBTC価格を参照して判定する。',
+    deadline: '2026-12-31T23:59:59Z',
+    status: 'open',
+    q_yes: 140,
+    q_no: 260,
+    b: 100,
+    resolved: null,
+    createdBy: 'u4',
+    createdAt: '2026-01-20T00:00:00Z',
+    category: 'Crypto',
+    volume: 22400,
+    priceHistory: generateHistory(140, 260, 100, '2026-01-20T00:00:00Z'),
+  },
+  {
+    id: 'm5',
+    question: 'NVIDIAは2026年内に時価総額$5兆を超えるか？',
+    description:
+      'NVIDIAの時価総額が2026年12月31日までに$5兆（5 Trillion USD）を超えるか。終値ベースで判定する。',
+    deadline: '2026-12-31T00:00:00Z',
+    status: 'open',
+    q_yes: 200,
+    q_no: 100,
+    b: 100,
+    resolved: null,
+    createdBy: 'u2',
+    createdAt: '2026-04-10T00:00:00Z',
+    category: 'Tech',
+    volume: 19600,
+    priceHistory: generateHistory(200, 100, 100, '2026-04-10T00:00:00Z'),
+  },
+  {
+    id: 'm6',
+    question: '次のWWDCでAppleがARグラスを発表するか？',
+    description:
+      'Apple社がWWDC 2026（6月開催）において「Apple Glass」または同等のARグラス製品を正式発表するか。ティーザーや噂レベルは含まず、製品発表が条件。',
+    deadline: '2026-06-30T00:00:00Z',
+    status: 'closed',
+    q_yes: 80,
+    q_no: 320,
+    b: 100,
+    resolved: null,
+    createdBy: 'u3',
+    createdAt: '2026-02-15T00:00:00Z',
+    category: 'Tech',
+    volume: 26000,
+    priceHistory: generateHistory(80, 320, 100, '2026-02-15T00:00:00Z'),
+  },
+  {
+    id: 'm7',
+    question: '2026年参院選で与党が改選議席の過半数を獲得するか？',
+    description:
+      '2026年7月に行われる参議院議員通常選挙において、与党（自民党・公明党）が改選議席（125議席）の過半数（63議席以上）を獲得するか。',
+    deadline: '2026-07-31T00:00:00Z',
+    status: 'resolved',
+    q_yes: 200,
+    q_no: 100,
+    b: 100,
+    resolved: 'YES',
+    createdBy: 'u1',
+    createdAt: '2026-01-05T00:00:00Z',
+    category: 'Politics',
+    volume: 18300,
+    priceHistory: generateHistory(200, 100, 100, '2026-01-05T00:00:00Z'),
+  },
+  {
+    id: 'm8',
+    question: 'SpaceXが2026年内にスターシップで月軌道飛行を成功させるか？',
+    description:
+      'SpaceX社がStarshipを使用して月軌道に到達するミッション（有人・無人問わず）を2026年12月31日までに成功させるか。',
+    deadline: '2026-12-31T00:00:00Z',
+    status: 'pending',
+    q_yes: 0,
+    q_no: 0,
+    b: 100,
+    resolved: null,
+    createdBy: 'u3',
+    createdAt: '2026-06-18T00:00:00Z',
+    category: 'Science',
+    volume: 0,
+    priceHistory: [],
+  },
+]
+
+const SEED_POSITIONS: Position[] = [
+  { userId: 'u1', marketId: 'm1', yesShares: 80, noShares: 30 },
+  { userId: 'u2', marketId: 'm1', yesShares: 50, noShares: 20 },
+  { userId: 'u3', marketId: 'm1', yesShares: 30, noShares: 40 },
+  { userId: 'u4', marketId: 'm1', yesShares: 20, noShares: 30 },
+
+  { userId: 'u1', marketId: 'm2', yesShares: 60, noShares: 40 },
+  { userId: 'u2', marketId: 'm2', yesShares: 80, noShares: 30 },
+  { userId: 'u3', marketId: 'm2', yesShares: 60, noShares: 50 },
+  { userId: 'u4', marketId: 'm2', yesShares: 40, noShares: 40 },
+
+  { userId: 'u1', marketId: 'm3', yesShares: 20, noShares: 80 },
+  { userId: 'u2', marketId: 'm3', yesShares: 30, noShares: 50 },
+  { userId: 'u3', marketId: 'm3', yesShares: 20, noShares: 40 },
+  { userId: 'u4', marketId: 'm3', yesShares: 20, noShares: 40 },
+
+  { userId: 'u1', marketId: 'm4', yesShares: 40, noShares: 60 },
+  { userId: 'u2', marketId: 'm4', yesShares: 30, noShares: 80 },
+  { userId: 'u3', marketId: 'm4', yesShares: 40, noShares: 70 },
+  { userId: 'u4', marketId: 'm4', yesShares: 30, noShares: 50 },
+
+  { userId: 'u1', marketId: 'm7', yesShares: 100, noShares: 0 },
+  { userId: 'u2', marketId: 'm7', yesShares: 60, noShares: 20 },
+  { userId: 'u3', marketId: 'm7', yesShares: 40, noShares: 60 },
+]
+
+const SEED_TRADES: Trade[] = []
+
+function loadState() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY)
+    if (s) return JSON.parse(s)
+  } catch {}
+  return null
+}
+
+type StoreState = {
+  users: User[]
+  markets: Market[]
+  positions: Position[]
+  trades: Trade[]
+  currentUserId: string | null
+}
+
+type StoreActions = {
+  login: (userId: string) => void
+  logout: () => void
+  currentUser: () => User | null
+
+  buyShares: (
+    marketId: string,
+    side: 'YES' | 'NO',
+    shares: number
+  ) => { success: boolean; error?: string; cost?: number }
+
+  sellShares: (
+    marketId: string,
+    side: 'YES' | 'NO',
+    shares: number
+  ) => { success: boolean; error?: string; refund?: number }
+
+  proposeMarket: (data: {
+    question: string
+    description: string
+    deadline: string
+    category: string
+  }) => void
+
+  approveMarket: (marketId: string) => void
+  rejectMarket: (marketId: string) => void
+  closeMarket: (marketId: string) => void
+  resolveMarket: (marketId: string, result: 'YES' | 'NO') => void
+
+  addPoints: (userId: string, amount: number) => void
+  changeRole: (userId: string, role: 'user' | 'admin') => void
+  registerUser: (name: string) => User
+
+  getPosition: (userId: string, marketId: string) => Position
+  getMarketTrades: (marketId: string) => Trade[]
+  getUserTrades: (userId: string) => Trade[]
+}
+
+type Store = StoreState & StoreActions
+
+const saved = loadState()
+
+export const useStore = create<Store>((set, get) => {
+  const initial: StoreState = saved ?? {
+    users: SEED_USERS,
+    markets: SEED_MARKETS,
+    positions: SEED_POSITIONS,
+    trades: SEED_TRADES,
+    currentUserId: null,
+  }
+
+  const persist = (state: StoreState) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    } catch {}
+  }
+
+  const update = (fn: (s: StoreState) => Partial<StoreState>) => {
+    set((s) => {
+      const next = { ...s, ...fn(s) }
+      persist(next)
+      return next
+    })
+  }
+
+  return {
+    ...initial,
+
+    currentUser: () => {
+      const { users, currentUserId } = get()
+      return users.find((u) => u.id === currentUserId) ?? null
+    },
+
+    login: (userId) => update(() => ({ currentUserId: userId })),
+    logout: () => update(() => ({ currentUserId: null })),
+
+    buyShares: (marketId, side, shares) => {
+      const { markets, users, positions, trades, currentUserId } = get()
+      const user = users.find((u) => u.id === currentUserId)
+      const market = markets.find((m) => m.id === marketId)
+
+      if (!user) return { success: false, error: 'ログインしてください' }
+      if (!market) return { success: false, error: 'マーケットが見つかりません' }
+      if (market.status !== 'open') return { success: false, error: 'このマーケットは現在受付中ではありません' }
+      if (shares <= 0) return { success: false, error: '0より大きい枚数を入力してください' }
+
+      const cost = buyCost(market, side, shares)
+      if (user.points < cost) return { success: false, error: 'ポイントが不足しています' }
+
+      const price = cost / shares
+      const now = new Date().toISOString()
+      const newQYes = side === 'YES' ? market.q_yes + shares : market.q_yes
+      const newQNo = side === 'NO' ? market.q_no + shares : market.q_no
+      const newYesPrice = currentPrice(newQYes, newQNo, market.b).yes
+
+      const trade: Trade = {
+        id: genId(),
+        userId: user.id,
+        marketId,
+        side,
+        action: 'buy',
+        shares,
+        cost,
+        pricePerShare: price,
+        timestamp: now,
+      }
+
+      const existingPos = positions.find(
+        (p) => p.userId === user.id && p.marketId === marketId
+      )
+
+      update((s) => ({
+        users: s.users.map((u) =>
+          u.id === user.id ? { ...u, points: u.points - cost } : u
+        ),
+        markets: s.markets.map((m) =>
+          m.id === marketId
+            ? {
+                ...m,
+                q_yes: newQYes,
+                q_no: newQNo,
+                volume: m.volume + cost,
+                priceHistory: [...m.priceHistory, { t: now, yes: newYesPrice }],
+              }
+            : m
+        ),
+        positions: existingPos
+          ? s.positions.map((p) =>
+              p.userId === user.id && p.marketId === marketId
+                ? {
+                    ...p,
+                    yesShares: side === 'YES' ? p.yesShares + shares : p.yesShares,
+                    noShares: side === 'NO' ? p.noShares + shares : p.noShares,
+                  }
+                : p
+            )
+          : [
+              ...s.positions,
+              {
+                userId: user.id,
+                marketId,
+                yesShares: side === 'YES' ? shares : 0,
+                noShares: side === 'NO' ? shares : 0,
+              },
+            ],
+        trades: [...s.trades, trade],
+      }))
+
+      return { success: true, cost }
+    },
+
+    sellShares: (marketId, side, shares) => {
+      const { markets, users, positions, trades, currentUserId } = get()
+      const user = users.find((u) => u.id === currentUserId)
+      const market = markets.find((m) => m.id === marketId)
+      const pos = positions.find((p) => p.userId === currentUserId && p.marketId === marketId)
+
+      if (!user) return { success: false, error: 'ログインしてください' }
+      if (!market) return { success: false, error: 'マーケットが見つかりません' }
+      if (market.status !== 'open') return { success: false, error: 'このマーケットは現在受付中ではありません' }
+      if (shares <= 0) return { success: false, error: '0より大きい枚数を入力してください' }
+
+      const held = side === 'YES' ? (pos?.yesShares ?? 0) : (pos?.noShares ?? 0)
+      if (held < shares) return { success: false, error: '保有シェアが不足しています' }
+
+      const refund = sellRefund(market, side, shares)
+      const price = refund / shares
+      const now = new Date().toISOString()
+      const newQYes = side === 'YES' ? market.q_yes - shares : market.q_yes
+      const newQNo = side === 'NO' ? market.q_no - shares : market.q_no
+      const newYesPrice = currentPrice(newQYes, newQNo, market.b).yes
+
+      const trade: Trade = {
+        id: genId(),
+        userId: user.id,
+        marketId,
+        side,
+        action: 'sell',
+        shares,
+        cost: refund,
+        pricePerShare: price,
+        timestamp: now,
+      }
+
+      update((s) => ({
+        users: s.users.map((u) =>
+          u.id === user.id ? { ...u, points: u.points + refund } : u
+        ),
+        markets: s.markets.map((m) =>
+          m.id === marketId
+            ? {
+                ...m,
+                q_yes: newQYes,
+                q_no: newQNo,
+                priceHistory: [...m.priceHistory, { t: now, yes: newYesPrice }],
+              }
+            : m
+        ),
+        positions: s.positions.map((p) =>
+          p.userId === user.id && p.marketId === marketId
+            ? {
+                ...p,
+                yesShares: side === 'YES' ? p.yesShares - shares : p.yesShares,
+                noShares: side === 'NO' ? p.noShares - shares : p.noShares,
+              }
+            : p
+        ),
+        trades: [...s.trades, trade],
+      }))
+
+      return { success: true, refund }
+    },
+
+    proposeMarket: (data) => {
+      const { currentUserId } = get()
+      if (!currentUserId) return
+      const now = new Date().toISOString()
+      const market: Market = {
+        id: genId(),
+        question: data.question,
+        description: data.description,
+        deadline: data.deadline,
+        status: 'pending',
+        q_yes: 0,
+        q_no: 0,
+        b: 100,
+        resolved: null,
+        createdBy: currentUserId,
+        createdAt: now,
+        category: data.category as Market['category'],
+        volume: 0,
+        priceHistory: [],
+      }
+      update((s) => ({ markets: [...s.markets, market] }))
+    },
+
+    approveMarket: (marketId) => {
+      update((s) => ({
+        markets: s.markets.map((m) =>
+          m.id === marketId ? { ...m, status: 'open', priceHistory: [{ t: new Date().toISOString(), yes: 0.5 }] } : m
+        ),
+      }))
+    },
+
+    rejectMarket: (marketId) => {
+      update((s) => ({
+        markets: s.markets.filter((m) => m.id !== marketId),
+      }))
+    },
+
+    closeMarket: (marketId) => {
+      update((s) => ({
+        markets: s.markets.map((m) =>
+          m.id === marketId ? { ...m, status: 'closed' } : m
+        ),
+      }))
+    },
+
+    resolveMarket: (marketId, result) => {
+      const { markets, positions } = get()
+      const market = markets.find((m) => m.id === marketId)
+      if (!market) return
+
+      const marketPositions = positions.filter((p) => p.marketId === marketId)
+      const payouts = resolvePayouts(marketPositions, result)
+
+      update((s) => ({
+        markets: s.markets.map((m) =>
+          m.id === marketId ? { ...m, status: 'resolved', resolved: result } : m
+        ),
+        users: s.users.map((u) =>
+          payouts[u.id] != null ? { ...u, points: u.points + payouts[u.id] } : u
+        ),
+      }))
+    },
+
+    addPoints: (userId, amount) => {
+      update((s) => ({
+        users: s.users.map((u) =>
+          u.id === userId ? { ...u, points: u.points + amount } : u
+        ),
+      }))
+    },
+
+    changeRole: (userId, role) => {
+      update((s) => ({
+        users: s.users.map((u) => (u.id === userId ? { ...u, role } : u)),
+      }))
+    },
+
+    registerUser: (name) => {
+      const newUser: User = {
+        id: genId(),
+        name,
+        points: 1000,
+        role: 'user',
+        createdAt: new Date().toISOString(),
+      }
+      update((s) => ({ users: [...s.users, newUser], currentUserId: newUser.id }))
+      return newUser
+    },
+
+    getPosition: (userId, marketId) => {
+      return (
+        get().positions.find((p) => p.userId === userId && p.marketId === marketId) ?? {
+          userId,
+          marketId,
+          yesShares: 0,
+          noShares: 0,
+        }
+      )
+    },
+
+    getMarketTrades: (marketId) => get().trades.filter((t) => t.marketId === marketId),
+    getUserTrades: (userId) => get().trades.filter((t) => t.userId === userId),
+  }
+})
