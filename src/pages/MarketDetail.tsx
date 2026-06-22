@@ -8,6 +8,7 @@ import MarketImage from '../components/MarketImage'
 import OrderBook from '../components/OrderBook'
 import TopHolders from '../components/TopHolders'
 import Comments from '../components/Comments'
+import { usePriceFlash } from '../hooks/usePriceFlash'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 
@@ -15,6 +16,9 @@ export default function MarketDetail() {
   const { id } = useParams<{ id: string }>()
   const { markets, getMarketTrades, users } = useStore()
   const market = markets.find((m) => m.id === id)
+
+  const yesForFlash = market && market.status !== 'pending' ? Math.round(marketPrice(market).yes * 100) : 0
+  const priceFlash = usePriceFlash(yesForFlash)
 
   if (!market) {
     return (
@@ -73,7 +77,7 @@ export default function MarketDetail() {
               <div className="flex items-center gap-6 mb-4">
                 <div>
                   <p className="text-xs text-text-muted mb-1">YES</p>
-                  <p className="text-2xl font-bold text-yes">{yesPct}%</p>
+                  <p className={`text-2xl font-bold text-yes rounded px-1 -mx-1 ${priceFlash}`}>{yesPct}%</p>
                 </div>
                 <div className="flex-1">
                   <div className="flex rounded-full overflow-hidden h-3">
@@ -86,7 +90,7 @@ export default function MarketDetail() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-text-muted mb-1">NO</p>
-                  <p className="text-2xl font-bold text-no">{100 - yesPct}%</p>
+                  <p className={`text-2xl font-bold text-no rounded px-1 -mx-1 ${priceFlash}`}>{100 - yesPct}%</p>
                 </div>
               </div>
             )}

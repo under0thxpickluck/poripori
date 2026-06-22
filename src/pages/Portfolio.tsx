@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { marketPrice, sellRefund } from '../lib/lmsr'
 import { format } from 'date-fns'
-import { TrendingUp, TrendingDown, Wallet, PieChart, Layers, Activity } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, PieChart, Layers, Activity, Flame } from 'lucide-react'
 import CountUp from '../components/CountUp'
+import { levelInfo, winStreak } from '../lib/gamification'
 
 const CAT_BAR: Record<string, string> = {
   Politics: 'bg-blue-400',
@@ -87,11 +88,52 @@ export default function Portfolio() {
     .sort((a, b) => b.value - a.value)
   const allocTotal = alloc.reduce((s, a) => s + a.value, 0)
 
+  const lvl = levelInfo(totalAssets)
+  const streak = winStreak(positions, markets, user.id)
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-text mb-1">ポートフォリオ</h1>
         <p className="text-text-muted text-sm">資産・保有シェア・取引履歴</p>
+      </div>
+
+      {/* プロフィール / レベル */}
+      <div className="bg-surface border border-border rounded-lg p-5">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-accent/20 text-accent flex items-center justify-center text-xl font-bold ring-2 ring-accent/30 shrink-0">
+            {user.name.charAt(0)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-base font-bold text-text">{user.name}</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-accent/15 text-accent">
+                Lv.{lvl.level}
+              </span>
+              <span className={`text-xs font-semibold ${lvl.rank.color}`}>{lvl.rank.name}</span>
+              {streak > 0 && (
+                <span className="flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded-full bg-no/15 text-no">
+                  <Flame size={11} className="animate-flame" />
+                  {streak}連勝
+                </span>
+              )}
+            </div>
+            <div className="mt-2">
+              <div className="flex items-center justify-between text-[11px] text-text-muted mb-1">
+                <span>次のレベルまで</span>
+                <span>
+                  {Math.round(lvl.inLevel)} / {lvl.need} XP
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-surface-hover overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-accent animate-bar"
+                  style={{ width: `${Math.round(lvl.progress * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* サマリー4カード */}

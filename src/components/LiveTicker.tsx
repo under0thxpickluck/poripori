@@ -3,8 +3,31 @@ import { Link } from 'react-router-dom'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { marketPrice } from '../lib/lmsr'
 import type { Market } from '../types'
+import { usePriceFlash } from '../hooks/usePriceFlash'
 
 const TICK_MS = 1500
+
+function TickerItem({ m, yes, d }: { m: Market; yes: number; d: number }) {
+  const up = d >= 0
+  const flash = usePriceFlash(Math.round(d))
+  return (
+    <Link to={`/market/${m.id}`} className="group flex shrink-0 items-center gap-2 rounded px-1.5">
+      <span className="max-w-[180px] truncate text-xs font-medium text-text-muted transition-colors group-hover:text-text">
+        {m.question}
+      </span>
+      <span className="text-xs font-bold text-text">{yes}%</span>
+      <span
+        className={`flex items-center gap-0.5 text-xs font-semibold tabular-nums rounded px-1 ${flash} ${
+          up ? 'text-yes' : 'text-no'
+        }`}
+      >
+        {up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+        {up ? '+' : ''}
+        {d.toFixed(1)}%
+      </span>
+    </Link>
+  )
+}
 
 // 金融端末風のライブ価格ティッカー（横に流れ続け、各銘柄の変化率がリアルタイムに動く）
 export default function LiveTicker({ markets }: { markets: Market[] }) {
@@ -43,30 +66,9 @@ export default function LiveTicker({ markets }: { markets: Market[] }) {
       {/* スクロール本体 */}
       <div className="ticker-mask overflow-hidden pl-20">
         <div className="flex w-max gap-6 py-2.5 animate-ticker hover:[animation-play-state:paused]">
-          {loop.map((it, i) => {
-            const up = it.d >= 0
-            return (
-              <Link
-                key={i}
-                to={`/market/${it.m.id}`}
-                className="group flex shrink-0 items-center gap-2"
-              >
-                <span className="max-w-[180px] truncate text-xs font-medium text-text-muted transition-colors group-hover:text-text">
-                  {it.m.question}
-                </span>
-                <span className="text-xs font-bold text-text">{it.yes}%</span>
-                <span
-                  className={`flex items-center gap-0.5 text-xs font-semibold tabular-nums ${
-                    up ? 'text-yes' : 'text-no'
-                  }`}
-                >
-                  {up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-                  {up ? '+' : ''}
-                  {it.d.toFixed(1)}%
-                </span>
-              </Link>
-            )
-          })}
+          {loop.map((it, i) => (
+            <TickerItem key={i} m={it.m} yes={it.yes} d={it.d} />
+          ))}
         </div>
       </div>
     </div>

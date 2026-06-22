@@ -3,6 +3,7 @@ import { CheckCircle2, AlertTriangle } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { buyCost, sellRefund, sharesForPoints, marketPrice } from '../lib/lmsr'
 import type { Market } from '../types'
+import Confetti from './Confetti'
 
 type Tab = 'buy' | 'sell'
 type Side = 'YES' | 'NO'
@@ -19,6 +20,7 @@ export default function TradePanel({ market }: Props) {
   const [inputMode, setInputMode] = useState<'points' | 'shares'>('points')
   const [amount, setAmount] = useState('')
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [burst, setBurst] = useState(0)
 
   const pos = user ? getPosition(user.id, market.id) : { yesShares: 0, noShares: 0, userId: '', marketId: '' }
   const price = marketPrice(market)
@@ -74,6 +76,7 @@ export default function TradePanel({ market }: Props) {
             : `${pv.shares.toFixed(2)} ${side} シェアを売却しました`,
       })
       setAmount('')
+      setBurst((b) => b + 1)
     } else {
       setResult({ success: false, message: r.error ?? 'エラーが発生しました' })
     }
@@ -95,6 +98,7 @@ export default function TradePanel({ market }: Props) {
 
   return (
     <div className="bg-surface border border-border rounded-lg overflow-hidden">
+      <Confetti trigger={burst} />
       <div className="flex border-b border-border">
         {(['buy', 'sell'] as Tab[]).map((t) => (
           <button

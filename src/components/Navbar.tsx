@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { BarChart2, Trophy, PlusCircle, Settings, LogOut, ChevronDown, Search, ShieldCheck } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useTheme } from '../store/useTheme'
+import { levelInfo, winStreak } from '../lib/gamification'
 import LoginModal from './LoginModal'
 import ThemeToggle from './ThemeToggle'
 
@@ -24,10 +25,12 @@ const ADMIN_LINKS = [
 
 export default function Navbar() {
   const location = useLocation()
-  const { currentUser, logout } = useStore()
+  const { currentUser, logout, positions, markets } = useStore()
   const theme = useTheme((s) => s.theme)
   const user = currentUser()
   const logoMark = theme === 'light' ? '/logo-mark-light.png' : '/logo-mark.png'
+  const lvl = user ? levelInfo(user.points) : null
+  const streak = user ? winStreak(positions, markets, user.id) : 0
   const [showLogin, setShowLogin] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
@@ -99,8 +102,13 @@ export default function Navbar() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-hover border border-border hover:border-accent/50 transition-colors"
                 >
-                  <div className="w-6 h-6 rounded-full bg-accent/20 text-accent flex items-center justify-center text-xs font-bold">
+                  <div className="relative w-6 h-6 rounded-full bg-accent/20 text-accent flex items-center justify-center text-xs font-bold">
                     {user.name.charAt(0)}
+                    {lvl && (
+                      <span className="absolute -bottom-1.5 -right-1.5 text-[8px] font-bold leading-none px-1 py-0.5 rounded-full bg-accent text-white border border-bg">
+                        {lvl.level}
+                      </span>
+                    )}
                   </div>
                   <div className="hidden sm:block">
                     <span className="text-sm text-text font-medium">{user.name}</span>
@@ -114,8 +122,26 @@ export default function Navbar() {
                     <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
                     <div className="absolute right-0 top-full mt-1 z-20 w-48 bg-surface border border-border rounded-lg overflow-hidden">
                       <div className="px-4 py-3 border-b border-border">
-                        <div className="text-sm font-medium text-text">{user.name}</div>
-                        <div className="text-xs text-text-muted">{user.points.toLocaleString()} pt</div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-text">{user.name}</span>
+                          {lvl && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent">
+                              Lv.{lvl.level}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-text-muted mb-2">{user.points.toLocaleString()} pt</div>
+                        {lvl && (
+                          <>
+                            <div className="flex items-center justify-between text-[10px] text-text-muted mb-1">
+                              <span className={lvl.rank.color}>{lvl.rank.name}</span>
+                              {streak > 0 && <span className="text-no font-bold">🔥 {streak}連勝</span>}
+                            </div>
+                            <div className="h-1.5 rounded-full bg-surface-hover overflow-hidden">
+                              <div className="h-full rounded-full bg-accent" style={{ width: `${Math.round(lvl.progress * 100)}%` }} />
+                            </div>
+                          </>
+                        )}
                       </div>
                       <button
                         onClick={() => { logout(); setShowUserMenu(false) }}
