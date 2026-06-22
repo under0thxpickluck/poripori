@@ -56,3 +56,12 @@ export type Trade = {
   pricePerShare: number
   timestamp: string
 }
+
+export type Ad = {
+  id: string
+  title: string
+  imageUrl: string
+  linkUrl: string
+  active: boolean
+  createdAt: string
+}

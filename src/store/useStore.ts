@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { User, Market, Position, Trade, Category } from '../types'
+import type { User, Market, Position, Trade, Category, Ad } from '../types'
 import { buyCost, sellRefund, costFn, currentPrice, resolvePayouts } from '../lib/lmsr'
 
 const STORAGE_KEY = 'poripori-v1'
@@ -207,6 +207,25 @@ const SEED_POSITIONS: Position[] = [
 
 const SEED_TRADES: Trade[] = []
 
+const SEED_ADS: Ad[] = [
+  {
+    id: 'ad1',
+    title: '予測市場をはじめよう — 公式ガイド',
+    imageUrl: '',
+    linkUrl: 'https://example.com/guide',
+    active: true,
+    createdAt: '2026-06-01T00:00:00Z',
+  },
+  {
+    id: 'ad2',
+    title: 'コミュニティに参加する',
+    imageUrl: '',
+    linkUrl: 'https://example.com/community',
+    active: true,
+    createdAt: '2026-06-01T00:00:00Z',
+  },
+]
+
 function loadState() {
   try {
     const s = localStorage.getItem(STORAGE_KEY)
@@ -220,6 +239,7 @@ type StoreState = {
   markets: Market[]
   positions: Position[]
   trades: Trade[]
+  ads: Ad[]
   currentUserId: string | null
 }
 
@@ -245,7 +265,22 @@ type StoreActions = {
     description: string
     deadline: string
     category: string
+    imageUrl?: string
   }) => void
+
+  createMarket: (data: {
+    question: string
+    description: string
+    deadline: string
+    category: string
+    imageUrl?: string
+    b?: number
+  }) => void
+
+  addAd: (data: { title: string; imageUrl: string; linkUrl: string }) => void
+  updateAd: (id: string, data: Partial<Pick<Ad, 'title' | 'imageUrl' | 'linkUrl'>>) => void
+  toggleAd: (id: string) => void
+  deleteAd: (id: string) => void
 
   approveMarket: (marketId: string) => void
   rejectMarket: (marketId: string) => void
@@ -266,13 +301,15 @@ type Store = StoreState & StoreActions
 const saved = loadState()
 
 export const useStore = create<Store>((set, get) => {
-  const initial: StoreState = saved ?? {
+  const base: StoreState = {
     users: SEED_USERS,
     markets: SEED_MARKETS,
     positions: SEED_POSITIONS,
     trades: SEED_TRADES,
+    ads: SEED_ADS,
     currentUserId: null,
   }
+  const initial: StoreState = saved ? { ...base, ...saved, ads: saved.ads ?? SEED_ADS } : base
 
   const persist = (state: StoreState) => {
     try {
@@ -454,10 +491,66 @@ export const useStore = create<Store>((set, get) => {
         createdAt: now,
         category: data.category as Market['category'],
         volume: 0,
+        imageUrl: data.imageUrl,
         priceHistory: [],
       }
       update((s) => ({ markets: [...s.markets, market] }))
     },
+
+    createMarket: (data) => {
+      const { currentUserId } = get()
+      if (!currentUserId) return
+      const now = new Date().toISOString()
+      const b = data.b && data.b > 0 ? data.b : 100
+      const market: Market = {
+        id: genId(),
+        question: data.question,
+        description: data.description,
+        deadline: data.deadline,
+        status: 'open',
+        q_yes: 0,
+        q_no: 0,
+        b,
+        resolved: null,
+        createdBy: currentUserId,
+        createdAt: now,
+        category: data.category as Market['category'],
+        volume: 0,
+        imageUrl: data.imageUrl,
+        priceHistory: [{ t: now, yes: 0.5 }],
+      }
+      update((s) => ({ markets: [...s.markets, market] }))
+    },
+
+    addAd: (data) =>
+      update((s) => ({
+        ads: [
+          ...s.ads,
+          {
+            id: genId(),
+            title: data.title,
+            imageUrl: data.imageUrl,
+            linkUrl: data.linkUrl,
+            active: true,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      })),
+
+    updateAd: (id, data) =>
+      update((s) => ({
+        ads: s.ads.map((a) => (a.id === id ? { ...a, ...data } : a)),
+      })),
+
+    toggleAd: (id) =>
+      update((s) => ({
+        ads: s.ads.map((a) => (a.id === id ? { ...a, active: !a.active } : a)),
+      })),
+
+    deleteAd: (id) =>
+      update((s) => ({
+        ads: s.ads.filter((a) => a.id !== id),
+      })),
 
     approveMarket: (marketId) => {
       update((s) => ({
