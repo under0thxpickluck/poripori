@@ -201,7 +201,14 @@ export default function MarketList() {
             {(() => {
               const cells: React.ReactNode[] = []
               rest.forEach((m, i) => {
-                cells.push(<MarketCard key={m.id} market={m} />)
+                cells.push(
+                  <MarketCard
+                    key={m.id}
+                    market={m}
+                    hot={momentum(m) > 0.04}
+                    enterDelay={Math.min(i, 11) * 35}
+                  />
+                )
                 if (activeAds.length > 0 && (i + 1) % AD_INTERVAL === 0) {
                   const ad = activeAds[Math.floor(i / AD_INTERVAL) % activeAds.length]
                   cells.push(<AdCard key={`ad-${i}-${ad.id}`} ad={ad} />)

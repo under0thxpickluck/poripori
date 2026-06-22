@@ -59,11 +59,16 @@ function SlideCard({ market, interactive }: { market: Market; interactive: boole
     <Link
       to={`/market/${market.id}`}
       tabIndex={interactive ? 0 : -1}
-      className={`block h-full bg-surface border border-border rounded-lg overflow-hidden shadow-lg transition-colors group ${
+      className={`relative block h-full bg-surface border border-border rounded-lg overflow-hidden shadow-lg transition-colors group ${
         interactive ? 'hover:border-accent/40 pointer-events-auto' : 'pointer-events-none'
       }`}
     >
       <MarketImage src={market.imageUrl} category={market.category} className="w-full h-40 sm:h-44" />
+      {interactive && (
+        <span className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+          <span className="absolute top-0 left-0 h-full w-1/3 animate-shine bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        </span>
+      )}
       <div className="p-5">
         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}>
           {market.category}
