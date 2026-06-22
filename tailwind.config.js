@@ -4,12 +4,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        poly: {
-          bg: '#0c0e1a',
-          card: '#13162d',
-          border: '#2a2d4a',
-          hover: '#1e2244',
-        },
+        bg: '#0E1117',
+        surface: '#1A1D29',
+        'surface-hover': '#222632',
+        border: '#222632',
+        accent: '#2D9CDB',
+        'accent-hover': '#2589C4',
+        yes: '#27AE60',
+        no: '#EB5757',
+        text: '#E6E8EC',
+        'text-muted': '#8A8F98',
+      },
+      borderRadius: {
+        lg: '8px',
+        md: '6px',
       },
     },
   },
