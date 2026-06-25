@@ -27,6 +27,10 @@ const Compliance = lazy(() => import('./pages/legal/Compliance'))
 const Security = lazy(() => import('./pages/legal/Security'))
 const Company = lazy(() => import('./pages/Company'))
 const Contact = lazy(() => import('./pages/Contact'))
+const Status = lazy(() => import('./pages/Status'))
+const Press = lazy(() => import('./pages/Press'))
+const Faq = lazy(() => import('./pages/Faq'))
+const Developers = lazy(() => import('./pages/Developers'))
 
 function PageFallback() {
   return (
@@ -68,6 +72,10 @@ export default function App() {
           <Route path="/legal/security" element={<L><Security /></L>} />
           <Route path="/company" element={<L><Company /></L>} />
           <Route path="/contact" element={<L><Contact /></L>} />
+          <Route path="/status" element={<L><Status /></L>} />
+          <Route path="/press" element={<L><Press /></L>} />
+          <Route path="/faq" element={<L><Faq /></L>} />
+          <Route path="/developers" element={<L><Developers /></L>} />
         </Route>
       </Routes>
     </BrowserRouter>

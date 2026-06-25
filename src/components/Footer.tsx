@@ -5,18 +5,18 @@ import { COMPANY } from '../lib/company'
 type FooterLink = { label: string; href: string; action?: 'help' }
 
 const SOCIAL: FooterLink[] = [
-  { label: 'X (Twitter)', href: '#' },
-  { label: 'Instagram', href: '#' },
-  { label: 'Discord', href: '#' },
-  { label: 'TikTok', href: '#' },
+  { label: 'X (Twitter)', href: 'https://x.com/lifailabs' },
+  { label: 'Instagram', href: 'https://www.instagram.com/lifailabs' },
+  { label: 'Discord', href: 'https://discord.gg/lifailabs' },
+  { label: 'TikTok', href: 'https://www.tiktok.com/@lifailabs' },
 ]
 
 const SUPPORT: FooterLink[] = [
   { label: '使い方ガイド', href: '#', action: 'help' },
-  { label: 'ヘルプセンター', href: '#', action: 'help' },
+  { label: 'よくある質問 / FAQ', href: '/faq' },
   { label: 'お問い合わせ / Contact', href: '/contact' },
   { label: 'セキュリティ報告', href: '/legal/security' },
-  { label: 'ステータス', href: '#' },
+  { label: 'ステータス', href: '/status' },
 ]
 
 const RESOURCES: FooterLink[] = [
@@ -24,8 +24,8 @@ const RESOURCES: FooterLink[] = [
   { label: '会社概要 / Company', href: '/company' },
   { label: '市場の健全性', href: '/legal/market-integrity' },
   { label: 'コンプライアンス', href: '/legal/compliance' },
-  { label: 'API', href: '#' },
-  { label: 'プレス', href: '#' },
+  { label: '開発者 / API', href: '/developers' },
+  { label: 'プレス', href: '/press' },
 ]
 
 const LEGAL: FooterLink[] = [
@@ -61,8 +61,13 @@ function FooterLinkItem({ label, href, action }: FooterLink) {
       </Link>
     )
   }
+  const external = href.startsWith('http')
   return (
-    <a href={href} className="text-sm text-text-muted hover:text-text transition-colors">
+    <a
+      href={href}
+      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      className="text-sm text-text-muted hover:text-text transition-colors"
+    >
       {label}
     </a>
   )
