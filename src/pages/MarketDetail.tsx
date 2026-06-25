@@ -54,29 +54,33 @@ export default function MarketDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
           <div className="bg-surface border border-border rounded-lg p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent font-medium">
-                {market.category}
-              </span>
-              {market.status === 'resolved' && (
-                <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yes/20 text-yes">
-                  <CheckCircle size={10} />
-                  解決済み: {market.resolved}
-                </span>
-              )}
-              {market.status === 'closed' && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-surface-hover text-text-muted">
-                  締切済み・解決待ち
-                </span>
-              )}
+            <div className="flex gap-4 mb-4">
+              <MarketImage
+                src={market.imageUrl}
+                yes={price.yes}
+                category={market.category}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent font-medium">
+                    {market.category}
+                  </span>
+                  {market.status === 'resolved' && (
+                    <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yes/20 text-yes">
+                      <CheckCircle size={10} />
+                      解決済み: {market.resolved}
+                    </span>
+                  )}
+                  {market.status === 'closed' && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-surface-hover text-text-muted">
+                      締切済み・解決待ち
+                    </span>
+                  )}
+                </div>
+                <h1 className="text-xl font-bold text-text leading-snug">{market.question}</h1>
+              </div>
             </div>
-
-            <MarketImage
-              src={market.imageUrl}
-              category={market.category}
-              className="w-full h-40 rounded-lg mb-4"
-            />
-            <h1 className="text-xl font-bold text-text mb-4">{market.question}</h1>
 
             {market.status !== 'pending' && (
               <div className="flex items-center gap-6 mb-4">
@@ -134,7 +138,7 @@ export default function MarketDetail() {
 
           <div className="bg-surface border border-border rounded-lg p-5">
             <h2 className="text-sm font-semibold text-text-muted mb-4">価格推移 (YES)</h2>
-            <PriceChart market={market} height={220} />
+            <PriceChart market={market} height={300} />
           </div>
 
           <div className="bg-surface border border-border rounded-lg p-5">

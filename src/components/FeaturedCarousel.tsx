@@ -37,6 +37,7 @@ function SideCard({ market }: { market: Market }) {
     >
       <MarketImage
         src={market.imageUrl}
+        yes={marketPrice(market).yes}
         category={market.category}
         className="w-11 h-11 rounded-md shrink-0"
       />
@@ -63,7 +64,7 @@ function SlideCard({ market, interactive }: { market: Market; interactive: boole
         interactive ? 'hover:border-accent/40 pointer-events-auto' : 'pointer-events-none'
       }`}
     >
-      <MarketImage src={market.imageUrl} category={market.category} className="w-full h-40 sm:h-44" />
+      <MarketImage src={market.imageUrl} yes={marketPrice(market).yes} category={market.category} className="w-full h-40 sm:h-44" />
       {interactive && (
         <span className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
           <span className="absolute top-0 left-0 h-full w-1/3 animate-shine bg-gradient-to-r from-transparent via-white/10 to-transparent" />

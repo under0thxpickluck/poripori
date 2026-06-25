@@ -85,6 +85,7 @@ export default function MarketCard({ market, hot = false, enterDelay = 0 }: Prop
       <div className="flex gap-3 mb-4">
         <MarketImage
           src={market.imageUrl}
+          yes={price.yes}
           category={market.category}
           className="w-12 h-12 rounded-md shrink-0"
         />
