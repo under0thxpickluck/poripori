@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { BarChart2, Trophy, PlusCircle, Settings, LogOut, ChevronDown, Search, ShieldCheck, HelpCircle } from 'lucide-react'
 import { useStore } from '../store/useStore'
+import { useAuth } from '../store/useAuth'
 import { useTheme } from '../store/useTheme'
 import { levelInfo, winStreak } from '../lib/gamification'
 import LoginModal from './LoginModal'
@@ -26,7 +27,8 @@ const ADMIN_LINKS = [
 
 export default function Navbar() {
   const location = useLocation()
-  const { currentUser, logout, positions, markets } = useStore()
+  const { currentUser, positions, markets } = useStore()
+  const signOut = useAuth((s) => s.signOut)
   const theme = useTheme((s) => s.theme)
   const user = currentUser()
   const logoMark = theme === 'light' ? '/logo-mark-light.png' : '/logo-mark.png'
@@ -175,7 +177,7 @@ export default function Navbar() {
                         </div>
                       )}
                       <button
-                        onClick={() => { logout(); setShowUserMenu(false) }}
+                        onClick={() => { signOut(); setShowUserMenu(false) }}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-no hover:bg-no/10 transition-colors"
                       >
                         <LogOut size={14} />

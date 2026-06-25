@@ -460,6 +460,8 @@ type StoreActions = {
   login: (userId: string) => void
   logout: () => void
   currentUser: () => User | null
+  // Supabase認証のプロフィールを現在ユーザーとして取り込む（ブリッジ）
+  syncAuthUser: (u: User | null) => void
 
   buyShares: (
     marketId: string,
@@ -571,6 +573,18 @@ export const useStore = create<Store>((set, get) => {
 
     login: (userId) => update(() => ({ currentUserId: userId })),
     logout: () => update(() => ({ currentUserId: null })),
+
+    syncAuthUser: (u) =>
+      update((s) => {
+        if (!u) return { currentUserId: null }
+        const exists = s.users.some((x) => x.id === u.id)
+        return {
+          users: exists
+            ? s.users.map((x) => (x.id === u.id ? { ...x, ...u } : x))
+            : [...s.users, u],
+          currentUserId: u.id,
+        }
+      }),
 
     buyShares: (marketId, side, shares) => {
       const { markets, users, positions, trades, currentUserId } = get()
