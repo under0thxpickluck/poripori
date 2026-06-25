@@ -364,14 +364,5 @@ create policy ads_admin_all on public.ads for all using (
 );
 
 -- ---------------------------------------------------------------------------
--- 6. Optional starter markets (no creator). Delete if you seed your own.
+-- 6. (No seed data.) Markets are created by an admin via the app UI.
 -- ---------------------------------------------------------------------------
--- Only seed when the table is completely empty (so re-running this file is safe).
-insert into public.markets (question, description, deadline, status, q_yes, q_no, b, category, volume)
-select * from (values
-  ('ビットコインは2026年末までに$200,000を超えるか？',
-   'BTC/USDが2026-12-31時点で$200,000を超えているか。', '2026-12-31T23:59:59Z'::timestamptz, 'open', 140::numeric, 260::numeric, 100::numeric, 'Crypto', 0::numeric),
-  ('ChatGPT-5は2026年内にリリースされるか？',
-   'OpenAIが次世代モデルを2026-12-31までに一般公開するか。', '2026-12-31T00:00:00Z'::timestamptz, 'open', 240::numeric, 160::numeric, 100::numeric, 'AI', 0::numeric)
-) as v(question, description, deadline, status, q_yes, q_no, b, category, volume)
-where not exists (select 1 from public.markets);
