@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../store/useStore'
 import { sellRefund } from '../lib/lmsr'
+import { displayName } from '../lib/names'
 import { Crown, TrendingUp, Target, Coins } from 'lucide-react'
 
 type MetricKey = 'assets' | 'pnl' | 'hit'
@@ -119,7 +120,7 @@ export default function Ranking() {
               >
                 {r.user.name.charAt(0)}
               </div>
-              <p className="text-sm font-semibold text-text truncate">{r.user.name}</p>
+              <p className="text-sm font-semibold text-text truncate">{displayName(r.user.name, r.user.id, me?.id)}</p>
               <p className={`text-lg font-bold mt-1 ${m.color}`}>{m.main}</p>
               <p className="text-[10px] text-text-muted">{m.unit}</p>
             </div>
@@ -172,7 +173,7 @@ export default function Ranking() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-text truncate">{r.user.name}</p>
+                    <p className="text-sm font-medium text-text truncate">{displayName(r.user.name, r.user.id, me?.id)}</p>
                     {isMe && (
                       <span className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-full shrink-0">
                         あなた

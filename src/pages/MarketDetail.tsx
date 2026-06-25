@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Clock, Users, BarChart2, CheckCircle, TrendingUp } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { marketPrice } from '../lib/lmsr'
+import { displayName } from '../lib/names'
 import TradePanel from '../components/TradePanel'
 import BottomSheet from '../components/BottomSheet'
 import PriceChart from '../components/PriceChart'
@@ -17,7 +18,7 @@ import { ja } from 'date-fns/locale'
 
 export default function MarketDetail() {
   const { id } = useParams<{ id: string }>()
-  const { markets, getMarketTrades, users } = useStore()
+  const { markets, getMarketTrades, users, currentUserId } = useStore()
   const market = markets.find((m) => m.id === id)
   const [sheetOpen, setSheetOpen] = useState(false)
 
@@ -160,7 +161,7 @@ export default function MarketDetail() {
                         {trader?.name.charAt(0) ?? '?'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-xs text-text">{trader?.name ?? '不明'}</span>
+                        <span className="text-xs text-text">{displayName(trader?.name ?? '不明', t.userId, currentUserId)}</span>
                         <span className="text-xs text-text-muted mx-1.5">が</span>
                         <span
                           className={`text-xs font-semibold ${

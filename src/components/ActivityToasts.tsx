@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { marketPrice } from '../lib/lmsr'
+import { maskName } from '../lib/names'
 
 type Toast = {
   id: number
@@ -28,7 +29,7 @@ export default function ActivityToasts() {
       const side: 'YES' | 'NO' = Math.random() < marketPrice(m).yes ? 'YES' : 'NO'
       const amount = Math.floor(20 + Math.random() * 480)
       const id = counter++
-      setToasts((t) => [...t.slice(-3), { id, user: u.name, side, question: m.question, amount, to: `/market/${m.id}` }])
+      setToasts((t) => [...t.slice(-3), { id, user: maskName(u.name), side, question: m.question, amount, to: `/market/${m.id}` }])
       setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4500)
     }
 

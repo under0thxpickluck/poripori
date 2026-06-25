@@ -15,23 +15,31 @@ export default function LevelUpToast() {
   const [shown, setShown] = useState<{ level: number; rank: string } | null>(null)
   const [burst, setBurst] = useState(0)
 
+  // レベルアップ検知
   useEffect(() => {
     const lvl = levelFromXp(xp)
     if (prevLevel.current != null && lvl > prevLevel.current) {
       setShown({ level: lvl, rank: levelInfo(xp).rank.name })
       setBurst((b) => b + 1)
-      const t = setTimeout(() => setShown(null), 3600)
-      prevLevel.current = lvl
-      return () => clearTimeout(t)
     }
     prevLevel.current = lvl
   }, [xp])
+
+  // 自動消去タイマーは shown に紐づけて独立管理（xp変化に巻き込まれないように）
+  useEffect(() => {
+    if (!shown) return
+    const t = setTimeout(() => setShown(null), 3600)
+    return () => clearTimeout(t)
+  }, [shown])
 
   if (!shown) return null
   return (
     <>
       <Confetti trigger={burst} />
-      <div className="fixed left-1/2 -translate-x-1/2 top-20 z-[70] px-4 w-full max-w-xs">
+      <button
+        onClick={() => setShown(null)}
+        className="fixed left-1/2 -translate-x-1/2 top-20 z-[70] px-4 w-full max-w-xs text-left"
+      >
         <div className="animate-sheet-in flex items-center gap-3 rounded-xl border border-accent/40 bg-surface/95 backdrop-blur px-4 py-3 shadow-xl">
           <div className="w-10 h-10 rounded-lg bg-accent/15 text-accent flex items-center justify-center shrink-0">
             <Sparkles size={20} />
@@ -41,7 +49,7 @@ export default function LevelUpToast() {
             <p className="text-xs text-text-muted">ランク: {shown.rank}</p>
           </div>
         </div>
-      </div>
+      </button>
     </>
   )
 }
