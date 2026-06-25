@@ -1,12 +1,20 @@
 import { useState } from 'react'
 import type React from 'react'
-import { Search, Flame, Sparkles, BarChart2, Clock, MessageSquare } from 'lucide-react'
+import { Search, Flame, Sparkles, BarChart2, Clock, MessageSquare, SlidersHorizontal, Check } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import MarketCard from '../components/MarketCard'
 import AdCard from '../components/AdCard'
 import FeaturedCarousel from '../components/FeaturedCarousel'
 import LiveTicker from '../components/LiveTicker'
+import BottomSheet from '../components/BottomSheet'
 import type { Category, Market } from '../types'
+
+const STATUS_LABELS: Record<string, string> = {
+  open: '受付中',
+  closed: '締切済み',
+  resolved: '解決済み',
+  all: 'すべて',
+}
 
 const CATEGORIES: Category[] = ['All', 'Politics', 'Crypto', 'Sports', 'AI', 'Tech', 'Science', 'Entertainment']
 
@@ -59,6 +67,7 @@ export default function MarketList() {
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'open' | 'closed' | 'resolved' | 'all'>('open')
   const [sort, setSort] = useState<SortKey>('volume')
+  const [filterSheet, setFilterSheet] = useState(false)
 
   const commentCount = (id: string) => comments.filter((c) => c.marketId === id).length
 
@@ -134,7 +143,8 @@ export default function MarketList() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
+      {/* デスクトップ：インラインのステータス＋ソート */}
+      <div className="hidden sm:flex items-center gap-2 mb-4 flex-wrap">
         <div className="flex gap-1 p-1 bg-surface border border-border rounded-lg">
           {(['open', 'closed', 'resolved', 'all'] as const).map((s) => (
             <button
@@ -146,7 +156,7 @@ export default function MarketList() {
                   : 'text-text-muted hover:text-text'
               }`}
             >
-              {s === 'open' ? '受付中' : s === 'closed' ? '締切済み' : s === 'resolved' ? '解決済み' : 'すべて'}
+              {STATUS_LABELS[s]}
             </button>
           ))}
         </div>
@@ -166,6 +176,72 @@ export default function MarketList() {
           ))}
         </div>
       </div>
+
+      {/* スマホ：絞り込みをボトムシートに集約 */}
+      <button
+        onClick={() => setFilterSheet(true)}
+        className="sm:hidden flex items-center justify-between w-full mb-4 px-4 py-2.5 bg-surface border border-border rounded-lg text-sm text-text"
+      >
+        <span className="flex items-center gap-2 font-medium">
+          <SlidersHorizontal size={15} className="text-accent" />
+          並び替え・絞り込み
+        </span>
+        <span className="text-xs text-text-muted">
+          {STATUS_LABELS[statusFilter]} ・ {SORTS.find((s) => s.key === sort)?.label}
+        </span>
+      </button>
+
+      {filterSheet && (
+        <BottomSheet title="並び替え・絞り込み" onClose={() => setFilterSheet(false)}>
+          <div className="p-4 space-y-5">
+            <div>
+              <p className="text-xs font-semibold text-text-muted mb-2">表示するマーケット</p>
+              <div className="grid grid-cols-2 gap-2">
+                {(['open', 'closed', 'resolved', 'all'] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setStatusFilter(s)}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors ${
+                      statusFilter === s
+                        ? 'bg-accent/15 border-accent/60 text-accent font-semibold'
+                        : 'border-border text-text-muted'
+                    }`}
+                  >
+                    {STATUS_LABELS[s]}
+                    {statusFilter === s && <Check size={15} />}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-text-muted mb-2">並び替え</p>
+              <div className="grid grid-cols-1 gap-2">
+                {SORTS.map(({ key, label, Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setSort(key)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm transition-colors ${
+                      sort === key
+                        ? 'bg-accent/15 border-accent/60 text-accent font-semibold'
+                        : 'border-border text-text-muted'
+                    }`}
+                  >
+                    <Icon size={15} />
+                    {label}
+                    {sort === key && <Check size={15} className="ml-auto" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button
+              onClick={() => setFilterSheet(false)}
+              className="w-full py-3 rounded-lg bg-accent text-white text-sm font-semibold"
+            >
+              この条件で表示
+            </button>
+          </div>
+        </BottomSheet>
+      )}
 
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
         {CATEGORIES.map((c) => (

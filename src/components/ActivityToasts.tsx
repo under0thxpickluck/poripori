@@ -43,7 +43,7 @@ export default function ActivityToasts() {
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 w-72 max-w-[calc(100vw-2rem)]">
+    <div className="fixed bottom-20 md:bottom-4 right-4 z-30 flex flex-col gap-2 w-72 max-w-[calc(100vw-2rem)]">
       {toasts.map((t) => (
         <Link
           key={t.id}

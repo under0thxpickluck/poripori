@@ -77,7 +77,9 @@ export default function TradePanel({ market }: Props) {
       })
       setAmount('')
       setBurst((b) => b + 1)
+      navigator.vibrate?.(15) // スマホで軽い触覚フィードバック
     } else {
+      navigator.vibrate?.([8, 40, 8])
       setResult({ success: false, message: r.error ?? 'エラーが発生しました' })
     }
     setTimeout(() => setResult(null), 3000)
@@ -175,12 +177,13 @@ export default function TradePanel({ market }: Props) {
               </div>
               <input
                 type="number"
+                inputMode="decimal"
                 min={0}
                 step={sliderStep}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder={tab === 'buy' ? (inputMode === 'points' ? '100' : '1.00') : '1.00'}
-                className="w-full px-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-lg text-text text-sm outline-none transition-colors placeholder-text-muted"
+                className="w-full px-4 py-3 bg-surface-hover border border-border focus:border-accent rounded-lg text-text text-base outline-none transition-colors placeholder-text-muted"
               />
 
               {/* スライダー */}

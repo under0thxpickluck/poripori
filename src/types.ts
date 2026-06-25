@@ -6,6 +6,12 @@ export type User = {
   points: number
   role: UserRole
   createdAt: string
+  /** 累積経験値（トレード額＋的中受取で単調増加。レベル算出に使用） */
+  xp: number
+  /** デイリーボーナス最終受取日（YYYY-MM-DD） */
+  lastBonus?: string
+  /** 連続ログイン日数 */
+  bonusStreak?: number
 }
 
 export type MarketStatus = 'pending' | 'open' | 'closed' | 'resolved'

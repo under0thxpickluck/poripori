@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { X, Plus, ChevronRight, LogIn, ShieldCheck } from 'lucide-react'
 import { useStore } from '../store/useStore'
+import { useModalBehavior } from '../hooks/useModalBehavior'
 
 type Props = { onClose: () => void }
 
 export default function LoginModal({ onClose }: Props) {
+  useModalBehavior(onClose)
   const { users, login, registerUser } = useStore()
   const [newName, setNewName] = useState('')
   const [showNew, setShowNew] = useState(false)

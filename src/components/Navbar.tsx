@@ -30,7 +30,7 @@ export default function Navbar() {
   const theme = useTheme((s) => s.theme)
   const user = currentUser()
   const logoMark = theme === 'light' ? '/logo-mark-light.png' : '/logo-mark.png'
-  const lvl = user ? levelInfo(user.points) : null
+  const lvl = user ? levelInfo(user.xp) : null
   const streak = user ? winStreak(positions, markets, user.id) : 0
   const [showLogin, setShowLogin] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -159,6 +159,21 @@ export default function Navbar() {
                           </>
                         )}
                       </div>
+                      {user.role === 'admin' && (
+                        <div className="md:hidden border-b border-border py-1">
+                          <p className="px-4 py-1.5 text-[10px] font-semibold text-text-muted">管理メニュー</p>
+                          {ADMIN_LINKS.map((l) => (
+                            <Link
+                              key={l.to}
+                              to={l.to}
+                              onClick={() => setShowUserMenu(false)}
+                              className="block px-4 py-2 text-sm text-text-muted hover:text-text hover:bg-white/5 transition-colors"
+                            >
+                              {l.label}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                       <button
                         onClick={() => { logout(); setShowUserMenu(false) }}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-no hover:bg-no/10 transition-colors"

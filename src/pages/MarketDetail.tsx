@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Clock, Users, BarChart2, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Clock, Users, BarChart2, CheckCircle, TrendingUp } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { marketPrice } from '../lib/lmsr'
 import TradePanel from '../components/TradePanel'
+import BottomSheet from '../components/BottomSheet'
 import PriceChart from '../components/PriceChart'
 import MarketImage from '../components/MarketImage'
 import OrderBook from '../components/OrderBook'
@@ -17,6 +19,7 @@ export default function MarketDetail() {
   const { id } = useParams<{ id: string }>()
   const { markets, getMarketTrades, users } = useStore()
   const market = markets.find((m) => m.id === id)
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   const yesForFlash = market && market.status !== 'pending' ? Math.round(marketPrice(market).yes * 100) : 0
   const priceFlash = usePriceFlash(yesForFlash)
@@ -187,12 +190,35 @@ export default function MarketDetail() {
           <Comments marketId={market.id} />
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="hidden lg:block lg:col-span-1">
           <div className="sticky top-20">
             <TradePanel market={market} />
           </div>
         </div>
       </div>
+
+      {market.status === 'open' && <div className="h-16 lg:hidden" />}
+
+      {/* スマホ用の固定トレードCTA（下部タブバーの上に配置） */}
+      {market.status === 'open' && (
+        <div className="lg:hidden fixed inset-x-0 bottom-[calc(3.5rem_+_env(safe-area-inset-bottom))] z-30 px-4 pb-2 pt-3 bg-gradient-to-t from-bg via-bg/95 to-transparent">
+          <button
+            onClick={() => setSheetOpen(true)}
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-accent hover:bg-accent-hover text-white font-bold shadow-lg active:scale-[0.99] transition-transform"
+          >
+            <TrendingUp size={18} />
+            トレードする（YES {yesPct}% / NO {100 - yesPct}%）
+          </button>
+        </div>
+      )}
+
+      {sheetOpen && (
+        <BottomSheet title="トレード" onClose={() => setSheetOpen(false)}>
+          <div className="p-4">
+            <TradePanel market={market} />
+          </div>
+        </BottomSheet>
+      )}
     </div>
   )
 }

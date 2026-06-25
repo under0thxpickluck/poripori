@@ -53,7 +53,7 @@ export default function MarketCard({ market, hot = false, enterDelay = 0 }: Prop
         willChange: 'transform',
         animationDelay: `${enterDelay}ms`,
       }}
-      className="animate-card-in relative block overflow-hidden bg-surface hover:bg-surface-hover border border-border hover:border-accent/40 hover:shadow-[0_0_28px_-6px_rgb(var(--c-accent)/0.40)] rounded-lg p-5 group"
+      className="animate-card-in relative block overflow-hidden bg-surface hover:bg-surface-hover border border-border hover:border-accent/40 hover:shadow-[0_0_28px_-6px_rgb(var(--c-accent)/0.40)] rounded-lg p-5 group active:scale-[0.985]"
     >
       <span
         className="pointer-events-none absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
@@ -98,12 +98,12 @@ export default function MarketCard({ market, hot = false, enterDelay = 0 }: Prop
       ) : (
         <>
           <div className="flex gap-2 mb-3">
-            <button className="flex-1 py-2 rounded-lg bg-yes/10 border border-yes/20 text-yes text-sm font-semibold hover:bg-yes/20 transition-colors">
+            <span className="flex-1 py-2 rounded-lg bg-yes/10 border border-yes/20 text-yes text-sm font-semibold text-center group-hover:bg-yes/20 transition-colors">
               YES {yesPct}¢
-            </button>
-            <button className="flex-1 py-2 rounded-lg bg-no/10 border border-no/20 text-no text-sm font-semibold hover:bg-no/20 transition-colors">
+            </span>
+            <span className="flex-1 py-2 rounded-lg bg-no/10 border border-no/20 text-no text-sm font-semibold text-center group-hover:bg-no/20 transition-colors">
               NO {noPct}¢
-            </button>
+            </span>
           </div>
 
           <div className="flex rounded-full overflow-hidden h-1 mb-4 animate-bar">

@@ -33,12 +33,14 @@ function generateHistory(
 }
 
 const SEED_USERS: User[] = [
-  { id: 'admin', name: 'Admin', points: 50000, role: 'admin', createdAt: '2026-01-01T00:00:00Z' },
-  { id: 'u1', name: '田中 太郎', points: 1240, role: 'user', createdAt: '2026-01-10T00:00:00Z' },
-  { id: 'u2', name: '鈴木 花子', points: 890, role: 'user', createdAt: '2026-01-12T00:00:00Z' },
-  { id: 'u3', name: '山田 次郎', points: 1580, role: 'user', createdAt: '2026-01-15T00:00:00Z' },
-  { id: 'u4', name: '佐藤 美咲', points: 720, role: 'user', createdAt: '2026-01-20T00:00:00Z' },
+  { id: 'admin', name: 'Admin', points: 50000, role: 'admin', createdAt: '2026-01-01T00:00:00Z', xp: 50000 },
+  { id: 'u1', name: '田中 太郎', points: 1240, role: 'user', createdAt: '2026-01-10T00:00:00Z', xp: 4200 },
+  { id: 'u2', name: '鈴木 花子', points: 890, role: 'user', createdAt: '2026-01-12T00:00:00Z', xp: 3100 },
+  { id: 'u3', name: '山田 次郎', points: 1580, role: 'user', createdAt: '2026-01-15T00:00:00Z', xp: 6800 },
+  { id: 'u4', name: '佐藤 美咲', points: 720, role: 'user', createdAt: '2026-01-20T00:00:00Z', xp: 2300 },
 ]
+
+const HISTORY_CAP = 240
 
 const SEED_MARKETS: Market[] = [
   {
@@ -502,6 +504,8 @@ type StoreActions = {
   changeRole: (userId: string, role: 'user' | 'admin') => void
   registerUser: (name: string) => User
 
+  claimDailyBonus: () => { claimed: boolean; amount?: number; streak?: number }
+
   getPosition: (userId: string, marketId: string) => Position
   getMarketTrades: (marketId: string) => Trade[]
   getUserTrades: (userId: string) => Trade[]
@@ -528,6 +532,11 @@ export const useStore = create<Store>((set, get) => {
     ? {
         ...base,
         ...saved,
+        // 旧localStorageのユーザーに xp を補完（未設定なら現残高を初期XPとする）
+        users: (saved.users ?? SEED_USERS).map((u: User) => ({
+          ...u,
+          xp: u.xp ?? u.points,
+        })),
         // 旧localStorageにも新しいシード案件を補完（既存IDは保持）
         markets: [
           ...saved.markets,
@@ -600,7 +609,7 @@ export const useStore = create<Store>((set, get) => {
 
       update((s) => ({
         users: s.users.map((u) =>
-          u.id === user.id ? { ...u, points: u.points - cost } : u
+          u.id === user.id ? { ...u, points: u.points - cost, xp: (u.xp ?? 0) + cost } : u
         ),
         markets: s.markets.map((m) =>
           m.id === marketId
@@ -609,7 +618,7 @@ export const useStore = create<Store>((set, get) => {
                 q_yes: newQYes,
                 q_no: newQNo,
                 volume: m.volume + cost,
-                priceHistory: [...m.priceHistory, { t: now, yes: newYesPrice }],
+                priceHistory: [...m.priceHistory, { t: now, yes: newYesPrice }].slice(-HISTORY_CAP),
               }
             : m
         ),
@@ -681,7 +690,8 @@ export const useStore = create<Store>((set, get) => {
                 ...m,
                 q_yes: newQYes,
                 q_no: newQNo,
-                priceHistory: [...m.priceHistory, { t: now, yes: newYesPrice }],
+                volume: m.volume + refund,
+                priceHistory: [...m.priceHistory, { t: now, yes: newYesPrice }].slice(-HISTORY_CAP),
               }
             : m
         ),
@@ -814,7 +824,9 @@ export const useStore = create<Store>((set, get) => {
           m.id === marketId ? { ...m, status: 'resolved', resolved: result } : m
         ),
         users: s.users.map((u) =>
-          payouts[u.id] != null ? { ...u, points: u.points + payouts[u.id] } : u
+          payouts[u.id] != null
+            ? { ...u, points: u.points + payouts[u.id], xp: (u.xp ?? 0) + payouts[u.id] }
+            : u
         ),
       }))
     },
@@ -840,9 +852,39 @@ export const useStore = create<Store>((set, get) => {
         points: 1000,
         role: 'user',
         createdAt: new Date().toISOString(),
+        xp: 0,
       }
       update((s) => ({ users: [...s.users, newUser], currentUserId: newUser.id }))
       return newUser
+    },
+
+    claimDailyBonus: () => {
+      const { currentUserId, users } = get()
+      const user = users.find((u) => u.id === currentUserId)
+      if (!user) return { claimed: false }
+
+      const today = new Date().toISOString().slice(0, 10)
+      if (user.lastBonus === today) return { claimed: false }
+
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+      const streak = user.lastBonus === yesterday ? (user.bonusStreak ?? 0) + 1 : 1
+      // 連続日数が伸びるほどボーナス増（100〜400pt）
+      const amount = 100 + Math.min(streak - 1, 6) * 50
+
+      update((s) => ({
+        users: s.users.map((u) =>
+          u.id === user.id
+            ? {
+                ...u,
+                points: u.points + amount,
+                xp: (u.xp ?? 0) + amount,
+                lastBonus: today,
+                bonusStreak: streak,
+              }
+            : u
+        ),
+      }))
+      return { claimed: true, amount, streak }
     },
 
     getPosition: (userId, marketId) => {
