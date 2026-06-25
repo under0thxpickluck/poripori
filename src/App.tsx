@@ -16,6 +16,18 @@ const AdminMarketNew = lazy(() => import('./pages/admin/MarketNew'))
 const AdminAds = lazy(() => import('./pages/admin/Ads'))
 const AdminUsers = lazy(() => import('./pages/admin/Users'))
 
+const LegalHub = lazy(() => import('./pages/legal/LegalHub'))
+const Terms = lazy(() => import('./pages/legal/Terms'))
+const Privacy = lazy(() => import('./pages/legal/Privacy'))
+const Cookies = lazy(() => import('./pages/legal/Cookies'))
+const MarketIntegrity = lazy(() => import('./pages/legal/MarketIntegrity'))
+const Community = lazy(() => import('./pages/legal/Community'))
+const Risk = lazy(() => import('./pages/legal/Risk'))
+const Compliance = lazy(() => import('./pages/legal/Compliance'))
+const Security = lazy(() => import('./pages/legal/Security'))
+const Company = lazy(() => import('./pages/Company'))
+const Contact = lazy(() => import('./pages/Contact'))
+
 function PageFallback() {
   return (
     <div className="flex justify-center py-24">
@@ -44,6 +56,18 @@ export default function App() {
           <Route path="/admin/markets" element={<L><AdminMarkets /></L>} />
           <Route path="/admin/ads" element={<L><AdminAds /></L>} />
           <Route path="/admin/users" element={<L><AdminUsers /></L>} />
+
+          <Route path="/legal" element={<L><LegalHub /></L>} />
+          <Route path="/legal/terms" element={<L><Terms /></L>} />
+          <Route path="/legal/privacy" element={<L><Privacy /></L>} />
+          <Route path="/legal/cookies" element={<L><Cookies /></L>} />
+          <Route path="/legal/market-integrity" element={<L><MarketIntegrity /></L>} />
+          <Route path="/legal/community" element={<L><Community /></L>} />
+          <Route path="/legal/risk" element={<L><Risk /></L>} />
+          <Route path="/legal/compliance" element={<L><Compliance /></L>} />
+          <Route path="/legal/security" element={<L><Security /></L>} />
+          <Route path="/company" element={<L><Company /></L>} />
+          <Route path="/contact" element={<L><Contact /></L>} />
         </Route>
       </Routes>
     </BrowserRouter>
