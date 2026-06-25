@@ -297,6 +297,23 @@ begin
 end;
 $$;
 
+-- Seed an initial price point whenever a market becomes 'open'
+create or replace function public.seed_initial_price()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if NEW.status = 'open' and (TG_OP = 'INSERT' or OLD.status is distinct from 'open') then
+    insert into public.price_history (market_id, yes)
+    values (NEW.id, price_yes(NEW.q_yes, NEW.q_no, NEW.b));
+  end if;
+  return NEW;
+end;
+$$;
+
+drop trigger if exists trg_seed_initial_price on public.markets;
+create trigger trg_seed_initial_price
+  after insert or update on public.markets
+  for each row execute function public.seed_initial_price();
+
 -- ---------------------------------------------------------------------------
 -- 5. Row Level Security
 -- ---------------------------------------------------------------------------
@@ -364,5 +381,11 @@ create policy ads_admin_all on public.ads for all using (
 );
 
 -- ---------------------------------------------------------------------------
--- 6. (No seed data.) Markets are created by an admin via the app UI.
+-- 6. Realtime (live price chart + activity feed)
+-- ---------------------------------------------------------------------------
+do $$ begin alter publication supabase_realtime add table public.price_history; exception when duplicate_object then null; end $$;
+do $$ begin alter publication supabase_realtime add table public.trades; exception when duplicate_object then null; end $$;
+
+-- ---------------------------------------------------------------------------
+-- 7. (No seed data.) Markets are created by an admin via the app UI.
 -- ---------------------------------------------------------------------------

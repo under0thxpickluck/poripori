@@ -64,17 +64,24 @@ export default function PriceChart({ market, height = 200 }: Props) {
       ? points
       : points.filter((p) => anchor - new Date(p.t).getTime() <= cfg.ms)
 
-  const hasData = filtered.length >= 2
   const cur = marketPrice(market).yes
-  const data = hasData
-    ? filtered.map((p) => ({ t: fmt(p.t, range), yes: p.yes }))
-    : [
-        { t: '', yes: cur },
-        { t: '', yes: cur },
-      ]
+  const empty = filtered.length === 0 // この期間に1点もない
+  // 1点しかない場合も、現在値で水平線を引いてハッキリ見せる
+  const data =
+    filtered.length >= 2
+      ? filtered.map((p) => ({ t: fmt(p.t, range), yes: p.yes }))
+      : filtered.length === 1
+      ? [
+          { t: '', yes: filtered[0].yes },
+          { t: fmt(filtered[0].t, range), yes: filtered[0].yes },
+        ]
+      : [
+          { t: '', yes: cur },
+          { t: '', yes: cur },
+        ]
 
   // 選択範囲での変化
-  const change = hasData ? filtered[filtered.length - 1].yes - filtered[0].yes : 0
+  const change = filtered.length >= 2 ? filtered[filtered.length - 1].yes - filtered[0].yes : 0
   const changePct = Math.round(change * 100)
 
   return (
@@ -82,7 +89,7 @@ export default function PriceChart({ market, height = 200 }: Props) {
       <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-2xl font-bold text-yes tabular-nums">{Math.round(cur * 100)}%</span>
-          {hasData && (
+          {filtered.length >= 2 && (
             <span
               className={`text-xs font-semibold tabular-nums ${
                 changePct >= 0 ? 'text-yes' : 'text-no'
@@ -154,10 +161,12 @@ export default function PriceChart({ market, height = 200 }: Props) {
           </AreaChart>
         </ResponsiveContainer>
 
-        {!hasData && (
+        {empty && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <span className="text-xs text-text-muted bg-surface/70 px-2 py-1 rounded">
-              {range === 'ALL' ? 'まだ取引がありません' : 'この期間の取引はありません'}
+              {range === 'ALL'
+                ? `現在 ${Math.round(cur * 100)}%（取引が始まると変動します）`
+                : 'この期間の取引はありません'}
             </span>
           </div>
         )}
