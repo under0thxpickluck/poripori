@@ -16,20 +16,19 @@ import { usePriceHistory } from '../hooks/usePriceHistory'
 type Props = { market: Market; height?: number }
 
 const RANGES = [
+  { key: '1M', label: '1分', ms: 60_000 },
+  { key: '5M', label: '5分', ms: 300_000 },
+  { key: '15M', label: '15分', ms: 900_000 },
   { key: '1H', label: '1時間', ms: 3_600_000 },
-  { key: '1D', label: '1日', ms: 86_400_000 },
-  { key: '1W', label: '1週間', ms: 604_800_000 },
-  { key: 'ALL', label: '全期間', ms: Infinity },
 ] as const
 type RangeKey = (typeof RANGES)[number]['key']
 
 function pad(n: number) {
   return String(n).padStart(2, '0')
 }
-function fmt(iso: string, range: RangeKey) {
+function fmt(iso: string, _range: RangeKey) {
   const d = new Date(iso)
-  if (range === '1H' || range === '1D') return `${pad(d.getHours())}:${pad(d.getMinutes())}`
-  return `${d.getMonth() + 1}/${d.getDate()}`
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -48,7 +47,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function PriceChart({ market, height = 200 }: Props) {
   const theme = useTheme((s) => s.theme)
   const points = usePriceHistory(market.id)
-  const [range, setRange] = useState<RangeKey>('ALL')
+  const [range, setRange] = useState<RangeKey>('1H')
 
   const grid = theme === 'light' ? '#E5E7EB' : '#222632'
   const axis = theme === 'light' ? '#6B7280' : '#8A8F98'
@@ -59,10 +58,7 @@ export default function PriceChart({ market, height = 200 }: Props) {
 
   // 最新点を基準に、選択した時間幅でフィルタ（終了済み市場でも直近が見える）
   const anchor = points.length ? new Date(points[points.length - 1].t).getTime() : Date.now()
-  const filtered =
-    cfg.ms === Infinity
-      ? points
-      : points.filter((p) => anchor - new Date(p.t).getTime() <= cfg.ms)
+  const filtered = points.filter((p) => anchor - new Date(p.t).getTime() <= cfg.ms)
 
   const cur = marketPrice(market).yes
   const empty = filtered.length === 0 // この期間に1点もない
@@ -164,7 +160,7 @@ export default function PriceChart({ market, height = 200 }: Props) {
         {empty && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <span className="text-xs text-text-muted bg-surface/70 px-2 py-1 rounded">
-              {range === 'ALL'
+              {points.length === 0
                 ? `現在 ${Math.round(cur * 100)}%（取引が始まると変動します）`
                 : 'この期間の取引はありません'}
             </span>

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react'
 import { marketPrice } from '../lib/lmsr'
 import type { Market } from '../types'
 import MarketImage from './MarketImage'
+import MiniPriceChart from './MiniPriceChart'
 
 const CATEGORY_COLORS: Record<string, string> = {
   Politics: 'text-blue-400 bg-blue-400/10',
@@ -64,16 +65,38 @@ function SlideCard({ market, interactive }: { market: Market; interactive: boole
         interactive ? 'hover:border-accent/40 pointer-events-auto' : 'pointer-events-none'
       }`}
     >
-      <MarketImage src={market.imageUrl} yes={marketPrice(market).yes} category={market.category} className="w-full h-40 sm:h-44" />
+      {/* ヒーロー = リアル価格チャート（チャートメイン） */}
+      <div className="relative">
+        <MiniPriceChart market={market} height={180} interactive={interactive} />
+        <div className="pointer-events-none absolute left-4 top-3 flex items-baseline gap-1.5">
+          <span className="text-2xl font-bold text-yes tabular-nums drop-shadow">{yesPct}%</span>
+          <span className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-text-muted">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-yes opacity-60 animate-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-yes" />
+            </span>
+            LIVE
+          </span>
+        </div>
+      </div>
       {interactive && (
         <span className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
           <span className="absolute top-0 left-0 h-full w-1/3 animate-shine bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         </span>
       )}
       <div className="p-5">
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}>
-          {market.category}
-        </span>
+        <div className="flex items-center gap-2">
+          {market.imageUrl && (
+            <img
+              src={market.imageUrl}
+              alt=""
+              className="w-14 h-14 rounded-lg object-cover shrink-0 border border-border"
+            />
+          )}
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}>
+            {market.category}
+          </span>
+        </div>
         <p className="mt-3 text-lg sm:text-xl font-bold text-text leading-snug line-clamp-2">
           {market.question}
         </p>
