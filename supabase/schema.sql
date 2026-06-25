@@ -277,6 +277,26 @@ begin
 end;
 $$;
 
+-- ADMIN: adjust points / role (admin only) --------------------------------
+create or replace function public.admin_add_points(p_user uuid, p_amount numeric)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    then raise exception 'ADMIN_REQUIRED'; end if;
+  update public.profiles set points = points + p_amount, xp = xp + greatest(p_amount, 0) where id = p_user;
+end;
+$$;
+
+create or replace function public.admin_set_role(p_user uuid, p_role text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    then raise exception 'ADMIN_REQUIRED'; end if;
+  if p_role not in ('user','admin') then raise exception 'BAD_ROLE'; end if;
+  update public.profiles set role = p_role where id = p_user;
+end;
+$$;
+
 -- ---------------------------------------------------------------------------
 -- 5. Row Level Security
 -- ---------------------------------------------------------------------------
@@ -299,13 +319,21 @@ create policy markets_read on public.markets for select using (
   or created_by = auth.uid()
   or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
 );
--- Users may propose markets (status forced to 'pending' by a check); admins may insert open.
+-- Users may propose markets only as 'pending'; admins may insert 'open' directly.
 drop policy if exists markets_insert on public.markets;
 create policy markets_insert on public.markets for insert with check (
   created_by = auth.uid()
+  and (
+    status = 'pending'
+    or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+  )
 );
 drop policy if exists markets_admin_update on public.markets;
 create policy markets_admin_update on public.markets for update using (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+);
+drop policy if exists markets_admin_delete on public.markets;
+create policy markets_admin_delete on public.markets for delete using (
   exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
 );
 
@@ -338,10 +366,12 @@ create policy ads_admin_all on public.ads for all using (
 -- ---------------------------------------------------------------------------
 -- 6. Optional starter markets (no creator). Delete if you seed your own.
 -- ---------------------------------------------------------------------------
+-- Only seed when the table is completely empty (so re-running this file is safe).
 insert into public.markets (question, description, deadline, status, q_yes, q_no, b, category, volume)
-values
+select * from (values
   ('ビットコインは2026年末までに$200,000を超えるか？',
-   'BTC/USDが2026-12-31時点で$200,000を超えているか。', '2026-12-31T23:59:59Z', 'open', 140, 260, 100, 'Crypto', 0),
+   'BTC/USDが2026-12-31時点で$200,000を超えているか。', '2026-12-31T23:59:59Z'::timestamptz, 'open', 140::numeric, 260::numeric, 100::numeric, 'Crypto', 0::numeric),
   ('ChatGPT-5は2026年内にリリースされるか？',
-   'OpenAIが次世代モデルを2026-12-31までに一般公開するか。', '2026-12-31T00:00:00Z', 'open', 240, 160, 100, 'AI', 0)
-on conflict do nothing;
+   'OpenAIが次世代モデルを2026-12-31までに一般公開するか。', '2026-12-31T00:00:00Z'::timestamptz, 'open', 240::numeric, 160::numeric, 100::numeric, 'AI', 0::numeric)
+) as v(question, description, deadline, status, q_yes, q_no, b, category, volume)
+where not exists (select 1 from public.markets);

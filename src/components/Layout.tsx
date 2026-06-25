@@ -7,6 +7,7 @@ import MobileTabBar from './MobileTabBar'
 import DailyBonus from './DailyBonus'
 import LevelUpToast from './LevelUpToast'
 import AuthBridge from './AuthBridge'
+import DataLoader from './DataLoader'
 
 export default function Layout() {
   return (
@@ -18,6 +19,7 @@ export default function Layout() {
       <Footer />
       <CommandPalette />
       <AuthBridge />
+      <DataLoader />
       <ActivityToasts />
       <MobileTabBar />
       <DailyBonus />

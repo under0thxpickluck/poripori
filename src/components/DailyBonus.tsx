@@ -12,9 +12,14 @@ export default function DailyBonus() {
 
   useEffect(() => {
     if (!currentUserId) return
-    const r = claimDailyBonus()
-    if (r.claimed && r.amount != null && r.streak != null) {
-      setReward({ amount: r.amount, streak: r.streak })
+    let cancelled = false
+    claimDailyBonus().then((r) => {
+      if (!cancelled && r.claimed && r.amount != null && r.streak != null) {
+        setReward({ amount: r.amount, streak: r.streak })
+      }
+    })
+    return () => {
+      cancelled = true
     }
   }, [currentUserId, claimDailyBonus])
 

@@ -64,9 +64,11 @@ export default function TradePanel({ market }: Props) {
     setAmount(sliderStep < 1 ? v.toFixed(2) : String(Math.floor(v)))
   }
 
-  function handleExecute() {
+  async function handleExecute() {
     if (!pv || !user) return
-    const r = tab === 'buy' ? buyShares(market.id, side, pv.shares) : sellShares(market.id, side, pv.shares)
+    const r = tab === 'buy'
+      ? await buyShares(market.id, side, pv.shares)
+      : await sellShares(market.id, side, pv.shares)
     if (r.success) {
       setResult({
         success: true,
