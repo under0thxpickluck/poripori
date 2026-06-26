@@ -88,7 +88,20 @@
 
 ---
 
-## スコープ外（今回はやらない）
+## バックエンド実装（完了）
 
-- バックエンド / DB / 本物の認証（**最後にまとめて実施予定**）
-- 画像の外部ストレージ化（現状はlocalStorageにbase64）
+当初「最後にまとめて実施予定」としていたバックエンドは Supabase で実装済み。
+
+- **DB / RLS:** `supabase/schema.sql`（canonical）＋ `migrate-002〜005`。読み取り系テーブルは world-readable、書き込みはすべて `security definer` RPC 経由。
+- **認証:** Supabase Magic Link（`signInWithOtp`）。サインアップ時トリガで `profiles` 自動生成。
+- **取引:** `buy_shares` / `sell_shares`（行ロック・LMSR・ポイント検証・価格履歴記録）。
+- **解決:** `resolve_market`（admin限定・二重解決ガード・1勝ちシェア=1pt配当）。
+- **締切:** RPC内で `now() >= deadline` を拒否（`MARKET_CLOSED`）＋ `pg_cron` で毎分 `close_expired_markets()` 自動クローズ（`migrate-005`）。
+- **その他:** デイリーボーナス / 管理RPC（ポイント・ロール）/ 広告 / コメント / 価格履歴・取引の Realtime 購読。
+- **テスト:** `src/lib/lmsr.test.ts`（Vitest）。`npm test` で実行。
+
+## 残課題 / スコープ外
+
+- 画像の外部ストレージ化（現状はlocalStorage/base64）。Supabase Storage 移行候補。
+- `profiles` は world-readable（リーダーボード用）。他人の表示名はクライアント側 `names.ts` でマスク。本名相当が必要なら別途見直し。
+- `loadAll` は変更テーブルのみ再取得する最適化済みだが、規模拡大時は差分購読への移行が望ましい。

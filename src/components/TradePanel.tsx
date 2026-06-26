@@ -87,7 +87,8 @@ export default function TradePanel({ market }: Props) {
     setTimeout(() => setResult(null), 3000)
   }
 
-  const canTrade = market.status === 'open'
+  const expired = new Date(market.deadline).getTime() <= Date.now()
+  const canTrade = market.status === 'open' && !expired
   const insufficient = tab === 'buy' && pv != null && user != null && pv.cost > user.points
   const notEnoughShares = tab === 'sell' && amtNum > held
 
@@ -124,6 +125,7 @@ export default function TradePanel({ market }: Props) {
         {!canTrade && (
           <div className="text-center py-4 text-text-muted text-sm">
             {market.status === 'pending' && '承認待ちのためトレード不可'}
+            {market.status === 'open' && expired && '締切済み・解決待ち'}
             {market.status === 'closed' && '締切済み・解決待ち'}
             {market.status === 'resolved' && `解決済み: ${market.resolved}`}
           </div>

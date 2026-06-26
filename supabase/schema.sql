@@ -149,6 +149,7 @@ begin
   select * into m from public.markets where id = p_market_id for update; -- row lock
   if not found then raise exception 'MARKET_NOT_FOUND'; end if;
   if m.status <> 'open' then raise exception 'MARKET_NOT_OPEN'; end if;
+  if now() >= m.deadline then raise exception 'MARKET_CLOSED'; end if; -- 締切後は取引不可（cron遅延への防御）
 
   v_new_qyes := m.q_yes + (case when p_side='YES' then p_shares else 0 end);
   v_new_qno  := m.q_no  + (case when p_side='NO'  then p_shares else 0 end);
@@ -201,6 +202,7 @@ begin
   select * into m from public.markets where id = p_market_id for update;
   if not found then raise exception 'MARKET_NOT_FOUND'; end if;
   if m.status <> 'open' then raise exception 'MARKET_NOT_OPEN'; end if;
+  if now() >= m.deadline then raise exception 'MARKET_CLOSED'; end if; -- 締切後は取引不可
 
   select case when p_side='YES' then yes_shares else no_shares end
     into v_held from public.positions where user_id = v_uid and market_id = p_market_id for update;
@@ -211,7 +213,8 @@ begin
   v_refund := cost_fn(m.q_yes, m.q_no, m.b) - cost_fn(v_new_qyes, v_new_qno, m.b);
   v_new_price := price_yes(v_new_qyes, v_new_qno, m.b);
 
-  update public.profiles set points = points + v_refund, xp = xp + v_refund where id = v_uid;
+  -- 売却ではXPを加算しない（買い→即売りでのXP稼ぎを防止。XPは投じた額のみで積み上がる）
+  update public.profiles set points = points + v_refund where id = v_uid;
   update public.markets
      set q_yes = v_new_qyes, q_no = v_new_qno, volume = volume + v_refund
    where id = p_market_id;
@@ -236,11 +239,17 @@ returns void language plpgsql security definer set search_path = public as $$
 declare
   v_uid uuid := auth.uid();
   v_role text;
+  v_status text;
 begin
   if v_uid is null then raise exception 'AUTH_REQUIRED'; end if;
   select role into v_role from public.profiles where id = v_uid;
   if v_role <> 'admin' then raise exception 'ADMIN_REQUIRED'; end if;
   if p_result not in ('YES','NO') then raise exception 'BAD_RESULT'; end if;
+
+  -- 市場の存在と未解決を確認（解決済みの再解決＝二重配当を防止）
+  select status into v_status from public.markets where id = p_market_id for update;
+  if v_status is null then raise exception 'MARKET_NOT_FOUND'; end if;
+  if v_status = 'resolved' then raise exception 'ALREADY_RESOLVED'; end if;
 
   -- pay winners: 1 winning share = 1 point
   update public.profiles p
@@ -314,6 +323,38 @@ create trigger trg_seed_initial_price
   after insert or update on public.markets
   for each row execute function public.seed_initial_price();
 
+-- Auto-close markets whose deadline has passed (called by pg_cron below).
+-- Returns the number of markets closed.
+create or replace function public.close_expired_markets()
+returns int language plpgsql security definer set search_path = public as $$
+declare v_count int;
+begin
+  with closed as (
+    update public.markets
+       set status = 'closed'
+     where status = 'open' and now() >= deadline
+    returning id
+  )
+  select count(*) into v_count from closed;
+  return v_count;
+end;
+$$;
+
+-- Schedule the auto-close every minute via pg_cron.
+-- Requires the pg_cron extension (Supabase: Dashboard → Database → Extensions → enable "pg_cron").
+do $$
+begin
+  create extension if not exists pg_cron;
+  -- Remove any prior schedule with the same name, then (re)create it.
+  perform cron.unschedule('close-expired-markets')
+    where exists (select 1 from cron.job where jobname = 'close-expired-markets');
+  perform cron.schedule('close-expired-markets', '* * * * *',
+    $cron$ select public.close_expired_markets() $cron$);
+exception
+  when undefined_table or insufficient_privilege or feature_not_supported then
+    raise notice 'pg_cron not available — enable it in the dashboard, then re-run the cron block.';
+end $$;
+
 -- ---------------------------------------------------------------------------
 -- 5. Row Level Security
 -- ---------------------------------------------------------------------------
@@ -381,10 +422,15 @@ create policy ads_admin_all on public.ads for all using (
 );
 
 -- ---------------------------------------------------------------------------
--- 6. Realtime (live price chart + activity feed)
+-- 6. Realtime (live price chart, activity feed, and full live sync)
 -- ---------------------------------------------------------------------------
 do $$ begin alter publication supabase_realtime add table public.price_history; exception when duplicate_object then null; end $$;
 do $$ begin alter publication supabase_realtime add table public.trades; exception when duplicate_object then null; end $$;
+-- markets/profiles/positions: other users' trades, payouts, balances and
+-- market-status changes propagate to every client without a reload.
+do $$ begin alter publication supabase_realtime add table public.markets;   exception when duplicate_object then null; end $$;
+do $$ begin alter publication supabase_realtime add table public.profiles;  exception when duplicate_object then null; end $$;
+do $$ begin alter publication supabase_realtime add table public.positions; exception when duplicate_object then null; end $$;
 
 -- ---------------------------------------------------------------------------
 -- 7. (No seed data.) Markets are created by an admin via the app UI.
