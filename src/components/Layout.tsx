@@ -11,6 +11,7 @@ import DataLoader from './DataLoader'
 import RealtimeSync from './RealtimeSync'
 import ErrorBoundary from './ErrorBoundary'
 import ErrorToast from './ErrorToast'
+import DevAccountSwitcher from './DevAccountSwitcher'
 
 export default function Layout() {
   const { pathname } = useLocation()
@@ -33,6 +34,7 @@ export default function Layout() {
       <MobileTabBar />
       <DailyBonus />
       <LevelUpToast />
+      <DevAccountSwitcher />
     </div>
   )
 }
