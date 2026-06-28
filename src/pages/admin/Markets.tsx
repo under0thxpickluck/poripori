@@ -101,7 +101,7 @@ export default function AdminMarkets() {
                               <input
                                 type="datetime-local"
                                 value={customDeadline}
-                                min={new Date().toISOString().slice(0, 16)}
+                                min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                                 onChange={(e) => setCustomDeadline(e.target.value)}
                                 className="text-xs px-1.5 py-1 rounded-lg bg-surface text-text border border-border"
                               />
@@ -109,7 +109,7 @@ export default function AdminMarkets() {
                               <button onClick={() => { setExtending(null); setCustomDeadline('') }} className="text-xs px-2 py-1 text-text-muted hover:text-text transition-colors"><X size={12} /></button>
                             </div>
                           ) : (
-                            <button onClick={() => setExtending(m.id)} className="text-xs px-2.5 py-1 rounded-lg bg-surface-hover text-text-muted hover:bg-border border border-border transition-colors">延長</button>
+                            <button onClick={() => { setExtending(m.id); setCustomDeadline('') }} className="text-xs px-2.5 py-1 rounded-lg bg-surface-hover text-text-muted hover:bg-border border border-border transition-colors">延長</button>
                           )
                         )}
                         {resolving === m.id ? (
