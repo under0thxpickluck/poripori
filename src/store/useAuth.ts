@@ -38,6 +38,8 @@ export const useAuth = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     await supabase.auth.signOut()
+    // 管理者パスワードのロック解除状態も破棄（別ユーザーへの引き継ぎ防止）
+    if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('admin_unlocked')
     set({ session: null, profile: null })
   },
 

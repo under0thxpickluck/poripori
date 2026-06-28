@@ -328,7 +328,8 @@ export const useStore = create<Store>((set, get) => ({
 
   addComment: async (marketId, body) => {
     const uid = get().currentUserId
-    const text = body.trim()
+    // 念のためクライアント側でも長さを制限（DB 側の CHECK と二重防御）
+    const text = body.trim().slice(0, 500)
     if (!uid || !text) return
     const { error } = await supabase.from('comments').insert({ market_id: marketId, user_id: uid, body: text })
     if (error) return set({ error: mapRpcError(error.message) })

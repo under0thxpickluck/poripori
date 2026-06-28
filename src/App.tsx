@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import type { ReactNode } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
+import AdminGuard from './components/AdminGuard'
 import MarketList from './pages/MarketList'
 
 // ホーム以外は遅延読み込み（recharts等を初期バンドルから分離し、スマホの初回表示を軽く）
@@ -54,12 +55,14 @@ export default function App() {
           <Route path="/portfolio" element={<L><Portfolio /></L>} />
           <Route path="/propose" element={<L><Propose /></L>} />
           <Route path="/ranking" element={<L><Ranking /></L>} />
-          <Route path="/admin" element={<L><AdminDashboard /></L>} />
-          <Route path="/admin/proposals" element={<L><AdminProposals /></L>} />
-          <Route path="/admin/markets/new" element={<L><AdminMarketNew /></L>} />
-          <Route path="/admin/markets" element={<L><AdminMarkets /></L>} />
-          <Route path="/admin/ads" element={<L><AdminAds /></L>} />
-          <Route path="/admin/users" element={<L><AdminUsers /></L>} />
+          <Route element={<AdminGuard />}>
+            <Route path="/admin" element={<L><AdminDashboard /></L>} />
+            <Route path="/admin/proposals" element={<L><AdminProposals /></L>} />
+            <Route path="/admin/markets/new" element={<L><AdminMarketNew /></L>} />
+            <Route path="/admin/markets" element={<L><AdminMarkets /></L>} />
+            <Route path="/admin/ads" element={<L><AdminAds /></L>} />
+            <Route path="/admin/users" element={<L><AdminUsers /></L>} />
+          </Route>
 
           <Route path="/legal" element={<L><LegalHub /></L>} />
           <Route path="/legal/terms" element={<L><Terms /></L>} />
