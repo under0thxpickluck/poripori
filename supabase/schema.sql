@@ -39,6 +39,8 @@ create table if not exists public.markets (
   created_by   uuid references public.profiles(id) on delete set null,
   category     text not null default 'AI',
   volume       numeric not null default 0,
+  extended_count   numeric not null default 0,
+  last_extended_at timestamptz,
   image_url    text,
   created_at   timestamptz not null default now()
 );
@@ -259,6 +261,32 @@ begin
    where pos.market_id = p_market_id and pos.user_id = p.id;
 
   update public.markets set status='resolved', resolved=p_result where id = p_market_id;
+end;
+$$;
+
+-- EXTEND MARKET (admin only) -----------------------------------------------
+create or replace function public.extend_market(p_market_id uuid, p_new_deadline timestamptz)
+returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_uid uuid := auth.uid();
+  v_role text;
+  m public.markets%rowtype;
+begin
+  if v_uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  select role into v_role from public.profiles where id = v_uid;
+  if v_role <> 'admin' then raise exception 'ADMIN_REQUIRED'; end if;
+
+  select * into m from public.markets where id = p_market_id for update;
+  if not found then raise exception 'MARKET_NOT_FOUND'; end if;
+  if m.status <> 'closed' then raise exception 'NOT_CLOSED'; end if;
+  if p_new_deadline <= now() then raise exception 'DEADLINE_IN_PAST'; end if;
+
+  update public.markets
+     set status           = 'open',
+         deadline         = p_new_deadline,
+         extended_count   = extended_count + 1,
+         last_extended_at = now()
+   where id = p_market_id;
 end;
 $$;
 
