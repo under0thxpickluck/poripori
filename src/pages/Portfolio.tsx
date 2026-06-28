@@ -4,7 +4,7 @@ import { marketPrice, sellRefund } from '../lib/lmsr'
 import { format } from 'date-fns'
 import { TrendingUp, TrendingDown, Wallet, PieChart, Layers, Activity, Flame } from 'lucide-react'
 import CountUp from '../components/CountUp'
-import { levelInfo, winStreak } from '../lib/gamification'
+import { levelInfo, winStreak, resolvedRecord, achievements } from '../lib/gamification'
 
 const CAT_BAR: Record<string, string> = {
   Politics: 'bg-blue-400',
@@ -17,7 +17,7 @@ const CAT_BAR: Record<string, string> = {
 }
 
 export default function Portfolio() {
-  const { currentUser, markets, positions, getUserTrades } = useStore()
+  const { currentUser, markets, positions, getUserTrades, trades } = useStore()
   const user = currentUser()
 
   if (!user) {
@@ -73,10 +73,9 @@ export default function Portfolio() {
   const totalPnl = positionsWithValue.reduce((s, p) => s + p.pnl, 0)
   const totalAssets = user.points + totalValue
 
-  // 取引サマリー
-  const winners = positionsWithValue.filter((p) => p.pnl > 0).length
-  const losers = positionsWithValue.filter((p) => p.pnl < 0).length
-  const winRate = winners + losers > 0 ? Math.round((winners / (winners + losers)) * 100) : 0
+  // 的中率（解決済みマーケットの勝敗のみ。ランキングと定義を統一）
+  const rec = resolvedRecord(positions, markets, user.id)
+  const winRate = Math.round(rec.rate * 100)
 
   // カテゴリ別の保有内訳
   const allocMap = new Map<string, number>()
@@ -88,8 +87,10 @@ export default function Portfolio() {
     .sort((a, b) => b.value - a.value)
   const allocTotal = alloc.reduce((s, a) => s + a.value, 0)
 
-  const lvl = levelInfo(totalAssets)
+  const lvl = levelInfo(user.xp)
   const streak = winStreak(positions, markets, user.id)
+  const badges = achievements(user, positions, markets, trades)
+  const unlockedCount = badges.filter((b) => b.unlocked).length
 
   return (
     <div className="space-y-6">
@@ -133,6 +134,28 @@ export default function Portfolio() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 実績バッジ */}
+      <div className="bg-surface border border-border rounded-lg p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-text">実績</h2>
+          <span className="text-xs text-text-muted">{unlockedCount} / {badges.length} 達成</span>
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          {badges.map((b) => (
+            <div
+              key={b.id}
+              title={b.desc}
+              className={`flex flex-col items-center text-center gap-1 rounded-lg border p-3 transition-colors ${
+                b.unlocked ? 'border-accent/40 bg-accent/5' : 'border-border opacity-50 grayscale'
+              }`}
+            >
+              <span className="text-2xl leading-none">{b.emoji}</span>
+              <span className="text-[10px] font-medium text-text leading-tight">{b.label}</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -196,7 +219,7 @@ export default function Portfolio() {
               <p className="text-xl font-bold text-text">
                 <CountUp value={winRate} format={(n) => `${n}%`} />
               </p>
-              <p className="text-xs text-text-muted mt-0.5">勝率（{winners}勝{losers}敗）</p>
+              <p className="text-xs text-text-muted mt-0.5">的中率（{rec.wins}勝{rec.losses}敗）</p>
             </div>
           </div>
         </div>

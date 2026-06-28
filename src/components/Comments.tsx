@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { MessageSquare } from 'lucide-react'
 import { useStore } from '../store/useStore'
+import { displayName } from '../lib/names'
 import { format } from 'date-fns'
 
 export default function Comments({ marketId }: { marketId: string }) {
@@ -61,7 +62,7 @@ export default function Comments({ marketId }: { marketId: string }) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-text">{name(c.userId)}</span>
+                  <span className="text-sm font-medium text-text">{displayName(name(c.userId), c.userId, user?.id)}</span>
                   <span className="text-xs text-text-muted">
                     {format(new Date(c.createdAt), 'MM/dd HH:mm')}
                   </span>

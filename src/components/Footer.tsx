@@ -1,39 +1,39 @@
 import { Link } from 'react-router-dom'
 import { useTheme } from '../store/useTheme'
+import { COMPANY } from '../lib/company'
 
 type FooterLink = { label: string; href: string; action?: 'help' }
 
 const SOCIAL: FooterLink[] = [
-  { label: 'X (Twitter)', href: '#' },
-  { label: 'Instagram', href: '#' },
-  { label: 'Discord', href: '#' },
-  { label: 'TikTok', href: '#' },
+  { label: 'X (Twitter)', href: 'https://x.com/lifailabs' },
+  { label: 'Instagram', href: 'https://www.instagram.com/lifailabs' },
+  { label: 'Discord', href: 'https://discord.gg/lifailabs' },
+  { label: 'TikTok', href: 'https://www.tiktok.com/@lifailabs' },
 ]
 
 const SUPPORT: FooterLink[] = [
   { label: '使い方ガイド', href: '#', action: 'help' },
-  { label: 'ニュース', href: '#' },
-  { label: 'お問い合わせ', href: '#' },
-  { label: 'ヘルプセンター', href: '#', action: 'help' },
-  { label: 'ステータス', href: '#' },
+  { label: 'よくある質問 / FAQ', href: '/faq' },
+  { label: 'お問い合わせ / Contact', href: '/contact' },
+  { label: 'セキュリティ報告', href: '/legal/security' },
+  { label: 'ステータス', href: '/status' },
 ]
 
 const RESOURCES: FooterLink[] = [
-  { label: '報酬', href: '#' },
-  { label: 'API', href: '#' },
   { label: 'ランキング', href: '/ranking' },
-  { label: '正確さ', href: '#' },
-  { label: 'ブランド', href: '#' },
-  { label: 'アクティビティ', href: '#' },
-  { label: '採用情報', href: '#' },
-  { label: 'プレス', href: '#' },
+  { label: '会社概要 / Company', href: '/company' },
+  { label: '市場の健全性', href: '/legal/market-integrity' },
+  { label: 'コンプライアンス', href: '/legal/compliance' },
+  { label: '開発者 / API', href: '/developers' },
+  { label: 'プレス', href: '/press' },
 ]
 
 const LEGAL: FooterLink[] = [
-  { label: 'プライバシー', href: '#' },
-  { label: '利用規約', href: '#' },
-  { label: '市場の健全性', href: '#' },
-  { label: 'ドキュメント', href: '#' },
+  { label: 'Terms of Service', href: '/legal/terms' },
+  { label: 'Privacy Policy', href: '/legal/privacy' },
+  { label: 'Cookie & Storage', href: '/legal/cookies' },
+  { label: 'Risk Disclosure', href: '/legal/risk' },
+  { label: 'Legal Center', href: '/legal' },
 ]
 
 const COLUMNS: { title: string; links: FooterLink[] }[] = [
@@ -61,8 +61,13 @@ function FooterLinkItem({ label, href, action }: FooterLink) {
       </Link>
     )
   }
+  const external = href.startsWith('http')
   return (
-    <a href={href} className="text-sm text-text-muted hover:text-text transition-colors">
+    <a
+      href={href}
+      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      className="text-sm text-text-muted hover:text-text transition-colors"
+    >
       {label}
     </a>
   )
@@ -98,9 +103,14 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="border-t border-border mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-xs text-text-muted">© 2026 MIRAIX. すべて仮データです。</p>
-          <p className="text-xs text-text-muted">本サイトはデモであり、実際の取引は行われません。</p>
+        <div className="border-t border-border mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+          <p className="text-xs text-text-muted">
+            © 2026 {COMPANY.legalName} ・ {COMPANY.product}
+            <span className="hidden sm:inline"> ・ {COMPANY.addressInline}</span>
+          </p>
+          <p className="text-xs text-text-muted">
+            仮想ポイントのみを使用し、実際の金銭取引は行いません。
+          </p>
         </div>
       </div>
     </footer>

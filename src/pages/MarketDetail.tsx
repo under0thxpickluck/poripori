@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Clock, Users, BarChart2, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Clock, Users, BarChart2, CheckCircle, TrendingUp } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { marketPrice } from '../lib/lmsr'
+import { displayName } from '../lib/names'
 import TradePanel from '../components/TradePanel'
+import BottomSheet from '../components/BottomSheet'
 import PriceChart from '../components/PriceChart'
 import MarketImage from '../components/MarketImage'
 import OrderBook from '../components/OrderBook'
@@ -15,8 +18,9 @@ import { ja } from 'date-fns/locale'
 
 export default function MarketDetail() {
   const { id } = useParams<{ id: string }>()
-  const { markets, getMarketTrades, users } = useStore()
+  const { markets, getMarketTrades, users, currentUserId } = useStore()
   const market = markets.find((m) => m.id === id)
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   const yesForFlash = market && market.status !== 'pending' ? Math.round(marketPrice(market).yes * 100) : 0
   const priceFlash = usePriceFlash(yesForFlash)
@@ -50,29 +54,38 @@ export default function MarketDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
           <div className="bg-surface border border-border rounded-lg p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent font-medium">
-                {market.category}
-              </span>
-              {market.status === 'resolved' && (
-                <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yes/20 text-yes">
-                  <CheckCircle size={10} />
-                  解決済み: {market.resolved}
-                </span>
-              )}
-              {market.status === 'closed' && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-surface-hover text-text-muted">
-                  締切済み・解決待ち
-                </span>
-              )}
+            <div className="flex gap-4 mb-4">
+              <MarketImage
+                src={market.imageUrl}
+                yes={price.yes}
+                category={market.category}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent font-medium">
+                    {market.category}
+                  </span>
+                  {market.status === 'resolved' && (
+                    <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yes/20 text-yes">
+                      <CheckCircle size={10} />
+                      解決済み: {market.resolved}
+                    </span>
+                  )}
+                  {market.status === 'closed' && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-surface-hover text-text-muted">
+                      締切済み・解決待ち
+                    </span>
+                  )}
+                  {market.extendedCount > 0 && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent">
+                      延長済み ×{market.extendedCount}
+                    </span>
+                  )}
+                </div>
+                <h1 className="text-xl font-bold text-text leading-snug">{market.question}</h1>
+              </div>
             </div>
-
-            <MarketImage
-              src={market.imageUrl}
-              category={market.category}
-              className="w-full h-40 rounded-lg mb-4"
-            />
-            <h1 className="text-xl font-bold text-text mb-4">{market.question}</h1>
 
             {market.status !== 'pending' && (
               <div className="flex items-center gap-6 mb-4">
@@ -130,7 +143,7 @@ export default function MarketDetail() {
 
           <div className="bg-surface border border-border rounded-lg p-5">
             <h2 className="text-sm font-semibold text-text-muted mb-4">価格推移 (YES)</h2>
-            <PriceChart market={market} height={220} />
+            <PriceChart market={market} height={300} />
           </div>
 
           <div className="bg-surface border border-border rounded-lg p-5">
@@ -157,7 +170,7 @@ export default function MarketDetail() {
                         {trader?.name.charAt(0) ?? '?'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-xs text-text">{trader?.name ?? '不明'}</span>
+                        <span className="text-xs text-text">{displayName(trader?.name ?? '不明', t.userId, currentUserId)}</span>
                         <span className="text-xs text-text-muted mx-1.5">が</span>
                         <span
                           className={`text-xs font-semibold ${
@@ -187,12 +200,35 @@ export default function MarketDetail() {
           <Comments marketId={market.id} />
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="hidden lg:block lg:col-span-1">
           <div className="sticky top-20">
             <TradePanel market={market} />
           </div>
         </div>
       </div>
+
+      {market.status === 'open' && <div className="h-16 lg:hidden" />}
+
+      {/* スマホ用の固定トレードCTA（下部タブバーの上に配置） */}
+      {market.status === 'open' && (
+        <div className="lg:hidden fixed inset-x-0 bottom-[calc(3.5rem_+_env(safe-area-inset-bottom))] z-30 px-4 pb-2 pt-3 bg-gradient-to-t from-bg via-bg/95 to-transparent">
+          <button
+            onClick={() => setSheetOpen(true)}
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-accent hover:bg-accent-hover text-white font-bold shadow-lg active:scale-[0.99] transition-transform"
+          >
+            <TrendingUp size={18} />
+            トレードする（YES {yesPct}% / NO {100 - yesPct}%）
+          </button>
+        </div>
+      )}
+
+      {sheetOpen && (
+        <BottomSheet title="トレード" onClose={() => setSheetOpen(false)}>
+          <div className="p-4">
+            <TradePanel market={market} />
+          </div>
+        </BottomSheet>
+      )}
     </div>
   )
 }

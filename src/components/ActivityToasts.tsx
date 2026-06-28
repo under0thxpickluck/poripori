@@ -1,49 +1,68 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
-import { marketPrice } from '../lib/lmsr'
+import { supabase } from '../lib/supabase'
+import { maskName } from '../lib/names'
 
 type Toast = {
   id: number
   user: string
   side: 'YES' | 'NO'
+  action: 'buy' | 'sell'
   question: string
   amount: number
   to: string
 }
 
+// 実際の取引（Supabase Realtime）をライブで通知。フェイクの自動生成は廃止。
 export default function ActivityToasts() {
-  const { markets, users } = useStore()
   const [toasts, setToasts] = useState<Toast[]>([])
 
   useEffect(() => {
-    const open = markets.filter((m) => m.status === 'open')
-    const realUsers = users.filter((u) => u.role !== 'admin')
-    if (open.length === 0 || realUsers.length === 0) return
-
     let counter = 0
-    function spawn() {
-      const m = open[Math.floor(Math.random() * open.length)]
-      const u = realUsers[Math.floor(Math.random() * realUsers.length)]
-      const side: 'YES' | 'NO' = Math.random() < marketPrice(m).yes ? 'YES' : 'NO'
-      const amount = Math.floor(20 + Math.random() * 480)
-      const id = counter++
-      setToasts((t) => [...t.slice(-3), { id, user: u.name, side, question: m.question, amount, to: `/market/${m.id}` }])
-      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4500)
-    }
+    const channel = supabase
+      .channel('activity-trades')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'trades' },
+        (payload) => {
+          const t = payload.new as {
+            user_id: string
+            market_id: string
+            side: 'YES' | 'NO'
+            action: 'buy' | 'sell'
+            cost: number
+          }
+          const { users, markets, currentUserId } = useStore.getState()
+          if (t.user_id === currentUserId) return // 自分の取引は通知しない
+          const u = users.find((x) => x.id === t.user_id)
+          const m = markets.find((x) => x.id === t.market_id)
+          if (!m) return
+          const id = counter++
+          const toast: Toast = {
+            id,
+            user: maskName(u?.name ?? '匿名'),
+            side: t.side,
+            action: t.action,
+            question: m.question,
+            amount: Math.round(Number(t.cost)),
+            to: `/market/${m.id}`,
+          }
+          setToasts((prev) => [...prev.slice(-3), toast])
+          setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 4500)
+        }
+      )
+      .subscribe()
 
-    const first = setTimeout(spawn, 2500)
-    const id = setInterval(spawn, 5200)
     return () => {
-      clearTimeout(first)
-      clearInterval(id)
+      supabase.removeChannel(channel)
     }
-  }, [markets, users])
+  }, [])
 
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 w-72 max-w-[calc(100vw-2rem)]">
+    <div className="fixed bottom-20 md:bottom-4 right-4 z-30 flex flex-col gap-2 w-72 max-w-[calc(100vw-2rem)]">
       {toasts.map((t) => (
         <Link
           key={t.id}
@@ -57,7 +76,7 @@ export default function ActivityToasts() {
             <p className="text-xs text-text">
               <span className="font-medium">{t.user}</span> が
               <span className={`mx-1 font-bold ${t.side === 'YES' ? 'text-yes' : 'text-no'}`}>{t.side}</span>
-              を {t.amount.toLocaleString()}pt 購入
+              を {t.amount.toLocaleString()}pt {t.action === 'buy' ? '購入' : '売却'}
             </p>
             <p className="truncate text-[11px] text-text-muted">{t.question}</p>
           </div>

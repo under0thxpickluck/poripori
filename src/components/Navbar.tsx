@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { BarChart2, Trophy, PlusCircle, Settings, LogOut, ChevronDown, Search, ShieldCheck, HelpCircle } from 'lucide-react'
 import { useStore } from '../store/useStore'
+import { useAuth } from '../store/useAuth'
 import { useTheme } from '../store/useTheme'
 import { levelInfo, winStreak } from '../lib/gamification'
 import LoginModal from './LoginModal'
@@ -26,11 +27,12 @@ const ADMIN_LINKS = [
 
 export default function Navbar() {
   const location = useLocation()
-  const { currentUser, logout, positions, markets } = useStore()
+  const { currentUser, positions, markets } = useStore()
+  const signOut = useAuth((s) => s.signOut)
   const theme = useTheme((s) => s.theme)
   const user = currentUser()
   const logoMark = theme === 'light' ? '/logo-mark-light.png' : '/logo-mark.png'
-  const lvl = user ? levelInfo(user.points) : null
+  const lvl = user ? levelInfo(user.xp) : null
   const streak = user ? winStreak(positions, markets, user.id) : 0
   const [showLogin, setShowLogin] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -159,8 +161,23 @@ export default function Navbar() {
                           </>
                         )}
                       </div>
+                      {user.role === 'admin' && (
+                        <div className="md:hidden border-b border-border py-1">
+                          <p className="px-4 py-1.5 text-[10px] font-semibold text-text-muted">管理メニュー</p>
+                          {ADMIN_LINKS.map((l) => (
+                            <Link
+                              key={l.to}
+                              to={l.to}
+                              onClick={() => setShowUserMenu(false)}
+                              className="block px-4 py-2 text-sm text-text-muted hover:text-text hover:bg-white/5 transition-colors"
+                            >
+                              {l.label}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                       <button
-                        onClick={() => { logout(); setShowUserMenu(false) }}
+                        onClick={() => { signOut(); setShowUserMenu(false) }}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-no hover:bg-no/10 transition-colors"
                       >
                         <LogOut size={14} />

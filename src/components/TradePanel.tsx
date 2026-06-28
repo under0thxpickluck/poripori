@@ -64,9 +64,11 @@ export default function TradePanel({ market }: Props) {
     setAmount(sliderStep < 1 ? v.toFixed(2) : String(Math.floor(v)))
   }
 
-  function handleExecute() {
+  async function handleExecute() {
     if (!pv || !user) return
-    const r = tab === 'buy' ? buyShares(market.id, side, pv.shares) : sellShares(market.id, side, pv.shares)
+    const r = tab === 'buy'
+      ? await buyShares(market.id, side, pv.shares)
+      : await sellShares(market.id, side, pv.shares)
     if (r.success) {
       setResult({
         success: true,
@@ -77,13 +79,16 @@ export default function TradePanel({ market }: Props) {
       })
       setAmount('')
       setBurst((b) => b + 1)
+      navigator.vibrate?.(15) // スマホで軽い触覚フィードバック
     } else {
+      navigator.vibrate?.([8, 40, 8])
       setResult({ success: false, message: r.error ?? 'エラーが発生しました' })
     }
     setTimeout(() => setResult(null), 3000)
   }
 
-  const canTrade = market.status === 'open'
+  const expired = new Date(market.deadline).getTime() <= Date.now()
+  const canTrade = market.status === 'open' && !expired
   const insufficient = tab === 'buy' && pv != null && user != null && pv.cost > user.points
   const notEnoughShares = tab === 'sell' && amtNum > held
 
@@ -120,6 +125,7 @@ export default function TradePanel({ market }: Props) {
         {!canTrade && (
           <div className="text-center py-4 text-text-muted text-sm">
             {market.status === 'pending' && '承認待ちのためトレード不可'}
+            {market.status === 'open' && expired && '締切済み・解決待ち'}
             {market.status === 'closed' && '締切済み・解決待ち'}
             {market.status === 'resolved' && `解決済み: ${market.resolved}`}
           </div>
@@ -175,12 +181,13 @@ export default function TradePanel({ market }: Props) {
               </div>
               <input
                 type="number"
+                inputMode="decimal"
                 min={0}
                 step={sliderStep}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder={tab === 'buy' ? (inputMode === 'points' ? '100' : '1.00') : '1.00'}
-                className="w-full px-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-lg text-text text-sm outline-none transition-colors placeholder-text-muted"
+                className="w-full px-4 py-3 bg-surface-hover border border-border focus:border-accent rounded-lg text-text text-base outline-none transition-colors placeholder-text-muted"
               />
 
               {/* スライダー */}

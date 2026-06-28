@@ -1,15 +1,11 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { marketPrice } from '../lib/lmsr'
 import type { Market } from '../types'
-import { usePriceFlash } from '../hooks/usePriceFlash'
 
-const TICK_MS = 1500
-
-function TickerItem({ m, yes, d }: { m: Market; yes: number; d: number }) {
-  const up = d >= 0
-  const flash = usePriceFlash(Math.round(d))
+function TickerItem({ m }: { m: Market }) {
+  const yes = Math.round(marketPrice(m).yes * 100)
+  const leadingYes = yes >= 50
   return (
     <Link to={`/market/${m.id}`} className="group flex shrink-0 items-center gap-2 rounded px-1.5">
       <span className="max-w-[180px] truncate text-xs font-medium text-text-muted transition-colors group-hover:text-text">
@@ -17,40 +13,22 @@ function TickerItem({ m, yes, d }: { m: Market; yes: number; d: number }) {
       </span>
       <span className="text-xs font-bold text-text">{yes}%</span>
       <span
-        className={`flex items-center gap-0.5 text-xs font-semibold tabular-nums rounded px-1 ${flash} ${
-          up ? 'text-yes' : 'text-no'
+        className={`flex items-center gap-0.5 text-xs font-semibold ${
+          leadingYes ? 'text-yes' : 'text-no'
         }`}
       >
-        {up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-        {up ? '+' : ''}
-        {d.toFixed(1)}%
+        {leadingYes ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
       </span>
     </Link>
   )
 }
 
-// 金融端末風のライブ価格ティッカー（横に流れ続け、各銘柄の変化率がリアルタイムに動く）
+// 実データのライブティッカー（現在のYES確率を流す。フェイクの変動値は廃止）
 export default function LiveTicker({ markets }: { markets: Market[] }) {
   const items = markets.slice(0, 16)
-  const [deltas, setDeltas] = useState<number[]>(() => items.map(() => (Math.random() - 0.5) * 4))
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setDeltas((ds) =>
-        ds.map((d) => Math.max(-9, Math.min(9, d + (Math.random() - 0.5) * 1.4)))
-      )
-    }, TICK_MS)
-    return () => clearInterval(id)
-  }, [])
-
   if (items.length === 0) return null
 
-  const row = items.map((m, i) => ({
-    m,
-    yes: Math.round(marketPrice(m).yes * 100),
-    d: deltas[i] ?? 0,
-  }))
-  const loop = [...row, ...row] // シームレスループ用に2連結
+  const loop = [...items, ...items] // シームレスループ用に2連結
 
   return (
     <div className="relative mb-6 rounded-lg border border-border bg-surface/60 overflow-hidden">
@@ -66,8 +44,8 @@ export default function LiveTicker({ markets }: { markets: Market[] }) {
       {/* スクロール本体 */}
       <div className="ticker-mask overflow-hidden pl-20">
         <div className="flex w-max gap-6 py-2.5 animate-ticker hover:[animation-play-state:paused]">
-          {loop.map((it, i) => (
-            <TickerItem key={i} m={it.m} yes={it.yes} d={it.d} />
+          {loop.map((m, i) => (
+            <TickerItem key={`${m.id}-${i}`} m={m} />
           ))}
         </div>
       </div>

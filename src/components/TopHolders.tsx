@@ -1,4 +1,5 @@
 import { useStore } from '../store/useStore'
+import { displayName } from '../lib/names'
 
 function HolderColumn({
   title,
@@ -33,8 +34,9 @@ function HolderColumn({
 }
 
 export default function TopHolders({ marketId }: { marketId: string }) {
-  const { positions, users } = useStore()
-  const name = (id: string) => users.find((u) => u.id === id)?.name ?? '不明'
+  const { positions, users, currentUserId } = useStore()
+  const name = (id: string) =>
+    displayName(users.find((u) => u.id === id)?.name ?? '不明', id, currentUserId)
 
   const market = positions.filter((p) => p.marketId === marketId)
   const yes = market

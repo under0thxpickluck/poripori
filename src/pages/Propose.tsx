@@ -176,7 +176,7 @@ export default function Propose() {
                   {form.category}
                 </span>
                 <div className="flex gap-3 mt-3 mb-4">
-                  <MarketImage src={form.imageUrl} category={form.category} className="w-12 h-12 rounded-md shrink-0" />
+                  <MarketImage src={form.imageUrl} yes={0.5} category={form.category} className="w-12 h-12 rounded-md shrink-0" />
                   <p className="text-sm font-medium text-text leading-snug line-clamp-3">
                     {form.question || 'ここに質問が表示されます'}
                   </p>

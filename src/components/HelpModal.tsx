@@ -1,4 +1,5 @@
 import { X, LogIn, Search, TrendingUp, RefreshCw, Trophy, Lightbulb, FilePlus2, Coins, Scale } from 'lucide-react'
+import { useModalBehavior } from '../hooks/useModalBehavior'
 
 type Props = { onClose: () => void }
 
@@ -31,6 +32,7 @@ const STEPS = [
 ]
 
 export default function HelpModal({ onClose }: Props) {
+  useModalBehavior(onClose)
   return (
     <div className="fixed inset-0 z-[80] flex items-start justify-center px-4 pt-[8vh] pb-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -156,10 +158,11 @@ export default function HelpModal({ onClose }: Props) {
               便利なポイント
             </h3>
             <ul className="space-y-1.5 text-xs text-text-muted leading-relaxed">
-              <li>・<span className="text-text font-medium">⌘K</span> でマーケット/ページを瞬時に検索</li>
+              <li>・<span className="text-text font-medium">⌘K</span>（スマホは下部の「検索」）でマーケット/ページを瞬時に検索</li>
               <li>・<span className="text-no font-medium">🔥 HOT</span> は直近で急上昇しているマーケット</li>
               <li>・締切 <span className="text-no font-medium">1 時間前</span> になるとカウントダウンが赤くなります</li>
-              <li>・資産が増えるとレベル・ランクが上がり、連勝も記録されます</li>
+              <li>・トレードや的中で <span className="text-text font-medium">XP</span> が貯まりレベル・ランクが上がります（連勝も記録）</li>
+              <li>・<span className="text-text font-medium">毎日ログイン</span>でデイリーボーナス。連続日数で増額します</li>
             </ul>
           </section>
         </div>

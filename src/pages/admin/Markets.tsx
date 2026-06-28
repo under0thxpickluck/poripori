@@ -3,11 +3,26 @@ import { X } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { marketPrice } from '../../lib/lmsr'
 import { format } from 'date-fns'
+import { addDeadline, type DeadlinePreset } from '../../lib/deadline'
 
 export default function AdminMarkets() {
-  const { markets, closeMarket, resolveMarket, currentUser } = useStore()
+  const { markets, closeMarket, resolveMarket, extendMarket, currentUser } = useStore()
   const user = currentUser()
   const [resolving, setResolving] = useState<string | null>(null)
+  const [extending, setExtending] = useState<string | null>(null)
+  const [customDeadline, setCustomDeadline] = useState('')
+
+  const applyPreset = (marketId: string, preset: DeadlinePreset) => {
+    extendMarket(marketId, addDeadline(new Date(), preset).toISOString())
+    setExtending(null)
+    setCustomDeadline('')
+  }
+  const applyCustom = (marketId: string) => {
+    if (!customDeadline) return
+    extendMarket(marketId, new Date(customDeadline).toISOString())
+    setExtending(null)
+    setCustomDeadline('')
+  }
 
   if (user?.role !== 'admin') {
     return <div className="text-center py-20 text-no">管理者権限が必要です</div>
@@ -76,6 +91,26 @@ export default function AdminMarkets() {
                           >
                             締切
                           </button>
+                        )}
+                        {m.status === 'closed' && (
+                          extending === m.id ? (
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => applyPreset(m.id, '1d')} className="text-xs px-2 py-1 rounded-lg bg-surface-hover text-text hover:bg-border border border-border transition-colors">+1日</button>
+                              <button onClick={() => applyPreset(m.id, '3d')} className="text-xs px-2 py-1 rounded-lg bg-surface-hover text-text hover:bg-border border border-border transition-colors">+3日</button>
+                              <button onClick={() => applyPreset(m.id, '1w')} className="text-xs px-2 py-1 rounded-lg bg-surface-hover text-text hover:bg-border border border-border transition-colors">+1週</button>
+                              <input
+                                type="datetime-local"
+                                value={customDeadline}
+                                min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+                                onChange={(e) => setCustomDeadline(e.target.value)}
+                                className="text-xs px-1.5 py-1 rounded-lg bg-surface text-text border border-border"
+                              />
+                              <button onClick={() => applyCustom(m.id)} disabled={!customDeadline} className="text-xs px-2 py-1 rounded-lg bg-accent/20 text-accent hover:bg-accent/30 border border-accent/30 transition-colors disabled:opacity-40">確定</button>
+                              <button onClick={() => { setExtending(null); setCustomDeadline('') }} className="text-xs px-2 py-1 text-text-muted hover:text-text transition-colors"><X size={12} /></button>
+                            </div>
+                          ) : (
+                            <button onClick={() => { setExtending(m.id); setCustomDeadline('') }} className="text-xs px-2.5 py-1 rounded-lg bg-surface-hover text-text-muted hover:bg-border border border-border transition-colors">延長</button>
+                          )
                         )}
                         {resolving === m.id ? (
                           <div className="flex gap-1">
