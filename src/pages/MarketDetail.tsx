@@ -77,6 +77,11 @@ export default function MarketDetail() {
                       締切済み・解決待ち
                     </span>
                   )}
+                  {market.extendedCount > 0 && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent">
+                      延長済み ×{market.extendedCount}
+                    </span>
+                  )}
                 </div>
                 <h1 className="text-xl font-bold text-text leading-snug">{market.question}</h1>
               </div>
