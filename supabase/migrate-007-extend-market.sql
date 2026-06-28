@@ -17,7 +17,7 @@ declare
 begin
   if v_uid is null then raise exception 'AUTH_REQUIRED'; end if;
   select role into v_role from public.profiles where id = v_uid;
-  if v_role <> 'admin' then raise exception 'ADMIN_REQUIRED'; end if;
+  if v_role is distinct from 'admin' then raise exception 'ADMIN_REQUIRED'; end if;
 
   select * into m from public.markets where id = p_market_id for update;
   if not found then raise exception 'MARKET_NOT_FOUND'; end if;
