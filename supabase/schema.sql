@@ -245,7 +245,7 @@ declare
 begin
   if v_uid is null then raise exception 'AUTH_REQUIRED'; end if;
   select role into v_role from public.profiles where id = v_uid;
-  if v_role <> 'admin' then raise exception 'ADMIN_REQUIRED'; end if;
+  if v_role is distinct from 'admin' then raise exception 'ADMIN_REQUIRED'; end if; -- NULL-safe（profiles 行が無い認証ユーザーも拒否）
   if p_result not in ('YES','NO') then raise exception 'BAD_RESULT'; end if;
 
   -- 市場の存在と未解決を確認（解決済みの再解決＝二重配当を防止）

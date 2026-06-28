@@ -51,6 +51,15 @@ describe('rpc extend_market', () => {
     expect(error?.message).toContain('NOT_CLOSED')
   })
 
+  it('存在しない市場は MARKET_NOT_FOUND で拒否', async () => {
+    switchLocalUser(ADMIN_ID)
+    const { error } = await client.rpc('extend_market', {
+      p_market_id: '00000000-0000-4000-8000-0000000000ff',
+      p_new_deadline: future(),
+    })
+    expect(error?.message).toContain('MARKET_NOT_FOUND')
+  })
+
   it('非 admin は ADMIN_REQUIRED で拒否', async () => {
     const id = await aClosedMarketId() // 内部で一旦 admin に切替
     switchLocalUser(AYANO_ID)

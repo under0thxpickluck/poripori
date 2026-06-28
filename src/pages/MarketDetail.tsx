@@ -78,7 +78,14 @@ export default function MarketDetail() {
                     </span>
                   )}
                   {market.extendedCount > 0 && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent">
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent"
+                      title={
+                        market.lastExtendedAt
+                          ? `最終延長: ${format(new Date(market.lastExtendedAt), 'yyyy/MM/dd HH:mm', { locale: ja })}`
+                          : undefined
+                      }
+                    >
                       延長済み ×{market.extendedCount}
                     </span>
                   )}
