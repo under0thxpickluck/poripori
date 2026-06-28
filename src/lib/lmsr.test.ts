@@ -25,6 +25,8 @@ function mk(q_yes: number, q_no: number, b = 100): Market {
     createdAt: new Date().toISOString(),
     category: 'AI',
     volume: 0,
+    extendedCount: 0,
+    lastExtendedAt: null,
     priceHistory: [],
   }
 }

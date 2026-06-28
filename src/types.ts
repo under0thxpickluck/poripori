@@ -41,6 +41,10 @@ export type Market = {
   category: Category
   volume: number
   imageUrl?: string
+  /** 締切延長された回数（0 = 未延長） */
+  extendedCount: number
+  /** 最終延長日時（ISO, 未延長は null） */
+  lastExtendedAt: string | null
   priceHistory: Array<{ t: string; yes: number }>
 }
 

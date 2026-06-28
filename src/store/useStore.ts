@@ -36,6 +36,8 @@ function mapMarket(m: any): Market {
     category: m.category,
     volume: n(m.volume),
     imageUrl: m.image_url ?? undefined,
+    extendedCount: n(m.extended_count),
+    lastExtendedAt: m.last_extended_at ?? null,
     priceHistory: [],
   }
 }
@@ -72,6 +74,8 @@ function mapRpcError(msg: string): string {
   if (msg.includes('INSUFFICIENT_SHARES')) return '保有シェアが不足しています'
   if (msg.includes('BAD_SHARES')) return '0より大きい枚数を入力してください'
   if (msg.includes('ADMIN_REQUIRED')) return '管理者権限が必要です'
+  if (msg.includes('NOT_CLOSED')) return '締切済みの市場のみ延長できます'
+  if (msg.includes('DEADLINE_IN_PAST')) return '新しい締切は未来の日時にしてください'
   return msg || 'エラーが発生しました'
 }
 
@@ -112,6 +116,7 @@ type StoreActions = {
   rejectMarket: (marketId: string) => Promise<void>
   closeMarket: (marketId: string) => Promise<void>
   resolveMarket: (marketId: string, result: 'YES' | 'NO') => Promise<void>
+  extendMarket: (marketId: string, newDeadlineISO: string) => Promise<void>
 
   addPoints: (userId: string, amount: number) => Promise<void>
   changeRole: (userId: string, role: 'user' | 'admin') => Promise<void>
@@ -282,6 +287,14 @@ export const useStore = create<Store>((set, get) => ({
     if (error) return set({ error: mapRpcError(error.message) })
     await get().loadAll(['users', 'markets'])
     await refreshProfile()
+  },
+  extendMarket: async (marketId, newDeadlineISO) => {
+    const { error } = await supabase.rpc('extend_market', {
+      p_market_id: marketId,
+      p_new_deadline: newDeadlineISO,
+    })
+    if (error) return set({ error: mapRpcError(error.message) })
+    await get().loadAll(['markets'])
   },
 
   addPoints: async (userId, amount) => {
