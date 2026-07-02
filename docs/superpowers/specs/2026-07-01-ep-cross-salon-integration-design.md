@@ -16,7 +16,8 @@
 | 会員管理 | Supabase `profiles`（`auth.users`と1:1） | Google Sheets（group="5000"固定） | Google Sheets（**groupはGASが返す動的値**） |
 
 **重要な制約（実コード検証済み）:**
-- LIFAIOV と aisalon は**同一コード・同一 `GAS_WEBAPP_URL` だが、`group` パラメータで別スプレッドシート／別会員グループに振り分けられている**。会員プールは決して統合しない。
+- LIFAIOV と aisalon は**別々のGASプロジェクト・別デプロイ・別スプレッドシート**（2026-07-02 ユーザー確認により訂正。LIFAIOVはLIFAIOV専用applies）。加えて `group` パラメータによるシート振り分けが各プロジェクト内に存在する。会員プールもGAS接続情報も決して統合しない。
+  - ⚠️ ローカルの両 `.env.local` の `GAS_WEBAPP_URL` は現在同一値だが古いコピーとみられる。**本番（Vercel）envが正**。実装時に要確認。
 - **`group` の出所:** LIFAIOV/5000 はクライアントが `group:"5000"` を固定送信。**aisalon 本会員ログイン（`app/login/page.tsx`）は group を送らず、GAS の `login` 応答 `res.group` を採用**し、以後 auth state に保持する。→ SSO ではこの**セッションが保持する group をそのままトークンに載せる**（固定定数を仮定しない）。
 - 賭けの仕組み（LMSR: YES/NO シェアの売買・解決精算）は MIRAIX に**RPCとして実装済み**（`buy_shares` が `points - cost`、`INSUFFICIENT_POINTS` ガード付き。`sell_shares`／解決で points 還元）。**points 加算RPC `admin_add_points` も既存**＝EP入金時のクレジットに流用できる。
 - サロン側の EP 出金プリミティブ `deduct_ep`（adminKey認証・残高チェック・`wallet_ledger`記録・**`email` 列も保持**・新残高返却）は**既存**。参考実装 `ep_send_to_lfw`（EP外部送金）は **LIFAIOV のみ**・id+code認証で外部アドレス宛のため厳密な雛形ではない。**入金の実質雛形は `deduct_ep`。**
@@ -31,6 +32,11 @@
 2. **EPは単一残高:** アカウント内では EP の出所を区別せず、MIRAIX の `points` として一本化する（同一アカウントは元々1グループ由来なので混在は起きない）。
 3. **双方向:** MIRAIX→サロンへEPを戻せる。サロン⇄MIRAIX の**閉ループ内ポイント**として扱う。
 4. **本人紐付け:** 署名トークンSSO方式（安全かつ既存HMAC流儀で実装容易）。
+5. **サロン側の導線は LIFAI Arcade に置く（2026-07-02 追加合意）:** MIRAIX への入口は両サロンの LIFAI Arcade（`app/mini-games/page.tsx`）にゲームカードとして追加する。
+6. **免責ゲート必須（2026-07-02 追加合意）:** MIRAIX は外部サイトであるため、SSO遷移の**前に**免責ゲート（確認モーダル/中間ページ）を必ず挟む。文言に以下を含め、ユーザーが同意操作をしない限り遷移させない:
+   - MIRAIX は**外部サイト**であること。
+   - **資金保証・返金等の保証は一切できない**こと（転送したEPを含む）。
+   - MIRAIX は **LIFAI（LIFAIOV / aisalon）とは関係のない別サービス**であり、LIFAI はその運営・内容に責任を負わないこと。
 
 ---
 
@@ -153,7 +159,8 @@ MIRAIX サーバー関数 `POST /ep/withdraw`（要 MIRAIX セッション）:
 
 ## 8. UI（MIRAIX / サロン）
 
-- **サロン側:** 「MIRAIXで使う」導線（SSO発行→遷移）。マイページに現在のEP残高（既存 `get_balance`）。
+- **サロン側:** LIFAI Arcade（`app/mini-games/page.tsx`）に「MIRAIX」カードを追加（SSO発行→遷移）。クリック時にまず**免責ゲート**（§2-6: 外部サイト・資金保証不可・LIFAIとは無関係）を表示し、同意後にのみ SSO 遷移する。マイページに現在のEP残高（既存 `get_balance`）。
+  - **現況（2026-07-02）:** 両サロンに「準備中」バッジ付きの**押せないカード**を先行設置済み（`aria-disabled` + `opacity-50`、Link無し）。Phase 1 完成時に免責ゲート付きの有効カードへ差し替える。
 - **MIRAIX側:**
   - EP入金/出金モーダル（金額入力→§6実行、履歴は `ep_transfers`）。
   - ヘッダーに現在の `points`（=賭け原資）。
@@ -177,7 +184,7 @@ MIRAIX サーバー関数 `POST /ep/withdraw`（要 MIRAIX セッション）:
 ### やること（Phase 1）
 - **MIRAIX サーバー基盤の新設（前提作業）:** Supabase Edge Functions 等。service_role / GAS adminKey / SSO secret を保持。
 - MIRAIX: profiles 連携列 + `ep_transfers` + SSO検証/アカウント作成 + `/ep/deposit` `/ep/withdraw`。
-- サロン(両方): `/api/miraix/sso` 発行ルート + `add_ep` GAS アクション + MIRAIX導線。
+- サロン(両方): `/api/miraix/sso` 発行ルート + `add_ep` GAS アクション + LIFAI Arcade への MIRAIX 導線（免責ゲート付き, §2-6）。
 - EP↔points 1:1、入出金モーダル、履歴表示。
 
 ### やらないこと（Phase 2以降）
