@@ -20,6 +20,10 @@ re-run (functions/policies are `create or replace` / `drop ... if exists`).
 6. `migrate-006-realtime-sync.sql` — add `markets`/`profiles`/`positions` to the
    realtime publication so prices, balances, payouts and market status update on
    every client without a reload.
+7. `migrate-007-extend-market.sql` — market extension (deadline extend/reopen).
+8. `migrate-008-comment-guards.sql` — comment length guard (server-side defense-in-depth).
+9. `migrate-009-apply-pending.sql` — apply pending (catch-up bundle: 005/007/008).
+10. `migrate-010-ep-transfers.sql` — EPクロス連動: profiles連携列 / ep_transfers / 転送RPC（Studio SQL Editorで手動適用）
 
 > `schema.sql` already contains the final version of every function (including
 > the 005 changes). The `migrate-00X` files are incremental patches for projects
