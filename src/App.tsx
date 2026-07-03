@@ -16,6 +16,7 @@ const AdminMarkets = lazy(() => import('./pages/admin/Markets'))
 const AdminMarketNew = lazy(() => import('./pages/admin/MarketNew'))
 const AdminAds = lazy(() => import('./pages/admin/Ads'))
 const AdminUsers = lazy(() => import('./pages/admin/Users'))
+const AdminPlinko = lazy(() => import('./pages/admin/Plinko'))
 
 const LegalHub = lazy(() => import('./pages/legal/LegalHub'))
 const Terms = lazy(() => import('./pages/legal/Terms'))
@@ -64,6 +65,7 @@ export default function App() {
             <Route path="/admin/markets" element={<L><AdminMarkets /></L>} />
             <Route path="/admin/ads" element={<L><AdminAds /></L>} />
             <Route path="/admin/users" element={<L><AdminUsers /></L>} />
+            <Route path="/admin/plinko" element={<L><AdminPlinko /></L>} />
           </Route>
 
           <Route path="/legal" element={<L><LegalHub /></L>} />
