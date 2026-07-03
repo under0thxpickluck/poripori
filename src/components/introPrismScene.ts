@@ -12,7 +12,7 @@ const TURNS = 3 // 回転数
 
 // ---- テクスチャ生成（外部アセットなしで完結させる） ----
 
-// 「MR」の刻印。ガラス越しに光る白銀の文字
+// 「MR」の刻印。漆黒のシャープなロゴ（ジオメトリックな極太サンセリフ）
 function makeLabelTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas')
   c.width = 512
@@ -21,21 +21,25 @@ function makeLabelTexture(): THREE.CanvasTexture {
   ctx.clearRect(0, 0, c.width, c.height)
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.font = '900 168px Georgia, "Times New Roman", serif'
-  // 外側のにじみ（ガラス内で光が回っている感じ）
-  ctx.shadowColor = 'rgba(190, 215, 255, 0.9)'
-  ctx.shadowBlur = 26
-  const grad = ctx.createLinearGradient(0, 40, 0, 250)
-  grad.addColorStop(0, '#ffffff')
-  grad.addColorStop(0.5, '#dbe8ff')
-  grad.addColorStop(1, '#9db8e8')
+  ctx.font =
+    '900 190px "Avenir Next", Futura, "Helvetica Neue", "Segoe UI", "Hiragino Sans", Arial, sans-serif'
+  // ロゴらしく字間を締める（未対応ブラウザでは無視される）
+  try {
+    ;(ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = '-0.04em'
+  } catch {
+    /* noop */
+  }
+  // 漆黒の文字。わずかに上を明るくして金属彫刻の面取りを匂わせる
+  const grad = ctx.createLinearGradient(0, 50, 0, 240)
+  grad.addColorStop(0, '#23262e')
+  grad.addColorStop(0.35, '#05060a')
+  grad.addColorStop(1, '#000000')
   ctx.fillStyle = grad
-  ctx.fillText('MR', 256, 150)
-  // エッジのハイライトで彫り込み感を出す
-  ctx.shadowBlur = 0
-  ctx.strokeStyle = 'rgba(255,255,255,0.85)'
-  ctx.lineWidth = 3
-  ctx.strokeText('MR', 256, 150)
+  ctx.fillText('MR', 256, 152)
+  // 細い光の縁取りで、暗い背景に沈まないようにする
+  ctx.strokeStyle = 'rgba(220, 232, 255, 0.4)'
+  ctx.lineWidth = 2.5
+  ctx.strokeText('MR', 256, 152)
   const tex = new THREE.CanvasTexture(c)
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = 4
