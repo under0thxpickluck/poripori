@@ -190,8 +190,9 @@ function steerBall(ball: Ball, geom: Geometry, dt: number): boolean {
   }
 
   // 現在の高さにおける理想経路上のx(プランのジグザグを線分でつないだもの)
-  // へ、横速度をそっと寄せる。追従速度はペグで跳ねたときの最大横速度と同じ
-  // 上限に抑え、「跳ねより速い横滑り」は起こさない。
+  // へ、横速度をそっと寄せる。追従速度の上限は跳ね返り速度の上限
+  // (hopVx*1.5)より少し速くして、生じたズレを段を追うごとに必ず
+  // 取り戻せるようにする。それでも残った分は着地イーズが吸収する。
   const t = (ball.y - geom.topMargin) / geom.rowSpacingY
   const seg = Math.max(0, Math.min(geom.rows - 1, Math.floor(t)))
   const frac = Math.max(0, Math.min(1, t - seg))
@@ -247,7 +248,7 @@ function stepBall(ball: Ball, dt: number, geom: Geometry, pegs: Peg[], rng: Rng,
         const dir = ball.plan[peg.row]
         const mag = Math.min(
           Math.max(Math.abs(ball.vx), geom.hopVx * (0.9 + rng() * 0.5)),
-          geom.hopVx * 2.2
+          geom.hopVx * 1.5
         )
         ball.vx = dir * mag
         peg.hitAt = nowMs
