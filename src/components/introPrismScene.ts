@@ -113,13 +113,16 @@ function makeBurstPoints(starTex: THREE.Texture): { points: THREE.Points; materi
     new THREE.Color('#e8c8ff'),
   ]
   for (let i = 0; i < PARTICLE_COUNT; i++) {
-    // プリズム（円錐）内部からサンプリング
-    const h = Math.random() // 0=底面 1=頂点
-    const r = (1 - h) * 1.05 * Math.sqrt(Math.random())
-    const a = Math.random() * Math.PI * 2
-    const x = Math.cos(a) * r
-    const y = h * 1.6 - 0.8
-    const z = Math.sin(a) * r
+    // プリズム（八面体 |x|+|y|+|z|<=R）内部から棄却サンプリング
+    const R = 1.05
+    let x = 0
+    let y = 0
+    let z = 0
+    do {
+      x = (Math.random() * 2 - 1) * R
+      y = (Math.random() * 2 - 1) * R
+      z = (Math.random() * 2 - 1) * R
+    } while (Math.abs(x) + Math.abs(y) + Math.abs(z) > R)
     pos.set([x, y, z], i * 3)
     // 外向き＋ランダム。少し上に吹き上がってから落ちる
     const dir = new THREE.Vector3(x, 0.25 + Math.random() * 0.55, z).normalize()
@@ -227,23 +230,23 @@ export function mountIntroScene(container: HTMLDivElement, onDone: () => void): 
   const prism = new THREE.Group()
   scene.add(prism)
 
-  // 外殻：分光する無色クリスタル。面がカメラ正面（+z）を向くよう回しておく
-  const glassGeo = new THREE.ConeGeometry(1.25, 1.6, 3, 1)
-  glassGeo.rotateY(-Math.PI / 3)
+  // 外殻：分光する無色クリスタルの八面体（ダイヤモンド型）。
+  // 厚み・色減衰を抑えて、向こう側が透けて見えるクリアなガラスにする
+  const glassGeo = new THREE.OctahedronGeometry(1.1, 0)
   const glassMat = new THREE.MeshPhysicalMaterial({
     color: '#ffffff',
     transmission: 1,
-    thickness: 1.2,
-    attenuationColor: '#dfeaff',
-    attenuationDistance: 2.5,
+    thickness: 0.4,
+    attenuationColor: '#eef4ff',
+    attenuationDistance: 8,
     roughness: 0.03,
     metalness: 0,
-    ior: 2.3,
+    ior: 2.1,
     dispersion: 6, // プリズムらしい虹の分光
     clearcoat: 1,
     clearcoatRoughness: 0.05,
     specularIntensity: 1,
-    envMapIntensity: 1.2,
+    envMapIntensity: 0.65,
     flatShading: true,
   })
   const glass = new THREE.Mesh(glassGeo, glassMat)
@@ -262,9 +265,9 @@ export function mountIntroScene(container: HTMLDivElement, onDone: () => void): 
   )
   prism.add(edges)
 
-  // 内側のファセット：虹色の玉虫反射でガラス内部のきらめきを作る
-  const innerGeo = new THREE.ConeGeometry(0.82, 1.06, 3, 1)
-  innerGeo.rotateY(-Math.PI / 3)
+  // 内側のファセット：虹色の玉虫反射でガラス内部のきらめきを作る。
+  // 小さめにして背景の透けを確保する
+  const innerGeo = new THREE.OctahedronGeometry(0.4, 0)
   const innerMat = new THREE.MeshPhysicalMaterial({
     color: '#8fa3c8',
     metalness: 0.9,
@@ -275,17 +278,17 @@ export function mountIntroScene(container: HTMLDivElement, onDone: () => void): 
     flatShading: true,
   })
   const inner = new THREE.Mesh(innerGeo, innerMat)
-  inner.position.y = -0.18
+  inner.rotation.y = Math.PI / 4
   prism.add(inner)
 
   // 頂点で瞬くレンズフレア（回転に合わせて光を拾ったように見せる）
   const glintDefs = [
-    { pos: new THREE.Vector3(0, 0.8, 0), scale: 0.85 },
-    { pos: new THREE.Vector3(-1.08, -0.8, 0.62), scale: 0.6 },
-    { pos: new THREE.Vector3(1.08, -0.8, 0.62), scale: 0.6 },
-    { pos: new THREE.Vector3(0, -0.8, -1.25), scale: 0.55 },
-    { pos: new THREE.Vector3(0.54, 0, 0.31), scale: 0.45 },
-    { pos: new THREE.Vector3(-0.54, 0, 0.31), scale: 0.45 },
+    { pos: new THREE.Vector3(0, 1.1, 0), scale: 0.85 },
+    { pos: new THREE.Vector3(0, -1.1, 0), scale: 0.55 },
+    { pos: new THREE.Vector3(1.1, 0, 0), scale: 0.6 },
+    { pos: new THREE.Vector3(-1.1, 0, 0), scale: 0.6 },
+    { pos: new THREE.Vector3(0, 0, 1.1), scale: 0.5 },
+    { pos: new THREE.Vector3(0, 0, -1.1), scale: 0.5 },
   ]
   const glints = glintDefs.map((def, i) => {
     const sp = new THREE.Sprite(
@@ -313,8 +316,8 @@ export function mountIntroScene(container: HTMLDivElement, onDone: () => void): 
     side: THREE.DoubleSide,
     toneMapped: false,
   })
-  const label = new THREE.Mesh(new THREE.PlaneGeometry(1.06, 0.6), labelMat)
-  label.position.set(0, -0.28, 0.5)
+  const label = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.54), labelMat)
+  label.position.set(0, -0.02, 0.58)
   prism.add(label)
 
   // ---- 床の光だまり＆分光のかけら ----
@@ -328,7 +331,7 @@ export function mountIntroScene(container: HTMLDivElement, onDone: () => void): 
     })
   )
   groundGlow.rotation.x = -Math.PI / 2
-  groundGlow.position.y = -0.86
+  groundGlow.position.y = -1.2
   scene.add(groundGlow)
 
   const causticColors = ['rgba(255,120,170,0.5)', 'rgba(120,190,255,0.5)', 'rgba(255,210,130,0.5)']
@@ -344,7 +347,7 @@ export function mountIntroScene(container: HTMLDivElement, onDone: () => void): 
     )
     m.rotation.x = -Math.PI / 2
     const a = (i / causticColors.length) * Math.PI * 2 + 0.6
-    m.position.set(Math.cos(a) * 1.7, -0.85, Math.sin(a) * 1.2)
+    m.position.set(Math.cos(a) * 1.7, -1.19, Math.sin(a) * 1.2)
     scene.add(m)
     return m
   })
@@ -417,7 +420,7 @@ export function mountIntroScene(container: HTMLDivElement, onDone: () => void): 
       const s = 0.65 + 0.35 * (1 - Math.pow(1 - appear, 3))
       prism.scale.setScalar(s)
       prism.rotation.y = easeInCubic(t / SPIN_END) * Math.PI * 2 * TURNS
-      prism.position.y = 0.05 + Math.sin(t * 1.8) * 0.04 // わずかに浮遊
+      prism.position.y = 0.1 + Math.sin(t * 1.8) * 0.04 // わずかに浮遊
       groundGlow.material.opacity = 0.75 + Math.sin(t * 3.2) * 0.25
       // 面が光を拾った瞬間のきらめき
       for (const g of glints) {
