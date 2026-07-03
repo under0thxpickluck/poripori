@@ -155,10 +155,17 @@ function makeBurstPoints(starTex: THREE.Texture): { points: THREE.Points; materi
       varying vec3 vColor;
       varying float vAlpha;
       void main() {
-        // 減衰しつつ飛び、重力でゆっくり落ちる
+        // 減衰しつつ飛び、重力でゆっくり落ちる。
+        // 重力変位は有界（t^2/(1+t^2)）にする: 2乗のままだと終盤に全粒子が
+        // 一斉に等速落下し、俯角カメラの消失点（画面中央下）へ収束して
+        // 「中央へ吸い寄せられる」ように見える。
         float damp = 1.0 - exp(-uT * 1.6);
-        vec3 p = position + aVel * damp * 1.2 + vec3(0.0, -0.55, 0.0) * uT * uT;
-        float life = clamp(uT / 1.8, 0.0, 1.0);
+        float fall = uT * uT / (1.0 + uT * uT);
+        vec3 p = position + aVel * damp * 1.2 + vec3(0.0, -0.55, 0.0) * fall;
+        // 寿命は粒子ごとにランダム化（1.25〜2.1s）: 全体が同時にフェードすると
+        // 端の暗い粒子から先に消えて密度が中央へ収縮して見えるため
+        float lifeSpan = 1.25 + 0.85 * (aPhase / 6.28318);
+        float life = clamp(uT / lifeSpan, 0.0, 1.0);
         float twinkle = 0.55 + 0.45 * sin(uT * 12.0 + aPhase);
         vColor = aColor;
         vAlpha = twinkle * (1.0 - life * life);

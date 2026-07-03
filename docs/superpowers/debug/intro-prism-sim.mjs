@@ -1,4 +1,6 @@
 // introPrismScene.ts の破片シェーダーを忠実に再現し、終盤の画面上の動きを可視化する
+// 変種: original = バグ当時のコード（重力 -0.55t^2・寿命一律1.8s）
+//       fixed    = 出荷した修正（重力有界 t^2/(1+t^2)・寿命1.25〜2.1sランダム）
 import { writeFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
@@ -53,7 +55,6 @@ const aspect = 16 / 9
 const tanHalf = Math.tan((38 / 2) * (Math.PI / 180))
 function norm(v) { const l = Math.hypot(...v); return v.map((x) => x / l) }
 const zAxis = norm([0, 1.0, 4.9]) // pos - target
-const xAxis = [1, 0, 0]
 const yAxis = [0, zAxis[2], -zAxis[1]] // cross(z,x)
 function project(p) {
   const rel = [p[0] - camPos[0], p[1] - camPos[1], p[2] - camPos[2]]
@@ -68,32 +69,39 @@ function project(p) {
 }
 
 // ---- shader math variants ----
-// original: p = p0 + vel*damp*1.2 + (0,-0.55,0)t^2
-// current : p = p0 + vel*(damp*1.2 + 0.18t) + (0,-0.22,0)t^2
 const VARIANTS = {
-  original: { drift: 0, g: 0.55 },
-  current: { drift: 0.18, g: 0.22 },
+  original: {
+    fall: (t) => 0.55 * t * t,
+    life: () => 1.8,
+  },
+  fixed: {
+    fall: (t) => (0.55 * t * t) / (1 + t * t),
+    life: (pt) => 1.25 + 0.85 * (pt.phase / (Math.PI * 2)),
+  },
 }
 function posAt(pt, t, v) {
   const damp = 1 - Math.exp(-t * 1.6)
-  const k = damp * 1.2 + v.drift * t
+  const k = damp * 1.2
   return [
     pt.p0[0] + pt.vel[0] * k,
-    pt.p0[1] + pt.vel[1] * k - v.g * t * t,
+    pt.p0[1] + pt.vel[1] * k - v.fall(t),
     pt.p0[2] + pt.vel[2] * k,
   ]
 }
-function alphaAt(pt, t) {
-  const life = Math.min(t / 1.8, 1)
+function envAt(pt, t, v) {
+  const life = Math.min(t / v.life(pt), 1)
+  return 1 - life * life
+}
+function alphaAt(pt, t, v) {
   const twinkle = 0.55 + 0.45 * Math.sin(t * 12 + pt.phase)
-  return twinkle * (1 - life * life)
+  return twinkle * envAt(pt, t, v)
 }
 function containerFade(t) {
   // FADE_START=3.6, TOTAL=4.6, burst at 2.7 → bt基準で0.9からフェード
   return Math.max(0, Math.min(1, 1 - (t - 0.9) / 1.0))
 }
-function pointSizePx(pt, t, mz, H) {
-  const life = Math.min(t / 1.8, 1)
+function pointSizePx(pt, t, mz, H, v) {
+  const life = Math.min(t / v.life(pt), 1)
   const ps1080 = (pt.size * (36 + life * 14)) / Math.max(0.1, mz)
   return ps1080 * (H / 1080)
 }
@@ -153,11 +161,11 @@ for (const [name, v] of Object.entries(VARIANTS)) {
       const pr = project(posAt(pt, t, v))
       if (!pr) continue
       if (Math.abs(pr.xn) > 1 || Math.abs(pr.yn) > 1) continue // GLは点中心でクリップ
-      const a = alphaAt(pt, t) * fade
+      const a = alphaAt(pt, t, v) * fade
       if (a <= 0.001) continue
       const sx = ((pr.xn + 1) / 2) * W
       const sy = ((1 - pr.yn) / 2) * H
-      splat(buf, sx, sy, pointSizePx(pt, t, pr.mz, H) / 2, pt.col, a)
+      splat(buf, sx, sy, pointSizePx(pt, t, pr.mz, H, v) / 2, pt.col, a)
     }
     writeBMP(join(OUT, `frame_${name}_t${t.toFixed(1)}.bmp`), buf, W, H)
   }
@@ -174,7 +182,7 @@ for (const [name, v] of Object.entries(VARIANTS)) {
       const pr = project(posAt(pt, t, v))
       if (!pr) continue
       if (Math.abs(pr.xn) > 1 || Math.abs(pr.yn) > 1) continue
-      const a = alphaAt(pt, t) * fade
+      const a = envAt(pt, t, v) * fade
       if (a <= 0.001) continue
       const sx = ((pr.xn + 1) / 2) * W
       const sy = ((1 - pr.yn) / 2) * H
@@ -195,14 +203,13 @@ for (const [name, v] of Object.entries(VARIANTS)) {
     for (const pt of parts) {
       const pr = project(posAt(pt, t, v))
       if (!pr || Math.abs(pr.xn) > 1 || Math.abs(pr.yn) > 1) { clipped++; continue }
-      const life = Math.min(t / 1.8, 1)
-      const env = (1 - life * life) * fade // twinkleは平均0.55なので除外
+      const env = envAt(pt, t, v) * fade // twinkleは平均0.55なので除外
       if (env <= 0.02) continue
       nvis++
       const r = Math.hypot(pr.xn, pr.yn)
       const wgt = env * pt.size
       wsum += wgt; rsum += r * wgt
-      const sizePx = pointSizePx(pt, t, pr.mz, 1080)
+      const sizePx = pointSizePx(pt, t, pr.mz, 1080, v)
       const lum = env * sizePx * sizePx
       lumAll += lum
       if (r < 0.4) lumIn += lum
@@ -220,8 +227,8 @@ for (const [name, v] of Object.entries(VARIANTS)) {
 }
 
 // ---- 4) 画面端まで届いた粒子の追跡（ふちっこだったやつはどこへ行く？）----
-console.log('\n=== 画面端(r>0.8)に居た粒子のその後 (current) ===')
-const v = VARIANTS.current
+console.log('\n=== 画面端(r>0.8)に居た粒子のその後 (fixed) ===')
+const v = VARIANTS.fixed
 const edgeAtT = 1.0
 let tracked = 0
 for (const pt of parts) {
