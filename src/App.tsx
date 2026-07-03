@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import AdminGuard from './components/AdminGuard'
+import IntroPrism from './components/IntroPrism'
 import MarketList from './pages/MarketList'
 
 // ホーム以外は遅延読み込み（recharts等を初期バンドルから分離し、スマホの初回表示を軽く）
@@ -49,42 +50,45 @@ function L({ children }: { children: ReactNode }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<MarketList />} />
-          <Route path="/market/:id" element={<L><MarketDetail /></L>} />
-          <Route path="/portfolio" element={<L><Portfolio /></L>} />
-          <Route path="/propose" element={<L><Propose /></L>} />
-          <Route path="/ranking" element={<L><Ranking /></L>} />
-          <Route path="/plinko" element={<L><Plinko /></L>} />
-          <Route element={<AdminGuard />}>
-            <Route path="/admin" element={<L><AdminDashboard /></L>} />
-            <Route path="/admin/proposals" element={<L><AdminProposals /></L>} />
-            <Route path="/admin/markets/new" element={<L><AdminMarketNew /></L>} />
-            <Route path="/admin/markets" element={<L><AdminMarkets /></L>} />
-            <Route path="/admin/ads" element={<L><AdminAds /></L>} />
-            <Route path="/admin/users" element={<L><AdminUsers /></L>} />
-            <Route path="/admin/plinko" element={<L><AdminPlinko /></L>} />
-          </Route>
+    <>
+      <IntroPrism />
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<MarketList />} />
+            <Route path="/market/:id" element={<L><MarketDetail /></L>} />
+            <Route path="/portfolio" element={<L><Portfolio /></L>} />
+            <Route path="/propose" element={<L><Propose /></L>} />
+            <Route path="/ranking" element={<L><Ranking /></L>} />
+            <Route path="/plinko" element={<L><Plinko /></L>} />
+            <Route element={<AdminGuard />}>
+              <Route path="/admin" element={<L><AdminDashboard /></L>} />
+              <Route path="/admin/proposals" element={<L><AdminProposals /></L>} />
+              <Route path="/admin/markets/new" element={<L><AdminMarketNew /></L>} />
+              <Route path="/admin/markets" element={<L><AdminMarkets /></L>} />
+              <Route path="/admin/ads" element={<L><AdminAds /></L>} />
+              <Route path="/admin/users" element={<L><AdminUsers /></L>} />
+              <Route path="/admin/plinko" element={<L><AdminPlinko /></L>} />
+            </Route>
 
-          <Route path="/legal" element={<L><LegalHub /></L>} />
-          <Route path="/legal/terms" element={<L><Terms /></L>} />
-          <Route path="/legal/privacy" element={<L><Privacy /></L>} />
-          <Route path="/legal/cookies" element={<L><Cookies /></L>} />
-          <Route path="/legal/market-integrity" element={<L><MarketIntegrity /></L>} />
-          <Route path="/legal/community" element={<L><Community /></L>} />
-          <Route path="/legal/risk" element={<L><Risk /></L>} />
-          <Route path="/legal/compliance" element={<L><Compliance /></L>} />
-          <Route path="/legal/security" element={<L><Security /></L>} />
-          <Route path="/company" element={<L><Company /></L>} />
-          <Route path="/contact" element={<L><Contact /></L>} />
-          <Route path="/status" element={<L><Status /></L>} />
-          <Route path="/press" element={<L><Press /></L>} />
-          <Route path="/faq" element={<L><Faq /></L>} />
-          <Route path="/developers" element={<L><Developers /></L>} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+            <Route path="/legal" element={<L><LegalHub /></L>} />
+            <Route path="/legal/terms" element={<L><Terms /></L>} />
+            <Route path="/legal/privacy" element={<L><Privacy /></L>} />
+            <Route path="/legal/cookies" element={<L><Cookies /></L>} />
+            <Route path="/legal/market-integrity" element={<L><MarketIntegrity /></L>} />
+            <Route path="/legal/community" element={<L><Community /></L>} />
+            <Route path="/legal/risk" element={<L><Risk /></L>} />
+            <Route path="/legal/compliance" element={<L><Compliance /></L>} />
+            <Route path="/legal/security" element={<L><Security /></L>} />
+            <Route path="/company" element={<L><Company /></L>} />
+            <Route path="/contact" element={<L><Contact /></L>} />
+            <Route path="/status" element={<L><Status /></L>} />
+            <Route path="/press" element={<L><Press /></L>} />
+            <Route path="/faq" element={<L><Faq /></L>} />
+            <Route path="/developers" element={<L><Developers /></L>} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </>
   )
 }
