@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { computeGeometry, layoutPegs, createBall, advanceBall, SUBSTEP } from './plinko-engine'
+import { describe, it, expect, vi } from 'vitest'
+import { computeGeometry, layoutPegs, createBall, advanceBall, SUBSTEP, createPlinkoEngine } from './plinko-engine'
 
 // 再現性のためのシード付き乱数(LCG)
 function makeRng(seed: number) {
@@ -61,4 +61,71 @@ describe('plinko-engine 軌道品質', () => {
       }
     })
   }
+})
+
+describe('createPlinkoEngine ライフサイクル', () => {
+  function makeFakeCanvas(): HTMLCanvasElement {
+    // 描画は検証対象外。rAF をスタブして loop を一度も回さないので、
+    // ctx はどのメソッドを呼ばれても無視する Proxy で足りる。
+    const ctx = new Proxy({}, { get: () => () => undefined })
+    return {
+      clientWidth: 400,
+      style: {},
+      width: 0,
+      height: 0,
+      getContext: () => ctx,
+      parentElement: null,
+    } as unknown as HTMLCanvasElement
+  }
+
+  function stubBrowserGlobals() {
+    vi.stubGlobal('window', { devicePixelRatio: 1 })
+    vi.stubGlobal('requestAnimationFrame', () => 1)
+    vi.stubGlobal('cancelAnimationFrame', () => undefined)
+  }
+
+  it('destroy() は飛行中の玉の onBallLanded を発火してから破棄する', () => {
+    stubBrowserGlobals()
+    try {
+      const landed: { bucket: number; payload: unknown }[] = []
+      const engine = createPlinkoEngine(makeFakeCanvas(), {
+        rows: 12,
+        multipliers: new Array(13).fill(1),
+        onBallLanded: (r) => landed.push(r),
+      })
+      engine.drop(3, { id: 'a' })
+      engine.drop(9, { id: 'b' })
+      expect(engine.ballsInFlight()).toBe(2)
+      engine.destroy()
+      expect(landed).toEqual([
+        { bucket: 3, payload: { id: 'a' } },
+        { bucket: 9, payload: { id: 'b' } },
+      ])
+      expect(engine.ballsInFlight()).toBe(0)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('resize() は飛行中の玉を flush してから盤面を作り直す', () => {
+    stubBrowserGlobals()
+    try {
+      const landed: { bucket: number; payload: unknown }[] = []
+      const engine = createPlinkoEngine(makeFakeCanvas(), {
+        rows: 8,
+        multipliers: new Array(9).fill(1),
+        onBallLanded: (r) => landed.push(r),
+      })
+      engine.drop(0, 'x')
+      engine.resize()
+      expect(landed).toEqual([{ bucket: 0, payload: 'x' }])
+      expect(engine.ballsInFlight()).toBe(0)
+      // 作り直した盤面でも drop できる
+      engine.drop(8, 'y')
+      expect(engine.ballsInFlight()).toBe(1)
+      engine.destroy()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
 })
