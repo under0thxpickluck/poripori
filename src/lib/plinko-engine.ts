@@ -265,3 +265,234 @@ export function advanceBall(ball: Ball, dt: number, geom: Geometry, pegs: Peg[],
   if (steerBall(ball, geom, dt)) return
   stepBall(ball, dt, geom, pegs, rng, nowMs)
 }
+
+// ============================================================
+// Canvas 描画+エンジン本体
+// ============================================================
+
+export type PlinkoEngineOptions = {
+  rows: number
+  multipliers: number[]
+  onBallLanded: (r: { bucket: number; payload: unknown }) => void
+}
+
+export type PlinkoEngine = {
+  drop(targetBucket: number, payload?: unknown): void
+  resize(): void
+  destroy(): void
+  ballsInFlight(): number
+}
+
+const GLOW_MS = 420
+const FLASH_MS = 500
+
+const COLOR_STOPS: [number, number, number][] = [
+  [255, 210, 68], // 中央: 黄
+  [255, 150, 60], // 中間: 橙
+  [255, 68, 90], // 端: 赤
+]
+
+function bucketColor(t: number): [number, number, number] {
+  const seg = t * (COLOR_STOPS.length - 1)
+  const i = Math.min(COLOR_STOPS.length - 2, Math.floor(seg))
+  const f = seg - i
+  const a = COLOR_STOPS[i]
+  const b = COLOR_STOPS[i + 1]
+  return [lerp(a[0], b[0], f), lerp(a[1], b[1], f), lerp(a[2], b[2], f)]
+}
+
+function rgb(c: [number, number, number], alpha = 1): string {
+  return `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${alpha})`
+}
+
+function formatMult(m: number): string {
+  return (m >= 10 ? m.toFixed(0) : m.toFixed(m < 1 ? 2 : 1)) + 'x'
+}
+
+function roundRect(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  c.beginPath()
+  c.moveTo(x + r, y)
+  c.arcTo(x + w, y, x + w, y + h, r)
+  c.arcTo(x + w, y + h, x, y + h, r)
+  c.arcTo(x, y + h, x, y, r)
+  c.arcTo(x, y, x + w, y, r)
+  c.closePath()
+}
+
+export function createPlinkoEngine(canvas: HTMLCanvasElement, opts: PlinkoEngineOptions): PlinkoEngine {
+  const ctx = canvas.getContext('2d')!
+  const rng: Rng = Math.random
+  let geom: Geometry
+  let pegs: Peg[]
+  let balls: Ball[] = []
+  let bucketFlash: number[] = []
+  let dpr = 1
+  let rafId = 0
+  let lastTs = 0
+  let destroyed = false
+
+  function rebuild() {
+    const cssWidth = canvas.clientWidth || canvas.parentElement?.clientWidth || 400
+    geom = computeGeometry(opts.rows, cssWidth)
+    pegs = layoutPegs(geom)
+    bucketFlash = new Array(geom.buckets).fill(0)
+    balls = []
+    dpr = Math.min(2, window.devicePixelRatio || 1)
+    canvas.width = Math.round(cssWidth * dpr)
+    canvas.height = Math.round(geom.totalHeight * dpr)
+    canvas.style.height = geom.totalHeight + 'px'
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  }
+
+  // 飛行中の玉の配当はサーバーで確定済み。盤面を壊す前に必ず通知する。
+  function flushInFlight() {
+    for (const ball of balls) {
+      opts.onBallLanded({ bucket: ball.targetBucket, payload: ball.payload })
+    }
+    balls = []
+  }
+
+  function drawPegs(now: number) {
+    for (const peg of pegs) {
+      const since = now - peg.hitAt
+      const t = since < GLOW_MS ? 1 - since / GLOW_MS : 0
+      ctx.beginPath()
+      ctx.arc(peg.x, peg.y, geom.pegRadius * (1 + t * 0.9), 0, Math.PI * 2)
+      if (t > 0) {
+        ctx.shadowBlur = 22 * t
+        ctx.shadowColor = 'rgba(160,220,255,0.95)'
+        ctx.fillStyle = `rgba(${lerp(230, 255, t)}, ${lerp(236, 250, t)}, 255, 1)`
+      } else {
+        ctx.shadowBlur = 3
+        ctx.shadowColor = 'rgba(120,160,255,0.35)'
+        ctx.fillStyle = 'rgba(226,232,245,0.9)'
+      }
+      ctx.fill()
+      ctx.shadowBlur = 0
+    }
+  }
+
+  function drawBalls() {
+    for (const ball of balls) {
+      for (let i = 0; i < ball.trail.length; i++) {
+        const p = ball.trail[i]
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, geom.ballRadius * 0.7, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255,214,110,${(i / ball.trail.length) * 0.25})`
+        ctx.fill()
+      }
+      ctx.beginPath()
+      ctx.arc(ball.x, ball.y, geom.ballRadius, 0, Math.PI * 2)
+      const grad = ctx.createRadialGradient(
+        ball.x - geom.ballRadius * 0.3,
+        ball.y - geom.ballRadius * 0.3,
+        1,
+        ball.x,
+        ball.y,
+        geom.ballRadius
+      )
+      grad.addColorStop(0, '#fff8e0')
+      grad.addColorStop(1, '#ffb238')
+      ctx.fillStyle = grad
+      ctx.shadowBlur = 10
+      ctx.shadowColor = 'rgba(255,178,56,0.7)'
+      ctx.fill()
+      ctx.shadowBlur = 0
+    }
+  }
+
+  function drawBuckets(now: number) {
+    const mult = opts.multipliers
+    const y = geom.boardHeight
+    const minM = Math.min(...mult)
+    const maxM = Math.max(...mult)
+    for (let k = 0; k < mult.length; k++) {
+      const x0 = geom.leftWall + k * geom.D
+      const t =
+        maxM === minM
+          ? 0
+          : (Math.log(mult[k] + 0.05) - Math.log(minM + 0.05)) /
+            (Math.log(maxM + 0.05) - Math.log(minM + 0.05))
+      const flashT = bucketFlash[k] ? Math.max(0, 1 - (now - bucketFlash[k]) / FLASH_MS) : 0
+      roundRect(ctx, x0 + 1, y, geom.D - 2, geom.bucketBarHeight, 6)
+      ctx.fillStyle = rgb(bucketColor(t), 0.92)
+      if (flashT > 0) {
+        ctx.shadowBlur = 26 * flashT
+        ctx.shadowColor = 'rgba(255,255,255,0.9)'
+      }
+      ctx.fill()
+      ctx.shadowBlur = 0
+      if (flashT > 0) {
+        ctx.fillStyle = `rgba(255,255,255,${flashT * 0.5})`
+        ctx.fill()
+      }
+      ctx.fillStyle = 'rgba(10,10,20,0.85)'
+      ctx.font = `700 ${Math.max(9, geom.D * 0.24)}px 'Noto Sans JP', sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(formatMult(mult[k]), x0 + geom.D / 2, y + geom.bucketBarHeight / 2 + 1)
+    }
+  }
+
+  function draw(now: number) {
+    const w = canvas.width / dpr
+    const h = canvas.height / dpr
+    ctx.clearRect(0, 0, w, h)
+    ctx.save()
+    ctx.strokeStyle = 'rgba(120,160,255,0.15)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(geom.leftWall - 4, 2, geom.rightWall - geom.leftWall + 8, geom.boardHeight)
+    ctx.restore()
+    drawPegs(now)
+    drawBalls()
+    drawBuckets(now)
+  }
+
+  function loop(ts: number) {
+    if (destroyed) return
+    rafId = requestAnimationFrame(loop)
+    if (!lastTs) lastTs = ts
+    let frameDt = (ts - lastTs) / 1000
+    lastTs = ts
+    if (frameDt > 0.05) frameDt = 0.05 // タブ復帰時などの大ジャンプを抑制
+
+    if (frameDt > 0) {
+      const steps = Math.max(1, Math.ceil(frameDt / SUBSTEP))
+      const dt = frameDt / steps
+      const now = performance.now()
+      for (let s = 0; s < steps; s++) {
+        for (const ball of balls) advanceBall(ball, dt, geom, pegs, rng, now)
+      }
+      const remain: Ball[] = []
+      for (const ball of balls) {
+        if (ball.settled) {
+          bucketFlash[ball.targetBucket] = now
+          opts.onBallLanded({ bucket: ball.targetBucket, payload: ball.payload })
+        } else {
+          remain.push(ball)
+        }
+      }
+      balls = remain
+    }
+    draw(performance.now())
+  }
+
+  rebuild()
+  rafId = requestAnimationFrame(loop)
+
+  return {
+    drop(targetBucket, payload = null) {
+      balls.push(createBall(geom, targetBucket, payload, rng))
+    },
+    resize() {
+      flushInFlight()
+      rebuild()
+    },
+    destroy() {
+      destroyed = true
+      cancelAnimationFrame(rafId)
+      flushInFlight()
+    },
+    ballsInFlight: () => balls.length,
+  }
+}
