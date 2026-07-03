@@ -64,12 +64,16 @@ function mapAd(a: any): Ad {
   return { id: a.id, title: a.title, imageUrl: a.image_url, linkUrl: a.link_url, active: a.active, createdAt: a.created_at }
 }
 
-function mapRpcError(msg: string): string {
+export function mapRpcError(msg: string): string {
   if (msg.includes('AUTH_REQUIRED')) return 'ログインしてください'
   if (msg.includes('MARKET_NOT_OPEN')) return 'このマーケットは現在受付中ではありません'
   if (msg.includes('MARKET_CLOSED')) return 'このマーケットは締切済みです'
   if (msg.includes('ALREADY_RESOLVED')) return 'このマーケットは既に解決済みです'
   if (msg.includes('MARKET_NOT_FOUND')) return 'マーケットが見つかりません'
+  if (msg.includes('BAD_BET')) return 'ベット額は1〜10,000の範囲で入力してください'
+  if (msg.includes('BAD_ROWS')) return '段数の設定が見つかりません'
+  if (msg.includes('BAD_MULTIPLIERS')) return '倍率テーブルが不正です'
+  if (msg.includes('RTP_OUT_OF_RANGE')) return '還元率は10%〜150%の範囲にしてください'
   if (msg.includes('INSUFFICIENT_POINTS')) return 'ポイントが不足しています'
   if (msg.includes('INSUFFICIENT_SHARES')) return '保有シェアが不足しています'
   if (msg.includes('BAD_SHARES')) return '0より大きい枚数を入力してください'
