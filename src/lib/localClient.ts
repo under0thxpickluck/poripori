@@ -7,6 +7,7 @@
 // メール認証なしで「投稿・投票・解決」をローカルで試せる。
 // ============================================================================
 import { costFn, currentPrice } from './lmsr'
+import { calcRTP, generateMultipliers, GROWTH, ROW_OPTIONS } from './plinko-odds'
 
 export const IS_LOCAL = import.meta.env.VITE_LOCAL_MODE === '1'
 
@@ -54,6 +55,22 @@ type Trade = {
 type PricePoint = { id: number; market_id: string; t: string; yes: number }
 type Comment = { id: string; market_id: string; user_id: string; body: string; created_at: string }
 type Ad = { id: string; title: string; image_url: string; link_url: string; active: boolean; created_at: string }
+type PlinkoConfig = {
+  rows_count: number
+  multipliers: number[]
+  updated_at: string
+  updated_by: string | null
+}
+type PlinkoPlay = {
+  id: string
+  user_id: string
+  bet: number
+  rows_count: number
+  bucket: number
+  multiplier: number
+  payout: number
+  created_at: string
+}
 
 type DB = {
   profiles: Profile[]
@@ -63,6 +80,8 @@ type DB = {
   price_history: PricePoint[]
   comments: Comment[]
   ads: Ad[]
+  plinko_config: PlinkoConfig[]
+  plinko_plays: PlinkoPlay[]
 }
 
 // --- 固定 ID（seed ユーザー）---
@@ -141,14 +160,44 @@ function seed(): DB {
     yes: currentPrice(m.q_yes, m.q_no, m.b).yes,
   }))
 
-  return { profiles, markets, positions: [], trades: [], price_history, comments: [], ads: [] }
+  // migrate-011 の既定値と同じ生成則(8段95%⇔16段90%の線形補間)
+  const plinko_config: PlinkoConfig[] = ROW_OPTIONS.map((rows) => {
+    const t = (rows - ROW_OPTIONS[0]) / (ROW_OPTIONS[ROW_OPTIONS.length - 1] - ROW_OPTIONS[0])
+    return {
+      rows_count: rows,
+      multipliers: generateMultipliers(rows, 0.95 + (0.9 - 0.95) * t, GROWTH),
+      updated_at: nowIso(),
+      updated_by: null,
+    }
+  })
+
+  return {
+    profiles,
+    markets,
+    positions: [],
+    trades: [],
+    price_history,
+    comments: [],
+    ads: [],
+    plinko_config,
+    plinko_plays: [],
+  }
 }
 
 // --- 永続化 ---
 function load(): DB {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as DB
+    if (raw) {
+      // 保存済みデータに後から追加されたテーブルが無いことがあるので seed から補う
+      const parsed = JSON.parse(raw) as Partial<DB>
+      const base = seed()
+      const merged = { ...base, ...parsed } as DB
+      for (const k of Object.keys(base) as Array<keyof DB>) {
+        if (!Array.isArray(merged[k])) (merged as Record<string, unknown>)[k] = base[k]
+      }
+      return merged
+    }
   } catch {
     /* ignore */
   }
@@ -456,6 +505,11 @@ async function rpc(name: string, params: Record<string, unknown>): Promise<Resul
         return { data: null, error: null }
       case 'claim_daily_bonus':
         return { data: claimDailyBonus(), error: null }
+      case 'plinko_play':
+        return { data: plinkoPlay(params), error: null }
+      case 'admin_plinko_set_multipliers':
+        adminPlinkoSetMultipliers(params)
+        return { data: null, error: null }
       default:
         return { data: null, error: { message: 'UNKNOWN_RPC:' + name } }
     }
@@ -604,6 +658,60 @@ function adminSetRole(userId: string, role: 'user' | 'admin') {
   save(db)
   emit('profiles', 'UPDATE', p as unknown as Record<string, unknown>)
 }
+// migrate-011 の plinko_play と同じ検証・抽選・精算(XP は加算しない)
+function plinkoPlay(params: Record<string, unknown>) {
+  const me = requireAuth()
+  const bet = Number(params.p_bet)
+  const rows = Number(params.p_rows)
+  if (!Number.isFinite(bet) || bet < 1 || bet > 10000) throw new Error('BAD_BET')
+  const cfg = db.plinko_config.find((c) => c.rows_count === rows)
+  if (!cfg) throw new Error('BAD_ROWS')
+  const p = profile(me)
+  if (!p) throw new Error('PROFILE_NOT_FOUND')
+  if (p.points < bet) throw new Error('INSUFFICIENT_POINTS')
+
+  let bucket = 0
+  for (let i = 0; i < rows; i++) if (Math.random() < 0.5) bucket++
+  const multiplier = cfg.multipliers[bucket]
+  const payout = Math.round(bet * multiplier * 100) / 100
+  p.points = Math.round((p.points + payout - bet) * 100) / 100
+
+  const play: PlinkoPlay = {
+    id: uid(),
+    user_id: me,
+    bet,
+    rows_count: rows,
+    bucket,
+    multiplier,
+    payout,
+    created_at: nowIso(),
+  }
+  db.plinko_plays.push(play)
+  save(db)
+  emit('profiles', 'UPDATE', p as unknown as Record<string, unknown>)
+  emit('plinko_plays', 'INSERT', play as unknown as Record<string, unknown>)
+  return { bucket, multiplier, payout, balance: p.points }
+}
+
+// migrate-011 の admin_plinko_set_multipliers と同じ検証(RTP 10%〜150%)
+function adminPlinkoSetMultipliers(params: Record<string, unknown>) {
+  requireAdmin()
+  const rows = Number(params.p_rows)
+  const cfg = db.plinko_config.find((c) => c.rows_count === rows)
+  if (!cfg) throw new Error('BAD_ROWS')
+  const raw = params.p_multipliers
+  if (!Array.isArray(raw) || raw.length !== rows + 1) throw new Error('BAD_MULTIPLIERS')
+  const mult = raw.map(Number)
+  if (mult.some((m) => !Number.isFinite(m) || m < 0)) throw new Error('BAD_MULTIPLIERS')
+  const rtp = calcRTP(rows, mult)
+  if (rtp < 0.1 || rtp > 1.5) throw new Error('RTP_OUT_OF_RANGE')
+  cfg.multipliers = mult
+  cfg.updated_at = nowIso()
+  cfg.updated_by = currentUserId
+  save(db)
+  emit('plinko_config', 'UPDATE', cfg as unknown as Record<string, unknown>)
+}
+
 function claimDailyBonus() {
   const p = profile(requireAuth())!
   const today = new Date().toISOString().slice(0, 10)
