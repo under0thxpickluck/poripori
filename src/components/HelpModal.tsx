@@ -93,10 +93,11 @@ export default function HelpModal({ onClose }: Props) {
               <Coins size={17} />
             </div>
             <div>
-              <p className="text-sm font-medium text-text">ポイント（pt）制について</p>
+              <p className="text-sm font-medium text-text">ポイント（MR）制について</p>
               <p className="text-xs text-text-muted leading-relaxed mt-0.5">
-                取引はすべて仮想ポイントで行います。新規アカウントには <span className="text-text font-medium">1,000pt</span> が付与されます。
-                ポイントでシェアを購入し、的中すると増え、外すと減ります。残高や総資産はランキング・レベル・ランクに反映されます（実際のお金は一切使いません）。
+                取引はすべて仮想ポイント「MR（MIRAIXポイント。画面では pt とも表示）」で行います。
+                新規アカウントには<span className="text-text font-medium">期間限定の新規登録特典として 1,000 MR</span> が付与されます（キャンペーンは予告なく変更・終了する場合があります）。
+                MRでシェアを購入し、的中すると増え、外すと減ります。残高や総資産はランキング・レベル・ランクに反映されます（実際のお金は一切使いません）。
               </p>
             </div>
           </section>
