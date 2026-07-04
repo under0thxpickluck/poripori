@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { BarChart2, Trophy, PlusCircle, Settings, LogOut, ChevronDown, Search, ShieldCheck, HelpCircle } from 'lucide-react'
 import { useStore } from '../store/useStore'
@@ -8,6 +8,8 @@ import { levelInfo, winStreak } from '../lib/gamification'
 import LoginModal from './LoginModal'
 import HelpModal from './HelpModal'
 import ThemeToggle from './ThemeToggle'
+import LanguageSwitcher from './LanguageSwitcher'
+import { useT } from '../lib/i18n'
 
 const NAV_LINKS = [
   { to: '/', label: 'マーケット' },
@@ -28,6 +30,7 @@ const ADMIN_LINKS = [
 ]
 
 export default function Navbar() {
+  const t = useT()
   const location = useLocation()
   const { currentUser, positions, markets } = useStore()
   const signOut = useAuth((s) => s.signOut)
@@ -67,7 +70,7 @@ export default function Navbar() {
                     : 'text-text-muted hover:text-text hover:bg-white/5'
                 }`}
               >
-                {l.label}
+                {t(l.label)}
               </Link>
             ))}
             {salonLinked && (
@@ -79,7 +82,7 @@ export default function Navbar() {
                     : 'text-text-muted hover:text-text hover:bg-white/5'
                 }`}
               >
-                EPウォレット
+                {t('EPウォレット')}
               </Link>
             )}
             {user?.role === 'admin' && (
@@ -94,7 +97,7 @@ export default function Navbar() {
                         : 'text-text-muted hover:text-text hover:bg-white/5'
                     }`}
                   >
-                    {l.label}
+                    {t(l.label)}
                   </Link>
                 ))}
               </div>
@@ -108,26 +111,27 @@ export default function Navbar() {
                 className="flex items-center gap-1.5 h-9 px-3 rounded-lg bg-accent/15 border border-accent/40 text-accent hover:bg-accent/25 transition-colors"
               >
                 <ShieldCheck size={15} />
-                <span className="text-xs font-semibold hidden sm:inline">管理ダッシュボード</span>
+                <span className="text-xs font-semibold hidden sm:inline">{t('管理ダッシュボード')}</span>
               </Link>
             )}
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
-              aria-label="コマンドパレットを開く"
+              aria-label={t('コマンドパレットを開く')}
               className="hidden sm:flex items-center gap-2 h-9 px-3 rounded-lg bg-surface-hover border border-border text-text-muted hover:text-text hover:border-accent/50 transition-colors"
             >
               <Search size={14} />
-              <span className="text-xs">検索</span>
+              <span className="text-xs">{t('検索')}</span>
               <kbd className="text-[10px] border border-border rounded px-1 py-0.5 bg-surface">⌘K</kbd>
             </button>
             <button
               onClick={() => setShowHelp(true)}
-              aria-label="使い方"
-              title="使い方"
+              aria-label={t('使い方')}
+              title={t('使い方')}
               className="w-9 h-9 rounded-lg bg-surface-hover border border-border text-text-muted hover:text-text hover:border-accent/50 flex items-center justify-center transition-colors"
             >
               <HelpCircle size={16} />
             </button>
+            <LanguageSwitcher />
             <ThemeToggle />
             {user ? (
               <div className="relative">
@@ -168,7 +172,7 @@ export default function Navbar() {
                           <>
                             <div className="flex items-center justify-between text-[10px] text-text-muted mb-1">
                               <span className={lvl.rank.color}>{lvl.rank.name}</span>
-                              {streak > 0 && <span className="text-no font-bold">🔥 {streak}連勝</span>}
+                              {streak > 0 && <span className="text-no font-bold">🔥 {t('{n}連勝', { n: streak })}</span>}
                             </div>
                             <div className="h-1.5 rounded-full bg-surface-hover overflow-hidden">
                               <div className="h-full rounded-full bg-accent" style={{ width: `${Math.round(lvl.progress * 100)}%` }} />
@@ -178,7 +182,7 @@ export default function Navbar() {
                       </div>
                       {user.role === 'admin' && (
                         <div className="md:hidden border-b border-border py-1">
-                          <p className="px-4 py-1.5 text-[10px] font-semibold text-text-muted">管理メニュー</p>
+                          <p className="px-4 py-1.5 text-[10px] font-semibold text-text-muted">{t('管理メニュー')}</p>
                           {ADMIN_LINKS.map((l) => (
                             <Link
                               key={l.to}
@@ -196,7 +200,7 @@ export default function Navbar() {
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-no hover:bg-no/10 transition-colors"
                       >
                         <LogOut size={14} />
-                        ログアウト
+                        {t('ログアウト')}
                       </button>
                     </div>
                   </>
@@ -207,7 +211,7 @@ export default function Navbar() {
                 onClick={() => setShowLogin(true)}
                 className="px-4 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-sm font-medium text-white transition-colors"
               >
-                ログイン
+                {t('ログイン')}
               </button>
             )}
           </div>

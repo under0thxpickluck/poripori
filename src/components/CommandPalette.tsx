@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, TrendingUp, Wallet, Trophy, PlusCircle, LayoutDashboard, CornerDownLeft } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { marketPrice } from '../lib/lmsr'
+import { useT } from '../lib/i18n'
 
 type Item = {
   id: string
@@ -22,6 +23,7 @@ const NAV_ITEMS: Item[] = [
 ]
 
 export default function CommandPalette() {
+  const t = useT()
   const navigate = useNavigate()
   const { markets } = useStore()
   const [open, setOpen] = useState(false)
@@ -118,7 +120,7 @@ export default function CommandPalette() {
                 go()
               }
             }}
-            placeholder="マーケットやページを検索..."
+            placeholder={t('マーケットやページを検索...')}
             className="flex-1 bg-transparent py-3.5 text-sm text-text placeholder-text-muted outline-none"
           />
           <kbd className="rounded border border-border px-1.5 py-0.5 text-[10px] text-text-muted">ESC</kbd>
@@ -126,7 +128,7 @@ export default function CommandPalette() {
 
         <div ref={listRef} className="max-h-80 overflow-y-auto py-2">
           {results.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-text-muted">該当する項目がありません</div>
+            <div className="px-4 py-8 text-center text-sm text-text-muted">{t('該当する項目がありません')}</div>
           ) : (
             results.map((it, i) => {
               const Icon = it.icon
@@ -141,10 +143,10 @@ export default function CommandPalette() {
                 >
                   <Icon size={15} className="shrink-0 text-text-muted" />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm text-text">{it.label}</div>
+                    <div className="truncate text-sm text-text">{it.group === 'ページ' ? t(it.label) : it.label}</div>
                     {it.sub && <div className="truncate text-xs text-text-muted">{it.sub}</div>}
                   </div>
-                  <span className="shrink-0 text-[10px] text-text-muted">{it.group}</span>
+                  <span className="shrink-0 text-[10px] text-text-muted">{t(it.group)}</span>
                   {i === active && <CornerDownLeft size={13} className="shrink-0 text-text-muted" />}
                 </button>
               )
@@ -153,9 +155,9 @@ export default function CommandPalette() {
         </div>
 
         <div className="flex items-center gap-3 border-t border-border px-4 py-2 text-[10px] text-text-muted">
-          <span>↑↓ 移動</span>
-          <span>⏎ 開く</span>
-          <span>esc 閉じる</span>
+          <span>↑↓ {t('移動')}</span>
+          <span>⏎ {t('開く')}</span>
+          <span>esc {t('閉じる')}</span>
         </div>
       </div>
     </div>

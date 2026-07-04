@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Home, Wallet, Trophy, PlusCircle, Search } from 'lucide-react'
+import { useT } from '../lib/i18n'
 
 const TABS = [
   { to: '/', label: 'マーケット', Icon: Home },
@@ -10,6 +11,7 @@ const TABS = [
 
 // スマホ専用の下部固定タブバー（md以上では非表示）
 export default function MobileTabBar() {
+  const t = useT()
   const { pathname } = useLocation()
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-bg/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
@@ -25,17 +27,17 @@ export default function MobileTabBar() {
               }`}
             >
               <Icon size={20} strokeWidth={active ? 2.4 : 2} />
-              <span className="text-[10px] font-medium">{label}</span>
+              <span className="text-[10px] font-medium">{t(label)}</span>
             </Link>
           )
         })}
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
-          aria-label="検索"
+          aria-label={t('検索')}
           className="flex flex-col items-center justify-center gap-0.5 text-text-muted active:text-accent transition-colors"
         >
           <Search size={20} />
-          <span className="text-[10px] font-medium">検索</span>
+          <span className="text-[10px] font-medium">{t('検索')}</span>
         </button>
       </div>
     </nav>

@@ -1,6 +1,7 @@
 import { Component } from 'react'
 import type { ErrorInfo, ReactNode } from 'react'
 import { AlertTriangle } from 'lucide-react'
+import { tOutside as t } from '../lib/i18n'
 
 type Props = { children: ReactNode }
 type State = { hasError: boolean }
@@ -28,16 +29,16 @@ export default class ErrorBoundary extends Component<Props, State> {
           <AlertTriangle size={24} />
         </div>
         <div>
-          <p className="text-text font-semibold">表示中に問題が発生しました</p>
+          <p className="text-text font-semibold">{t('表示中に問題が発生しました')}</p>
           <p className="mt-1 text-sm text-text-muted">
-            一時的なエラーの可能性があります。再読み込みをお試しください。
+            {t('一時的なエラーの可能性があります。再読み込みをお試しください。')}
           </p>
         </div>
         <button
           onClick={() => window.location.reload()}
           className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
         >
-          再読み込み
+          {t('再読み込み')}
         </button>
       </div>
     )

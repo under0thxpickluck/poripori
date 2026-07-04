@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTheme } from '../store/useTheme'
 import { COMPANY } from '../lib/company'
+import { useT } from '../lib/i18n'
 
 type FooterLink = { label: string; href: string; action?: 'help' }
 
@@ -44,20 +45,21 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
 ]
 
 function FooterLinkItem({ label, href, action }: FooterLink) {
+  const t = useT()
   if (action === 'help') {
     return (
       <button
         onClick={() => window.dispatchEvent(new CustomEvent('open-help'))}
         className="text-sm text-text-muted hover:text-text transition-colors"
       >
-        {label}
+        {t(label)}
       </button>
     )
   }
   if (href.startsWith('/')) {
     return (
       <Link to={href} className="text-sm text-text-muted hover:text-text transition-colors">
-        {label}
+        {t(label)}
       </Link>
     )
   }
@@ -68,12 +70,13 @@ function FooterLinkItem({ label, href, action }: FooterLink) {
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className="text-sm text-text-muted hover:text-text transition-colors"
     >
-      {label}
+      {t(label)}
     </a>
   )
 }
 
 export default function Footer() {
+  const t = useT()
   const theme = useTheme((s) => s.theme)
   const logo = theme === 'light' ? '/logo-light.png' : '/logo.png'
   return (
@@ -85,13 +88,13 @@ export default function Footer() {
               <img src={logo} alt="MIRAIX" className="h-10 w-auto" />
             </Link>
             <p className="text-xs text-text-muted mt-3 leading-relaxed">
-              みんなの予測でつくる、新しい情報市場。
+              {t('みんなの予測でつくる、新しい情報市場。')}
             </p>
           </div>
 
           {COLUMNS.map((col) => (
             <div key={col.title}>
-              <h3 className="text-xs font-semibold text-text mb-3">{col.title}</h3>
+              <h3 className="text-xs font-semibold text-text mb-3">{t(col.title)}</h3>
               <ul className="space-y-2">
                 {col.links.map((link) => (
                   <li key={link.label}>
@@ -109,7 +112,7 @@ export default function Footer() {
             <span className="hidden sm:inline"> ・ {COMPANY.addressInline}</span>
           </p>
           <p className="text-xs text-text-muted">
-            仮想ポイントのみを使用し、実際の金銭取引は行いません。
+            {t('仮想ポイントのみを使用し、実際の金銭取引は行いません。')}
           </p>
         </div>
       </div>

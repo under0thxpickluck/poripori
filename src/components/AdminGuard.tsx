@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import { Lock, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../store/useAuth'
+import { useT } from '../lib/i18n'
 
 // 管理者ページ用のゲート。
 // 1) DB の role='admin' でなければホームへ戻す（実際の権限はサーバー側 RLS/RPC が強制）。
@@ -13,6 +14,7 @@ const ADMIN_PASSWORD = 'nagoya01@'
 const UNLOCK_KEY = 'admin_unlocked'
 
 export default function AdminGuard() {
+  const t = useT()
   const profile = useAuth((s) => s.profile)
   const ready = useAuth((s) => s.ready)
 
@@ -57,10 +59,10 @@ export default function AdminGuard() {
         >
           <div className="flex items-center gap-2 text-text">
             <Lock size={18} className="text-accent" />
-            <h1 className="text-base font-semibold">管理者認証</h1>
+            <h1 className="text-base font-semibold">{t('管理者認証')}</h1>
           </div>
           <p className="text-xs text-text-muted">
-            管理画面にアクセスするには管理者パスワードを入力してください。
+            {t('管理画面にアクセスするには管理者パスワードを入力してください。')}
           </p>
           <input
             type="password"
@@ -70,13 +72,13 @@ export default function AdminGuard() {
               setInput(e.target.value)
               if (error) setError(false)
             }}
-            placeholder="管理者パスワード"
+            placeholder={t('管理者パスワード')}
             className="w-full px-3 py-2 bg-surface-hover border border-border focus:border-accent rounded-md text-sm text-text placeholder-text-muted outline-none transition-colors"
           />
           {error && (
             <p className="flex items-center gap-1.5 text-xs text-red-500">
               <ShieldAlert size={13} />
-              パスワードが違います。
+              {t('パスワードが違います。')}
             </p>
           )}
           <button
@@ -84,7 +86,7 @@ export default function AdminGuard() {
             disabled={!input}
             className="w-full px-4 py-2 rounded-md bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
           >
-            認証する
+            {t('認証する')}
           </button>
         </form>
       </div>

@@ -3,9 +3,11 @@ import { Sparkles } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { levelFromXp, levelInfo } from '../lib/gamification'
 import Confetti from './Confetti'
+import { useT } from '../lib/i18n'
 
 // XP増加でレベルが上がった瞬間を検知して祝う
 export default function LevelUpToast() {
+  const t = useT()
   const user = useStore((s) => {
     const id = s.currentUserId
     return id ? s.users.find((u) => u.id === id) ?? null : null
@@ -45,8 +47,8 @@ export default function LevelUpToast() {
             <Sparkles size={20} />
           </div>
           <div>
-            <p className="text-sm font-bold text-text">レベルアップ！ Lv.{shown.level}</p>
-            <p className="text-xs text-text-muted">ランク: {shown.rank}</p>
+            <p className="text-sm font-bold text-text">{t('レベルアップ！')} Lv.{shown.level}</p>
+            <p className="text-xs text-text-muted">{t('ランク')}: {t(shown.rank)}</p>
           </div>
         </div>
       </button>
