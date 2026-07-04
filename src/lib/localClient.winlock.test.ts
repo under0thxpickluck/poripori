@@ -104,32 +104,34 @@ describe('migrate-016 ゲーム勝ち分ロック', () => {
 describe('rpc declare_residency', () => {
   beforeEach(() => resetLocalDb())
 
-  it('申告が profiles に記録される', async () => {
+  it('申告(ISO国コード)が profiles に記録される', async () => {
     switchLocalUser(AYANO_ID)
     const { error } = await client.rpc('declare_residency', {
-      p_residency: 'overseas',
+      p_residency: 'AU',
       p_version: 'v1-2026-07-05',
     })
     expect(error).toBeNull()
     const p = await myProfile()
-    expect(p.residency).toBe('overseas')
+    expect(p.residency).toBe('AU')
     expect(p.residency_consent_version).toBe('v1-2026-07-05')
     expect(p.residency_consented_at).toBeTruthy()
   })
 
-  it('不正な居住国は BAD_RESIDENCY', async () => {
+  it('不正な居住国(ISO alpha-2 以外)は BAD_RESIDENCY', async () => {
     switchLocalUser(AYANO_ID)
-    const { error } = await client.rpc('declare_residency', {
-      p_residency: 'mars',
-      p_version: 'v1-2026-07-05',
-    })
-    expect(error?.message).toContain('BAD_RESIDENCY')
+    for (const bad of ['mars', 'jp', 'JPN', '']) {
+      const { error } = await client.rpc('declare_residency', {
+        p_residency: bad,
+        p_version: 'v1-2026-07-05',
+      })
+      expect(error?.message).toContain('BAD_RESIDENCY')
+    }
   })
 
   it('空バージョンは BAD_VERSION', async () => {
     switchLocalUser(AYANO_ID)
     const { error } = await client.rpc('declare_residency', {
-      p_residency: 'japan',
+      p_residency: 'JP',
       p_version: '',
     })
     expect(error?.message).toContain('BAD_VERSION')

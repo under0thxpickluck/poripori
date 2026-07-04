@@ -7,6 +7,27 @@ import { mapRpcError } from '../store/useStore'
 /** 同意文の版。文言を改定したらこの値を上げる(全ユーザーに再同意を要求する) */
 export const CONSENT_VERSION = 'v1-2026-07-05'
 
+// ISO 3166-1 alpha-2 の全国コード。表示名は Intl.DisplayNames(英語)で解決する
+const COUNTRY_CODES = ('AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ ' +
+  'CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR ' +
+  'GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP ' +
+  'KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ ' +
+  'NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW ' +
+  'SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ ' +
+  'UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW').split(' ')
+
+const COUNTRIES: Array<{ code: string; name: string }> = (() => {
+  let display: Intl.DisplayNames | null = null
+  try {
+    display = new Intl.DisplayNames(['en'], { type: 'region' })
+  } catch {
+    /* 未対応環境ではコードをそのまま表示 */
+  }
+  return COUNTRY_CODES
+    .map((code) => ({ code, name: display?.of(code) ?? code }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'en'))
+})()
+
 /** 英文が正文(仕様書 §3.3)。翻訳・要約は参考情報の位置づけ */
 const CONSENT_CLAUSES: string[] = [
   'MIRAIX Points ("MR") are virtual points provided solely for entertainment purposes within this site. MR is not money, electronic money, or a financial instrument of any kind.',
@@ -30,7 +51,7 @@ export default function ResidencyGate() {
   const loadProfile = useAuth((s) => s.loadProfile)
   const signOut = useAuth((s) => s.signOut)
 
-  const [residency, setResidency] = useState<'japan' | 'overseas' | null>(null)
+  const [residency, setResidency] = useState('')
   const [agreed, setAgreed] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -82,31 +103,20 @@ export default function ResidencyGate() {
 
         <div className="p-5 space-y-3">
           <div>
-            <p className="text-xs font-semibold text-text mb-1.5">Country of residence ／ 居住国</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setResidency('japan')}
-                className={`flex-1 py-2 rounded-lg border text-sm transition-colors ${
-                  residency === 'japan'
-                    ? 'border-accent bg-accent/15 text-text font-semibold'
-                    : 'border-border text-text-muted hover:text-text'
-                }`}
-              >
-                日本に居住 ／ Japan
-              </button>
-              <button
-                type="button"
-                onClick={() => setResidency('overseas')}
-                className={`flex-1 py-2 rounded-lg border text-sm transition-colors ${
-                  residency === 'overseas'
-                    ? 'border-accent bg-accent/15 text-text font-semibold'
-                    : 'border-border text-text-muted hover:text-text'
-                }`}
-              >
-                日本国外に居住 ／ Outside Japan
-              </button>
-            </div>
+            <label htmlFor="residency-country" className="block text-xs font-semibold text-text mb-1.5">
+              Country of residence ／ 居住国
+            </label>
+            <select
+              id="residency-country"
+              value={residency}
+              onChange={(e) => setResidency(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-lg border border-border bg-bg text-sm text-text outline-none focus:border-accent"
+            >
+              <option value="">Select your country of residence…</option>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>{c.name}</option>
+              ))}
+            </select>
           </div>
 
           <label className="flex items-start gap-2 text-xs text-text cursor-pointer select-none">

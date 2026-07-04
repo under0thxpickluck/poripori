@@ -27,8 +27,8 @@ type Profile = {
   // サロン連携（ローカルモードでは常に未連携）
   salon_group: string | null
   salon_login_id: string | null
-  // 居住国申告（migrate-016。未申告は null）
-  residency: 'japan' | 'overseas' | null
+  // 居住国申告（migrate-016。ISO 3166-1 alpha-2 国コード。未申告は null）
+  residency: string | null
   residency_consent_version: string | null
   residency_consented_at: string | null
 }
@@ -920,7 +920,7 @@ function declareResidency(params: Record<string, unknown>) {
   if (!p) throw new Error('PROFILE_NOT_FOUND')
   const residency = params.p_residency
   const version = params.p_version
-  if (residency !== 'japan' && residency !== 'overseas') throw new Error('BAD_RESIDENCY')
+  if (typeof residency !== 'string' || !/^[A-Z]{2}$/.test(residency)) throw new Error('BAD_RESIDENCY')
   if (typeof version !== 'string' || version.trim().length === 0) throw new Error('BAD_VERSION')
   p.residency = residency
   p.residency_consent_version = version

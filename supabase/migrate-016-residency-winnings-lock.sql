@@ -14,9 +14,14 @@
 -- B) 居住国申告の記録
 -- ============================================================
 alter table public.profiles
-  add column if not exists residency text check (residency in ('japan','overseas')),
+  add column if not exists residency text,
   add column if not exists residency_consent_version text,
   add column if not exists residency_consented_at timestamptz;
+
+-- 居住国は ISO 3166-1 alpha-2 の国コード(例: JP / US / AU)で記録する
+alter table public.profiles drop constraint if exists profiles_residency_check;
+alter table public.profiles add constraint profiles_residency_check
+  check (residency is null or residency ~ '^[A-Z]{2}$');
 
 create or replace function public.declare_residency(p_residency text, p_version text)
 returns void language plpgsql security definer set search_path = public as $$
@@ -24,7 +29,7 @@ declare
   v_uid uuid := auth.uid();
 begin
   if v_uid is null then raise exception 'AUTH_REQUIRED'; end if;
-  if p_residency is null or p_residency not in ('japan', 'overseas')
+  if p_residency is null or p_residency !~ '^[A-Z]{2}$'
     then raise exception 'BAD_RESIDENCY'; end if;
   if p_version is null or length(trim(p_version)) = 0
     then raise exception 'BAD_VERSION'; end if;
