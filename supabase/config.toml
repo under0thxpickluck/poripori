@@ -1,0 +1,10 @@
+# Supabase CLI 設定（Edge Functions デプロイ用の最小構成）
+# `npx supabase link --project-ref <ref>` 後に CLI が使う。
+# <ref> は VITE_SUPABASE_URL の https://<ref>.supabase.co 部分。
+project_id = "poripori"
+
+[functions.miraix-sso]
+verify_jwt = false   # SSOはMIRAIXセッション取得前に呼ぶため
+
+[functions.ep-transfer]
+verify_jwt = true    # MIRAIXログイン済みユーザーのみ
