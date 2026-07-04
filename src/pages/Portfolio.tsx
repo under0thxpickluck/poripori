@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
+import { useAuth } from '../store/useAuth'
 import { marketPrice, sellRefund } from '../lib/lmsr'
 import { format } from 'date-fns'
-import { TrendingUp, TrendingDown, Wallet, PieChart, Layers, Activity, Flame } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, PieChart, Layers, Activity, Flame, ArrowLeftRight } from 'lucide-react'
 import CountUp from '../components/CountUp'
 import { levelInfo, winStreak, resolvedRecord, achievements } from '../lib/gamification'
 
@@ -18,6 +19,7 @@ const CAT_BAR: Record<string, string> = {
 
 export default function Portfolio() {
   const { currentUser, markets, positions, getUserTrades, trades } = useStore()
+  const salonProfile = useAuth((s) => s.profile)
   const user = currentUser()
 
   if (!user) {
@@ -136,6 +138,25 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
+
+      {/* EPウォレット導線（サロン連携ユーザーのみ。モバイルはここが入口） */}
+      {salonProfile?.salon_login_id && (
+        <Link
+          to="/wallet"
+          className="flex items-center justify-between bg-surface border border-border rounded-lg p-4 hover:border-accent/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-accent/15 text-accent flex items-center justify-center shrink-0">
+              <ArrowLeftRight size={16} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-text">EPウォレット</p>
+              <p className="text-xs text-text-muted">サロンEP ⇄ MIRAIXポイントの転送・履歴</p>
+            </div>
+          </div>
+          <span className="text-xs text-accent font-medium shrink-0">開く →</span>
+        </Link>
+      )}
 
       {/* 実績バッジ */}
       <div className="bg-surface border border-border rounded-lg p-5">

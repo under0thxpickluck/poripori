@@ -21,6 +21,9 @@ type Profile = {
   last_bonus: string | null
   bonus_streak: number
   created_at: string
+  // サロン連携（ローカルモードでは常に未連携）
+  salon_group: string | null
+  salon_login_id: string | null
 }
 type Market = {
   id: string
@@ -110,6 +113,8 @@ function seed(): DB {
       last_bonus: null,
       bonus_streak: 0,
       created_at: nowIso(),
+      salon_group: null,
+      salon_login_id: null,
     },
     {
       id: AYANO_ID,
@@ -120,6 +125,8 @@ function seed(): DB {
       last_bonus: null,
       bonus_streak: 0,
       created_at: nowIso(),
+      salon_group: null,
+      salon_login_id: null,
     },
   ]
 

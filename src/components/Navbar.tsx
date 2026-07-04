@@ -30,6 +30,7 @@ export default function Navbar() {
   const location = useLocation()
   const { currentUser, positions, markets } = useStore()
   const signOut = useAuth((s) => s.signOut)
+  const salonLinked = useAuth((s) => Boolean(s.profile?.salon_login_id))
   const theme = useTheme((s) => s.theme)
   const user = currentUser()
   const logoMark = theme === 'light' ? '/logo-mark-light.png' : '/logo-mark.png'
@@ -68,6 +69,18 @@ export default function Navbar() {
                 {l.label}
               </Link>
             ))}
+            {salonLinked && (
+              <Link
+                to="/wallet"
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  location.pathname === '/wallet'
+                    ? 'bg-accent/15 text-accent'
+                    : 'text-text-muted hover:text-text hover:bg-white/5'
+                }`}
+              >
+                EPウォレット
+              </Link>
+            )}
             {user?.role === 'admin' && (
               <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
                 {ADMIN_LINKS.map((l) => (

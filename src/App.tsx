@@ -35,6 +35,8 @@ const Press = lazy(() => import('./pages/Press'))
 const Faq = lazy(() => import('./pages/Faq'))
 const Developers = lazy(() => import('./pages/Developers'))
 const Plinko = lazy(() => import('./pages/Plinko'))
+const SalonLink = lazy(() => import('./pages/SalonLink'))
+const Wallet = lazy(() => import('./pages/Wallet'))
 
 function PageFallback() {
   return (
@@ -61,6 +63,8 @@ export default function App() {
             <Route path="/propose" element={<L><Propose /></L>} />
             <Route path="/ranking" element={<L><Ranking /></L>} />
             <Route path="/plinko" element={<L><Plinko /></L>} />
+            <Route path="/salon-link" element={<L><SalonLink /></L>} />
+            <Route path="/wallet" element={<L><Wallet /></L>} />
             <Route element={<AdminGuard />}>
               <Route path="/admin" element={<L><AdminDashboard /></L>} />
               <Route path="/admin/proposals" element={<L><AdminProposals /></L>} />

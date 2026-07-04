@@ -11,6 +11,9 @@ export type Profile = {
   last_bonus: string | null
   bonus_streak: number
   created_at: string
+  // サロン連携（LIFAIOV / aisalon）。未連携なら null
+  salon_group: string | null
+  salon_login_id: string | null
 }
 
 type AuthState = {
