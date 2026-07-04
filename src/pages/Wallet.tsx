@@ -97,8 +97,16 @@ export default function Wallet() {
       const { data, error } = await supabase.functions.invoke('ep-transfer', {
         body: { direction, amount: ep, idempotencyKey: crypto.randomUUID() },
       })
-      if (error || !data?.ok) {
-        const code = data?.error ?? error?.message ?? 'unknown'
+      // 非2xx時は data が null になり、本文（{ok:false,error}）は error.context にある
+      let result = data as { ok?: boolean; error?: string; ep_balance?: number } | null
+      if (!result && error) {
+        const ctx = (error as { context?: Response }).context
+        if (ctx && typeof ctx.json === 'function') {
+          result = await ctx.json().catch(() => null)
+        }
+      }
+      if (error || !result?.ok) {
+        const code = result?.error ?? error?.message ?? 'unknown'
         setMsgKind('error')
         setMsg(
           code === 'insufficient_ep' ? 'サロンのEP残高が不足しています。'
@@ -114,7 +122,7 @@ export default function Wallet() {
         ? `${ep.toLocaleString()} EP をMRに移しました。`
         : `${ep.toLocaleString()} EP をサロンへ戻しました。`)
       setAmount('')
-      if (typeof data.ep_balance === 'number') setEpBalance(data.ep_balance)
+      if (typeof result.ep_balance === 'number') setEpBalance(result.ep_balance)
     } finally {
       setBusy(false)
       await Promise.all([loadProfile(), loadHistory()])
