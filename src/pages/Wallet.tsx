@@ -37,6 +37,9 @@ export default function Wallet() {
   const [msgKind, setMsgKind] = useState<'ok' | 'error'>('ok')
   const [epBalance, setEpBalance] = useState<number | null>(null)
   const [history, setHistory] = useState<Transfer[]>([])
+  // 出金の日次上限（migrate-014）。null = 未取得
+  const [dailyLimit, setDailyLimit] = useState<number | null>(null)
+  const [todayOut, setTodayOut] = useState(0)
   const linked = Boolean(profile?.salon_login_id)
 
   const loadHistory = useCallback(async () => {
@@ -46,6 +49,22 @@ export default function Wallet() {
       .order('created_at', { ascending: false })
       .limit(30)
     setHistory((data as Transfer[]) ?? [])
+  }, [])
+
+  // 出金日次上限と当日消費分（JST基準。サーバー側 ep_begin_withdraw と同じ集計ルール）
+  const loadDailyQuota = useCallback(async () => {
+    const { data: cfg } = await supabase.from('ep_config').select('daily_withdraw_ep').eq('id', 1).maybeSingle()
+    if (cfg) setDailyLimit(Number(cfg.daily_withdraw_ep))
+    // JSTの当日0時をUTCに直して当日分の出金(pending/completed)を集計
+    const now = new Date()
+    const jstMidnightUtcMs = Math.floor((now.getTime() + 9 * 3600_000) / 86400_000) * 86400_000 - 9 * 3600_000
+    const { data: outs } = await supabase
+      .from('ep_transfers')
+      .select('ep_amount, status')
+      .eq('direction', 'out')
+      .in('status', ['pending', 'completed'])
+      .gte('created_at', new Date(jstMidnightUtcMs).toISOString())
+    setTodayOut((outs ?? []).reduce((s, r) => s + Number(r.ep_amount), 0))
   }, [])
 
   // サロン側のEP残高を照会（読み取りのみ）
@@ -60,7 +79,8 @@ export default function Wallet() {
     if (IS_LOCAL || !linked) return
     loadHistory()
     loadEpBalance()
-  }, [linked, loadHistory, loadEpBalance])
+    loadDailyQuota()
+  }, [linked, loadHistory, loadEpBalance, loadDailyQuota])
 
   if (IS_LOCAL) {
     return <p className="py-24 text-center text-sm text-text-muted">ローカルデモモードではEPウォレットは利用できません。</p>
@@ -113,6 +133,10 @@ export default function Wallet() {
           : code === 'INSUFFICIENT_POINTS' ? 'MR（MIRAIXポイント）が不足しています。'
           : code === 'BONUS_LOCKED' ? '新規登録特典分のMRはサロンEPへ出金できません。出金可能額の範囲で入力してください。'
           : code === 'duplicate' ? '同じ転送が既に処理されています。残高を確認してください。'
+          : code === 'DAILY_LIMIT' ? `本日の出金上限に達しました。残り枠は明日（日本時間0時）リセットされます。`
+          : code === 'busy' ? 'サロン側が混み合っています。しばらく待ってから再度お試しください。'
+          : code === 'gas_unreachable_pending' ? 'サロンとの通信が確認できませんでした。この転送は「処理中」として記録されています。残高に反映されない場合は運営にお問い合わせください（再送はしないでください）。'
+          : code === 'credit_failed_revert_failed' ? '転送に失敗し、EPの自動返却も確認できませんでした。運営にお問い合わせください。'
           : `転送に失敗しました（${code}）。残高は履歴で確認できます。`,
         )
         return
@@ -125,7 +149,44 @@ export default function Wallet() {
       if (typeof result.ep_balance === 'number') setEpBalance(result.ep_balance)
     } finally {
       setBusy(false)
-      await Promise.all([loadProfile(), loadHistory()])
+      await Promise.all([loadProfile(), loadHistory(), loadDailyQuota()])
+    }
+  }
+
+  // 「処理中」で止まった転送の再開。サーバー/GAS側の冪等キー照合により
+  // 実行済み分は duplicated 扱いになるだけで、二重減算・二重付与は起きない
+  const resume = async (transferId: string) => {
+    setMsg(null)
+    setBusy(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('ep-transfer', {
+        body: { direction: 'resume', transferId },
+      })
+      let result = data as { ok?: boolean; error?: string; ep_balance?: number } | null
+      if (!result && error) {
+        const ctx = (error as { context?: Response }).context
+        if (ctx && typeof ctx.json === 'function') {
+          result = await ctx.json().catch(() => null)
+        }
+      }
+      if (error || !result?.ok) {
+        const code = result?.error ?? error?.message ?? 'unknown'
+        setMsgKind(code === 'not_pending' ? 'ok' : 'error')
+        setMsg(
+          code === 'not_pending' ? 'この転送は既に処理済みです。履歴を更新しました。'
+          : code === 'resume_unsupported' ? 'この転送は自動再開できません。運営にお問い合わせください。'
+          : code === 'gas_unreachable_pending' ? 'サロンとの通信がまだ確認できません。時間をおいて再度お試しください。'
+          : code === 'insufficient_ep' ? 'サロンのEP残高が不足しているため、この転送は失敗として確定しました。'
+          : `再開に失敗しました（${code}）。`,
+        )
+        return
+      }
+      setMsgKind('ok')
+      setMsg('止まっていた転送を完了しました。')
+      if (typeof result.ep_balance === 'number') setEpBalance(result.ep_balance)
+    } finally {
+      setBusy(false)
+      await Promise.all([loadProfile(), loadHistory(), loadDailyQuota()])
     }
   }
 
@@ -196,7 +257,7 @@ export default function Wallet() {
           </p>
           {locked > 0 && (
             <p className="text-[11px] text-text-muted mt-1">
-              うち特典分 {locked.toLocaleString()} MR は出金不可（出金可能 {withdrawable.toLocaleString()} MR）
+              うち特典・ボーナス分 {locked.toLocaleString()} MR は出金不可（出金可能 {withdrawable.toLocaleString()} MR）
             </p>
           )}
         </div>
@@ -235,7 +296,11 @@ export default function Wallet() {
           {direction === 'in'
             ? `${salonName} のEPをMRに移して予測やゲームに使えます（1 EP = 1 MR）。`
             : `MRを ${salonName} のEPに戻します（1 MR = 1 EP）。出金可能: ${withdrawable.toLocaleString()} MR${
-                locked > 0 ? `（新規登録特典分 ${locked.toLocaleString()} MR は出金不可）` : ''
+                locked > 0 ? `（特典・ボーナス分 ${locked.toLocaleString()} MR は出金不可）` : ''
+              }${
+                dailyLimit != null
+                  ? `／本日の出金残り枠: ${Math.max(0, dailyLimit - todayOut).toLocaleString()} MR`
+                  : ''
               }`}
         </p>
 
@@ -307,6 +372,16 @@ export default function Wallet() {
               <span className={`shrink-0 ${t.status === 'completed' ? 'text-yes' : t.status === 'pending' ? 'text-text-muted' : 'text-no'}`}>
                 {STATUS_LABEL[t.status] ?? t.status}
               </span>
+              {t.status === 'pending' && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => resume(t.id)}
+                  className="shrink-0 px-2 py-1 rounded-md border border-accent/50 text-accent hover:bg-accent/10 disabled:opacity-40 transition-colors"
+                >
+                  再開
+                </button>
+              )}
             </li>
           ))}
           {history.length === 0 && <li className="text-text-muted">まだ履歴がありません。</li>}

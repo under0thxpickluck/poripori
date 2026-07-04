@@ -206,3 +206,23 @@ MIRAIX サーバー関数 `POST /ep/withdraw`（要 MIRAIX セッション）:
 - 新規登録特典 1,000 MR（`MIRAIX_WELCOME_BONUS_MR`、0で終了）は `profiles.bonus_locked` により**サロンEPへ出金不可**（ロー・ウォーターマーク方式、migrate-012）。
 - GAS `add_ep` の冪等性は専用シート `miraix_idempotency` + LockService（wallet_ledger のヘッダー差異に依存しない）。
 - ⚠️ 既知の残課題: デイリーボーナス（最大400MR/日）はロック対象外でサロンEPへ出金可能（要判断）。GAS の `ADMIN_SECRET` が弱い値（要ローテーション）。
+
+### 追記（2026-07-04 バグ監査後のハードニング。要再デプロイ: miraix-sso / ep-transfer / 両GAS）
+- **SSOトークンに発行元サロンID `salon`（`"lifaiov"`/`"aisalon"`）を必須化**。各サロンの `route.ts` にハードコード（envにしない: 取り違え防止）し、発行時に `gasGroup` との整合を検証（LIFAIOV⇒"5000" / aisalon⇒""、不一致は `group_mismatch` で発行拒否）。MIRAIX側 `miraix-sso` も `salonGroupFromPayload` で再検証し、不整合・旧形式トークンは `salon_mismatch` で拒否（**混合のフェイルクローズ**）。
+- **合成メールに loginId の SHA-256 ハッシュ（先頭10hex）を付加**。小文字化・記号正規化で別会員が同一メールに潰れてアカウントが混ざる事故を防止。既存リンク済みアカウントは `(salon_group, salon_login_id)` 検索で解決されるため影響なし。
+- **既に別サロン会員に連携済みの auth ユーザーへの上書きリンクを拒否**（`already_linked_other`）。
+- **GAS `deduct_ep` に LockService（20秒待ち、失敗時 `busy`）+ 任意の `idempotencyKey`**（`miraix_idempotency` シート共用、キーは `deduct-<transfer_id>`）。同時実行での減算消失（残高過大）と再送時の二重減算を防止。既存呼び出し（narasu等・キー無し）は挙動不変。
+- **入金補償（`revert-<id>` の add_ep）の成否を確認**。返却失敗時は `reversed` ではなく `pending` のまま `gas_result` に両結果を記録（「返却済み」と偽らない）。
+- **GAS応答喪失（fetch例外）時は failed 確定せず pending 維持**＋`gas_result.unreachable` 記録（`gas_unreachable_pending`）。二重付与/「EP未変動」の虚偽表示を防ぐ。
+- `listUsers` をページング化（1000人超対応）。SalonLink/Wallet に新エラーコードの表示文言を追加。
+
+### 追記（2026-07-04 残課題3件の解消）
+- **デイリーボーナスの出金漏れ（migrate-013）**: `claim_daily_bonus` が付与額を `bonus_locked` にも加算。
+  出金可能額（points − bonus_locked）はボーナスで増えない（新規登録特典と同一原則）。localClient にも同実装＋テスト。
+- **pending滞留の解決**: `ep-transfer` に `direction:'resume'`（本人のみ）。GASの冪等キー照合を利用し、
+  出金は常に・入金は `gas_result.deduct_idempotent` 印がある行のみ安全に再実行して確定させる。
+  `/wallet` 履歴の「処理中」行に「再開」ボタン。対象外（旧形式・補償失敗後）と手動手順は
+  `docs/ops/ep-cross-salon-ops.md` §1 に記載。
+- **ADMIN_SECRET ローテーション**: 手順書 `docs/ops/ep-cross-salon-ops.md` §2（**SECRET_KEY は変更禁止**
+  =全会員のpw_hash鍵。ADMIN_SECRETのみ、1サロンずつ、GASプロパティ→Supabase secrets→Vercel env→.env.local の順）。
+  実際の値変更はユーザー操作。

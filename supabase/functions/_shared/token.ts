@@ -1,6 +1,8 @@
 // HMAC-SHA256 署名付きSSOトークン。Web Crypto のみ使用（Deno / Node 18+ / vitest で同一動作）。
 // サロン（LIFAIOV / aisalon）側の app/lib/miraixSso.ts と形式互換を保つこと。
 export type SsoPayload = {
+  // 発行元サロン（リポジトリごとにハードコードされた値。envや会員データに依存しない）
+  salon?: 'lifaiov' | 'aisalon'
   gasGroup: '' | '5000'
   loginId: string
   email?: string
@@ -11,6 +13,15 @@ export type SsoPayload = {
 // GASのgroup値 → MIRAIX DBのsalon_group（空文字は使わない）
 export function salonGroupFromGas(g: string): string {
   return g === '5000' ? '5000' : 'aisalon'
+}
+
+// 発行元サロンと gasGroup の整合を検証して salon_group を返す（混合のフェイルクローズ）。
+// LIFAIOV発行のトークンは gasGroup "5000" 以外あり得ず、aisalon発行は "" 以外あり得ない。
+// どちらかが崩れている＝会員データ/ルーティングの想定外なので、リンク自体を拒否する。
+export function salonGroupFromPayload(p: SsoPayload): string {
+  if (p.salon === 'lifaiov' && p.gasGroup === '5000') return '5000'
+  if (p.salon === 'aisalon' && p.gasGroup === '') return 'aisalon'
+  throw new Error('salon_mismatch')
 }
 // MIRAIX DBのsalon_group → GASのgroup値
 export function gasGroupFromSalon(g: string): string {

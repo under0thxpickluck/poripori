@@ -31,14 +31,29 @@ export default function SalonLink() {
     }
     ;(async () => {
       const { data, error } = await supabase.functions.invoke('miraix-sso', { body: { token } })
-      if (error || !data?.ok) {
+      // 非2xx時は data が null になり、本文（{ok:false,error}）は error.context にある
+      let result = data as { ok?: boolean; error?: string; token_hash?: string; welcome_bonus?: number } | null
+      if (!result && error) {
+        const ctx = (error as { context?: Response }).context
+        if (ctx && typeof ctx.json === 'function') {
+          result = await ctx.json().catch(() => null)
+        }
+      }
+      if (error || !result?.ok) {
+        const code = result?.error ?? ''
         setStatus('error')
-        setMessage('連携に失敗しました。トークンの有効期限（5分）が切れている場合は、サロンからやり直してください。')
+        setMessage(
+          code === 'salon_mismatch'
+            ? '連携を中止しました。サロンとグループ情報が一致しません（安全のため処理していません）。サロンの運営にお問い合わせください。'
+            : code === 'already_linked_other'
+              ? 'このメールアドレスは既に別のサロンアカウントと連携されています。'
+              : '連携に失敗しました。トークンの有効期限（5分）が切れている場合は、サロンからやり直してください。',
+        )
         return
       }
       const { error: vErr } = await supabase.auth.verifyOtp({
         type: 'email',
-        token_hash: data.token_hash,
+        token_hash: result.token_hash!,
       })
       if (vErr) {
         setStatus('error')
@@ -46,7 +61,7 @@ export default function SalonLink() {
         return
       }
       await loadProfile()
-      const bonus = Number(data.welcome_bonus ?? 0)
+      const bonus = Number(result.welcome_bonus ?? 0)
       navigate(bonus > 0 ? `/wallet?welcome=${bonus}` : '/wallet', { replace: true })
     })()
   }, [params, navigate, loadProfile])
