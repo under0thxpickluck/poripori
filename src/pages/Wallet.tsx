@@ -257,9 +257,12 @@ export default function Wallet() {
           </p>
           {locked > 0 && (
             <p className="text-[11px] text-text-muted mt-1">
-              うち特典・ボーナス分 {locked.toLocaleString()} MR は出金不可（出金可能 {withdrawable.toLocaleString()} MR）
+              うち特典・ボーナス・ゲーム獲得分 {locked.toLocaleString()} MR は出金不可（出金可能 {withdrawable.toLocaleString()} MR）
             </p>
           )}
+          <p className="text-[11px] text-text-muted mt-1">
+            ゲーム（Mines・Plinko）で増えた分は出金対象外です（出金可能額に含まれません）。
+          </p>
         </div>
       </div>
 

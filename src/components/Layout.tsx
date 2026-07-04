@@ -12,6 +12,7 @@ import RealtimeSync from './RealtimeSync'
 import ErrorBoundary from './ErrorBoundary'
 import ErrorToast from './ErrorToast'
 import DevAccountSwitcher from './DevAccountSwitcher'
+import ResidencyGate from './ResidencyGate'
 
 export default function Layout() {
   const { pathname } = useLocation()
@@ -34,6 +35,7 @@ export default function Layout() {
       <MobileTabBar />
       <DailyBonus />
       <LevelUpToast />
+      <ResidencyGate />
       <DevAccountSwitcher />
     </div>
   )

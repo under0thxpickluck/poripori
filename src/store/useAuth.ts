@@ -16,6 +16,10 @@ export type Profile = {
   // サロン連携（LIFAIOV / aisalon）。未連携なら null
   salon_group: string | null
   salon_login_id: string | null
+  // 居住国申告（migrate-016。未申告なら null / 旧データは undefined）
+  residency?: 'japan' | 'overseas' | null
+  residency_consent_version?: string | null
+  residency_consented_at?: string | null
 }
 
 type AuthState = {

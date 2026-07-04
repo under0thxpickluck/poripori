@@ -27,6 +27,10 @@ type Profile = {
   // サロン連携（ローカルモードでは常に未連携）
   salon_group: string | null
   salon_login_id: string | null
+  // 居住国申告（migrate-016。未申告は null）
+  residency: 'japan' | 'overseas' | null
+  residency_consent_version: string | null
+  residency_consented_at: string | null
 }
 type Market = {
   id: string
@@ -136,6 +140,9 @@ function seed(): DB {
       created_at: nowIso(),
       salon_group: null,
       salon_login_id: null,
+      residency: null,
+      residency_consent_version: null,
+      residency_consented_at: null,
     },
     {
       id: AYANO_ID,
@@ -149,6 +156,9 @@ function seed(): DB {
       created_at: nowIso(),
       salon_group: null,
       salon_login_id: null,
+      residency: null,
+      residency_consent_version: null,
+      residency_consented_at: null,
     },
   ]
 
@@ -552,6 +562,9 @@ async function rpc(name: string, params: Record<string, unknown>): Promise<Resul
       case 'admin_mines_set_house_edge':
         adminMinesSetHouseEdge(params)
         return { data: null, error: null }
+      case 'declare_residency':
+        declareResidency(params)
+        return { data: null, error: null }
       default:
         return { data: null, error: { message: 'UNKNOWN_RPC:' + name } }
     }
@@ -717,6 +730,8 @@ function plinkoPlay(params: Record<string, unknown>) {
   const multiplier = cfg.multipliers[bucket]
   const payout = Math.round(bet * multiplier * 100) / 100
   p.points = Math.round((p.points + payout - bet) * 100) / 100
+  // 勝ち分ロック(migrate-016): 純増分は出金不可枠へ(クランプトリガ相当で 0〜points に収める)
+  p.bonus_locked = Math.max(0, Math.min(Math.round(((p.bonus_locked ?? 0) + Math.max(0, payout - bet)) * 100) / 100, p.points))
 
   const play: PlinkoPlay = {
     id: uid(),
@@ -840,10 +855,11 @@ function minesReveal(params: Record<string, unknown>) {
   g.multiplier = multiplierAt(g.mines_count, k, g.house_edge)
 
   if (k === MINES_GRID - g.mines_count) {
-    // 全ての安全マスを開け切った: 自動キャッシュアウト
+    // 全ての安全マスを開け切った: 自動キャッシュアウト(勝ち分はロック)
     const p = profile(me)!
     g.payout = Math.round(g.bet * g.multiplier * 100) / 100
     p.points = Math.round((p.points + g.payout) * 100) / 100
+    p.bonus_locked = Math.max(0, Math.min(Math.round(((p.bonus_locked ?? 0) + Math.max(0, g.payout - g.bet)) * 100) / 100, p.points))
     g.status = 'cashed'
     g.mines = mines
     g.finished_at = nowIso()
@@ -871,6 +887,8 @@ function minesCashout(params: Record<string, unknown>) {
   const p = profile(me)!
   g.payout = Math.round(g.bet * g.multiplier * 100) / 100
   p.points = Math.round((p.points + g.payout) * 100) / 100
+  // 勝ち分ロック(migrate-016): 純増分は出金不可枠へ
+  p.bonus_locked = Math.max(0, Math.min(Math.round(((p.bonus_locked ?? 0) + Math.max(0, g.payout - g.bet)) * 100) / 100, p.points))
   g.status = 'cashed'
   g.mines = mines
   g.finished_at = nowIso()
@@ -894,6 +912,21 @@ function adminMinesSetHouseEdge(params: Record<string, unknown>) {
   cfg.house_edge = edge
   save(db)
   emit('mines_config', 'UPDATE', cfg as unknown as Record<string, unknown>)
+}
+
+// migrate-016 の declare_residency と同じ検証(居住国申告の記録。機能制限はしない)
+function declareResidency(params: Record<string, unknown>) {
+  const p = profile(requireAuth())
+  if (!p) throw new Error('PROFILE_NOT_FOUND')
+  const residency = params.p_residency
+  const version = params.p_version
+  if (residency !== 'japan' && residency !== 'overseas') throw new Error('BAD_RESIDENCY')
+  if (typeof version !== 'string' || version.trim().length === 0) throw new Error('BAD_VERSION')
+  p.residency = residency
+  p.residency_consent_version = version
+  p.residency_consented_at = nowIso()
+  save(db)
+  emit('profiles', 'UPDATE', p as unknown as Record<string, unknown>)
 }
 
 function claimDailyBonus() {
