@@ -136,4 +136,20 @@ describe('rpc declare_residency', () => {
     })
     expect(error?.message).toContain('BAD_VERSION')
   })
+
+  it('日本(JP)申告済みユーザーはゲームを開始できない(REGION_BLOCKED)', async () => {
+    switchLocalUser(AYANO_ID)
+    await client.rpc('declare_residency', { p_residency: 'JP', p_version: 'v1-2026-07-05' })
+    const { error: minesErr } = await client.rpc('mines_start', { p_bet: 10, p_mines: 3 })
+    expect(minesErr?.message).toContain('REGION_BLOCKED')
+    const { error: plinkoErr } = await client.rpc('plinko_play', { p_bet: 10, p_rows: 8 })
+    expect(plinkoErr?.message).toContain('REGION_BLOCKED')
+  })
+
+  it('日本以外(AU)の申告ならゲームを開始できる', async () => {
+    switchLocalUser(AYANO_ID)
+    await client.rpc('declare_residency', { p_residency: 'AU', p_version: 'v1-2026-07-05' })
+    const { error } = await client.rpc('mines_start', { p_bet: 10, p_mines: 3 })
+    expect(error).toBeNull()
+  })
 })

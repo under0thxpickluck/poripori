@@ -723,6 +723,7 @@ function plinkoPlay(params: Record<string, unknown>) {
   if (!cfg) throw new Error('BAD_ROWS')
   const p = profile(me)
   if (!p) throw new Error('PROFILE_NOT_FOUND')
+  if (p.residency === 'JP') throw new Error('REGION_BLOCKED')
   if (p.points < bet) throw new Error('INSUFFICIENT_POINTS')
 
   let bucket = 0
@@ -799,6 +800,7 @@ function minesStart(params: Record<string, unknown>) {
   if (db.mines_games.some((g) => g.user_id === me && g.status === 'active')) throw new Error('GAME_ACTIVE')
   const p = profile(me)
   if (!p) throw new Error('PROFILE_NOT_FOUND')
+  if (p.residency === 'JP') throw new Error('REGION_BLOCKED')
   if (p.points < bet) throw new Error('INSUFFICIENT_POINTS')
   const edge = db.mines_config.find((c) => c.id === 1)?.house_edge ?? 0.95
 

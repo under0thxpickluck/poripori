@@ -225,6 +225,7 @@ Deno.serve(async (req) => {
       const msg = beginErr.message.includes('INSUFFICIENT_POINTS') ? 'INSUFFICIENT_POINTS'
         : beginErr.message.includes('BONUS_LOCKED') ? 'BONUS_LOCKED'
         : beginErr.message.includes('DAILY_LIMIT') ? 'DAILY_LIMIT'
+        : beginErr.message.includes('REGION_BLOCKED') ? 'REGION_BLOCKED'
         : beginErr.message.includes('duplicate key') ? 'duplicate'
         : beginErr.message
       return json({ ok: false, error: msg }, 400)

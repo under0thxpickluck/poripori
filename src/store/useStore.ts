@@ -87,6 +87,7 @@ export function mapRpcError(msg: string): string {
   if (msg.includes('BAD_CELL')) return 'マスの指定が不正です'
   if (msg.includes('ALREADY_REVEALED')) return 'そのマスは既に開いています'
   if (msg.includes('NO_REVEAL')) return '1マス以上開けてからキャッシュアウトしてください'
+  if (msg.includes('REGION_BLOCKED')) return 'ご申告の居住国では本サービスをご利用いただけません'
   return msg || 'エラーが発生しました'
 }
 

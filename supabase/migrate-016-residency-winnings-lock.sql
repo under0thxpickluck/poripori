@@ -8,7 +8,10 @@
 --      「ゲームでは出金可能額(points - bonus_locked)を絶対に増やせない」構造にする。
 --      ベット原資はロックしない(勝っても負けても往復で出金可能額は増えない)。
 --      クランプトリガ(migrate-012)は変更しない。
---   B) 居住国申告 + 同意バージョンを profiles に記録する(機能制限はしない。記録のみ)。
+--   B) 居住国申告 + 同意バージョンを profiles に記録する。
+--   C) 居住国 = 日本(JP)のユーザーは参加不可: クライアントは全画面遮断、
+--      サーバーは価値移転系RPC(mines_start / plinko_play / ep_begin_withdraw)を
+--      REGION_BLOCKED で拒否する。
 
 -- ============================================================
 -- B) 居住国申告の記録
@@ -45,8 +48,94 @@ revoke execute on function public.declare_residency(text, text) from public, ano
 grant execute on function public.declare_residency(text, text) to authenticated;
 
 -- ============================================================
--- A-1) Plinko: 勝ち分ロック(migrate-011 の plinko_play を差し替え)
---      変更点は profiles 更新行の bonus_locked 加算のみ
+-- C) 日本居住者の参加遮断
+--    mines_start(migrate-015 の定義 + residency チェック)
+-- ============================================================
+create or replace function public.mines_start(p_bet numeric, p_mines int)
+returns json language plpgsql security definer set search_path = public as $$
+declare
+  v_uid uuid := auth.uid();
+  v_points numeric;
+  v_residency text;
+  v_edge numeric;
+  v_mines int[];
+  v_game public.mines_games;
+begin
+  if v_uid is null then raise exception 'AUTH_REQUIRED'; end if;
+  if p_bet is null or p_bet < 1 or p_bet > 10000 or p_bet <> trunc(p_bet)
+    then raise exception 'BAD_BET'; end if;
+  if p_mines is null or p_mines < 1 or p_mines > 24 then raise exception 'BAD_MINES'; end if;
+  if exists (select 1 from public.mines_games where user_id = v_uid and status = 'active')
+    then raise exception 'GAME_ACTIVE'; end if;
+
+  select points, residency into v_points, v_residency
+    from public.profiles where id = v_uid for update;
+  if v_points is null then raise exception 'PROFILE_NOT_FOUND'; end if;
+  if v_residency = 'JP' then raise exception 'REGION_BLOCKED'; end if;
+  if v_points < p_bet then raise exception 'INSUFFICIENT_POINTS'; end if;
+  select house_edge into v_edge from public.mines_config where id = 1;
+  if v_edge is null then v_edge := 0.95; end if;
+
+  update public.profiles set points = points - p_bet where id = v_uid;
+
+  select array_agg(x) into v_mines
+    from (select x from generate_series(0, 24) as x order by random() limit p_mines) s;
+
+  begin
+    insert into public.mines_games (user_id, bet, mines_count, house_edge)
+    values (v_uid, p_bet, p_mines, v_edge)
+    returning * into v_game;
+  exception when unique_violation then
+    raise exception 'GAME_ACTIVE';
+  end;
+  insert into public.mines_secrets (game_id, mines) values (v_game.id, v_mines);
+
+  return json_build_object(
+    'id', v_game.id, 'bet', v_game.bet, 'mines_count', v_game.mines_count,
+    'house_edge', v_game.house_edge, 'revealed', to_json(v_game.revealed),
+    'multiplier', v_game.multiplier, 'status', v_game.status,
+    'balance', v_points - p_bet);
+end $$;
+
+-- ============================================================
+-- C) ep_begin_withdraw(migrate-014 の定義 + residency チェック)
+-- ============================================================
+create or replace function public.ep_begin_withdraw(
+  p_user uuid, p_ep numeric, p_points numeric, p_key text, p_group text, p_login_id text
+) returns uuid language plpgsql security definer set search_path = public as $$
+declare v_id uuid; v_points numeric; v_locked numeric; v_residency text; v_limit numeric; v_today numeric;
+begin
+  if p_ep <= 0 or p_points <= 0 then raise exception 'INVALID_AMOUNT'; end if;
+  select points, bonus_locked, residency into v_points, v_locked, v_residency
+    from public.profiles where id = p_user for update;
+  if v_points is null then raise exception 'PROFILE_NOT_FOUND'; end if;
+  if v_residency = 'JP' then raise exception 'REGION_BLOCKED'; end if;
+  if v_points < p_points then raise exception 'INSUFFICIENT_POINTS'; end if;
+  -- 特典ロック枠: 出金可能額（points - bonus_locked）を超える出金は拒否
+  if v_points - coalesce(v_locked, 0) < p_points then raise exception 'BONUS_LOCKED'; end if;
+  -- 日次上限（Asia/Tokyo の暦日で集計）
+  select daily_withdraw_ep into v_limit from public.ep_config where id = 1;
+  if v_limit is not null then
+    select coalesce(sum(ep_amount), 0) into v_today
+      from public.ep_transfers
+     where user_id = p_user
+       and direction = 'out'
+       and status in ('pending', 'completed')
+       and (created_at at time zone 'Asia/Tokyo')::date = (now() at time zone 'Asia/Tokyo')::date;
+    if v_today + p_ep > v_limit then raise exception 'DAILY_LIMIT'; end if;
+  end if;
+  update public.profiles set points = points - p_points where id = p_user;
+  insert into public.ep_transfers
+    (user_id, salon_group, salon_login_id, direction, ep_amount, points_delta, idempotency_key)
+  values (p_user, p_group, p_login_id, 'out', p_ep, -p_points, p_key)
+  returning id into v_id;
+  return v_id;
+end $$;
+
+revoke execute on function public.ep_begin_withdraw(uuid, numeric, numeric, text, text, text) from public, anon, authenticated;
+
+-- ============================================================
+-- A-1) Plinko: 勝ち分ロック + 日本居住者遮断(migrate-011 の plinko_play を差し替え)
 -- ============================================================
 create or replace function public.plinko_play(p_bet numeric, p_rows int)
 returns json language plpgsql security definer set search_path = public as $$
@@ -54,6 +143,7 @@ declare
   v_uid uuid := auth.uid();
   v_mult numeric[];
   v_points numeric;
+  v_residency text;
   v_bucket int := 0;
   v_multiplier numeric;
   v_payout numeric;
@@ -64,8 +154,10 @@ begin
   if p_bet is null or p_bet < 1 or p_bet > 10000 then raise exception 'BAD_BET'; end if;
   select multipliers into v_mult from public.plinko_config where rows_count = p_rows;
   if not found then raise exception 'BAD_ROWS'; end if;
-  select points into v_points from public.profiles where id = v_uid for update;
+  select points, residency into v_points, v_residency
+    from public.profiles where id = v_uid for update;
   if v_points is null then raise exception 'PROFILE_NOT_FOUND'; end if;
+  if v_residency = 'JP' then raise exception 'REGION_BLOCKED'; end if;
   if v_points < p_bet then raise exception 'INSUFFICIENT_POINTS'; end if;
   -- 抽選: 公正なコイントス p_rows 回(クライアントの旧 sampleBinomialBucket と同一モデル)
   for i in 1..p_rows loop

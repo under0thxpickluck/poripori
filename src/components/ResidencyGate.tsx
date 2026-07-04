@@ -32,6 +32,7 @@ const COUNTRIES: Array<{ code: string; name: string }> = (() => {
 const CONSENT_CLAUSES: string[] = [
   'MIRAIX Points ("MR") are virtual points provided solely for entertainment purposes within this site. MR is not money, electronic money, or a financial instrument of any kind.',
   'The mini-games on this site (including Mines and Plinko) are entertainment features. Any MR gained through these games is locked as non-withdrawable and can never be transferred or exchanged outside this site, including to partner salon EP.',
+  'This service is not available to residents of Japan. If you declare that you reside in Japan, you will not be able to participate in this service.',
   'You must truthfully declare your country of residence. Deliberately false or misleading declarations are prohibited.',
   'If we recognise that a declaration is false, we may restrict, suspend or terminate the relevant account and any associated features without prior notice.',
   'We may, at any time and at our sole discretion, require you to complete identity verification (KYC), including the submission of government-issued identification documents. Failure to cooperate may result in restriction of features.',
@@ -56,7 +57,38 @@ export default function ResidencyGate() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  if (!profile || profile.residency_consent_version === CONSENT_VERSION) return null
+  if (!profile) return null
+
+  // 日本居住を申告済み: 参加不可(全画面遮断。解除は運営対応のみ)
+  if (profile.residency === 'JP') {
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-surface shadow-2xl p-6 text-center space-y-4">
+          <span className="mx-auto w-12 h-12 rounded-full bg-no/15 text-no flex items-center justify-center">
+            <Globe size={22} />
+          </span>
+          <h2 className="text-lg font-bold text-text">Service Unavailable in Your Region</h2>
+          <p className="text-sm text-text leading-relaxed">
+            Based on your declared country of residence (Japan), this service is not available to you.
+          </p>
+          <p className="text-xs text-text-muted leading-relaxed">
+            ご申告いただいた居住国（日本）では、本サービスをご利用いただけません。
+            誤って選択した場合は運営までお問い合わせください。
+          </p>
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="mx-auto inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-border text-text-muted hover:text-text text-sm transition-colors"
+          >
+            <LogOut size={14} />
+            サインアウト ／ Sign out
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (profile.residency_consent_version === CONSENT_VERSION) return null
 
   const submit = async () => {
     if (!residency || !agreed || busy) return
