@@ -81,6 +81,9 @@ export default function Wallet() {
 
   const ep = Number(amount)
   const amountOk = Number.isInteger(ep) && ep >= MIN_EP && ep <= MAX_EP
+  // 特典ロック枠: この分はサロンEPへ出金不可（特典で増えた分・入金分は出金可）
+  const locked = Math.max(0, Math.floor(Number(profile.bonus_locked ?? 0)))
+  const withdrawable = Math.max(0, Math.floor(profile.points) - locked)
 
   const transfer = async () => {
     setMsg(null)
@@ -100,6 +103,7 @@ export default function Wallet() {
         setMsg(
           code === 'insufficient_ep' ? 'サロンのEP残高が不足しています。'
           : code === 'INSUFFICIENT_POINTS' ? 'MR（MIRAIXポイント）が不足しています。'
+          : code === 'BONUS_LOCKED' ? '新規登録特典分のMRはサロンEPへ出金できません。出金可能額の範囲で入力してください。'
           : code === 'duplicate' ? '同じ転送が既に処理されています。残高を確認してください。'
           : `転送に失敗しました（${code}）。残高は履歴で確認できます。`,
         )
@@ -138,6 +142,7 @@ export default function Wallet() {
             </p>
             <p className="text-xs text-text-muted mt-0.5">
               期間限定キャンペーンです。MR（MIRAIXポイント）は予測やゲームにそのまま使えます。
+              特典分はサロンEPへの出金には使えません（特典を使って増えた分は出金できます）。
             </p>
           </div>
           <button
@@ -181,6 +186,11 @@ export default function Wallet() {
             {Math.floor(profile.points).toLocaleString()}
             <span className="text-xs font-normal text-text-muted ml-1">MR</span>
           </p>
+          {locked > 0 && (
+            <p className="text-[11px] text-text-muted mt-1">
+              うち特典分 {locked.toLocaleString()} MR は出金不可（出金可能 {withdrawable.toLocaleString()} MR）
+            </p>
+          )}
         </div>
       </div>
 
@@ -216,7 +226,9 @@ export default function Wallet() {
         <p className="text-xs text-text-muted">
           {direction === 'in'
             ? `${salonName} のEPをMRに移して予測やゲームに使えます（1 EP = 1 MR）。`
-            : `MRを ${salonName} のEPに戻します（1 MR = 1 EP）。`}
+            : `MRを ${salonName} のEPに戻します（1 MR = 1 EP）。出金可能: ${withdrawable.toLocaleString()} MR${
+                locked > 0 ? `（新規登録特典分 ${locked.toLocaleString()} MR は出金不可）` : ''
+              }`}
         </p>
 
         {/* 金額 */}

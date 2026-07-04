@@ -77,11 +77,12 @@ Deno.serve(async (req) => {
       // handle_new_user トリガが profiles を作るので、連携列をリンク。
       // 新規SSOアカウントの初期残高は「期間限定の新規登録特典」として付与する。
       // 金額は MIRAIX_WELCOME_BONUS_MR（未設定なら1000）。キャンペーン終了時は 0 を設定。
+      // 特典分は bonus_locked でサロンEPへの出金を禁止（migrate-012。増えた分は出金可）。
       const welcomeBonus = Math.max(0, Number(Deno.env.get('MIRAIX_WELCOME_BONUS_MR') ?? '1000') || 0)
       const patch: Record<string, unknown> = {
         salon_group: salonGroup,
         salon_login_id: payload.loginId,
-        ...(createdNew ? { points: welcomeBonus } : {}),
+        ...(createdNew ? { points: welcomeBonus, bonus_locked: welcomeBonus } : {}),
       }
       const { error: linkErr } = await admin.from('profiles').update(patch).eq('id', userId)
       if (linkErr) return json({ ok: false, error: `link_failed: ${linkErr.message}` }, 500)

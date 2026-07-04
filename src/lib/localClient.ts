@@ -20,6 +20,8 @@ type Profile = {
   role: 'user' | 'admin'
   last_bonus: string | null
   bonus_streak: number
+  // 新規登録特典のロック枠（サロンEPへ出金不可分。ローカルモードでは表示互換のためだけに保持）
+  bonus_locked: number
   created_at: string
   // サロン連携（ローカルモードでは常に未連携）
   salon_group: string | null
@@ -112,6 +114,7 @@ function seed(): DB {
       role: 'admin',
       last_bonus: null,
       bonus_streak: 0,
+      bonus_locked: 1000,
       created_at: nowIso(),
       salon_group: null,
       salon_login_id: null,
@@ -124,6 +127,7 @@ function seed(): DB {
       role: 'user',
       last_bonus: null,
       bonus_streak: 0,
+      bonus_locked: 1000,
       created_at: nowIso(),
       salon_group: null,
       salon_login_id: null,

@@ -120,6 +120,7 @@ Deno.serve(async (req) => {
     })
     if (beginErr) {
       const msg = beginErr.message.includes('INSUFFICIENT_POINTS') ? 'INSUFFICIENT_POINTS'
+        : beginErr.message.includes('BONUS_LOCKED') ? 'BONUS_LOCKED'
         : beginErr.message.includes('duplicate key') ? 'duplicate'
         : beginErr.message
       return json({ ok: false, error: msg }, 400)

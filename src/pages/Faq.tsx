@@ -39,7 +39,7 @@ const FAQS: { group: string; items: QA[] }[] = [
       { q: 'MIRAIX と LIFAI（LIFAIOV / aisalon）はどういう関係ですか？', a: 'MIRAIX は LIFAI（LIFAIOV / aisalon）とは関係のない外部サイトです。LIFAI は MIRAIX の運営・内容について一切の責任を負いません。' },
       { q: 'サロンのEPをMIRAIXで使えますか？', a: <>サロン会員の方は、サロンの LIFAI Arcade から「MIRAIX」を開いて連携すると、<Link to="/wallet" className="text-accent hover:underline">EPウォレット</Link> でサロンのEPをMRに移して予測やゲームに使えます（1 EP = 1 MR）。MRをEPに戻すこともできます。</> },
       { q: 'MIRAIXで消費したEP・MRはLIFAI側で補填されますか？', a: 'されません。MIRAIXへ転送したEP、およびMIRAIX上で消費・喪失したMRを、LIFAI側で補填・返金することはできません。あらかじめご了承のうえご利用ください。' },
-      { q: '新規登録特典はありますか？', a: '期間限定キャンペーンとして、MIRAIXアカウントの新規作成時に 1,000 MR を新規登録特典として付与しています。キャンペーンは予告なく変更・終了する場合があります。' },
+      { q: '新規登録特典はありますか？', a: '期間限定キャンペーンとして、MIRAIXアカウントの新規作成時に 1,000 MR を新規登録特典として付与しています。特典分のMRはサロンEPへの出金には使えません（特典を使って増えた分は出金できます）。キャンペーンは予告なく変更・終了する場合があります。' },
     ],
   },
   {

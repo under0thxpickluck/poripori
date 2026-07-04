@@ -10,6 +10,8 @@ export type Profile = {
   role: 'user' | 'admin'
   last_bonus: string | null
   bonus_streak: number
+  // 新規登録特典のロック枠（この分はサロンEPへ出金不可。出金可能 = points - bonus_locked）
+  bonus_locked: number
   created_at: string
   // サロン連携（LIFAIOV / aisalon）。未連携なら null
   salon_group: string | null
