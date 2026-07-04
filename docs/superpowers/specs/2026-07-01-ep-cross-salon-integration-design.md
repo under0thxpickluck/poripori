@@ -194,10 +194,15 @@ MIRAIX サーバー関数 `POST /ep/withdraw`（要 MIRAIX セッション）:
 
 ---
 
-## 11. 未確定 / 実装前に確認すべき点
+## 11. 未確定 / 実装前に確認すべき点（2026-07-04 解決状況を反映）
 
-1. 🔴 **【最重要・土台】MIRAIX のサーバー実行環境を新設する必要がある。** 現状 MIRAIX はフロントのみ（Vite SPA）。SSO検証・アカウント作成（service_role）・GAS adminKey 呼び出しは**必ずサーバーが要る**。候補: Supabase Edge Functions（推奨・追加インフラ最小）／ 別途 API サーバー。これが決まらないと他が着手できない。
-2. **アカウント識別子:** サロン `applies` の `email` を Supabase auth ユーザーの識別に使えるか（会員全員に email があるか）。無い場合は合成メール方式。
-3. **aisalon の group 値の扱い:** 固定でなく GAS 応答由来のため、`(salon_group, salon_login_id)` が全会員で一意になるか（空 group や重複 loginId の可能性）を GAS 側データで確認。
-4. **EP↔points レート**（既定1:1で良いか）。
-5. **転送の最小/最大額・1日上限**を設けるか。
+1. ✅ **解決: Supabase Edge Functions を採用**（`miraix-sso` / `ep-transfer`、本番デプロイ・E2E検証済み）。
+2. ✅ **解決: 合成メール方式**（`sso.<salon_group>.<login_id>@salon-member.miraix.local`）。email が来た場合はそれを優先。
+3. ✅ **解決: 実装は `salon_group="aisalon"` へ正規化**（GAS group 空文字→"aisalon"、"5000"→"5000"。`(salon_group, salon_login_id)` に部分一意インデックス。E2EでLIFAIOV/aisalonのadminが別アカウントになることを確認済み）。
+4. ✅ **確定: 1:1 固定**（`EP_TO_POINTS_RATE = 1`）。
+5. ✅ **暫定確定: 1回 1〜10,000 EP・整数のみ**（日次上限は Phase 2）。
+
+### 追記（実装後に確定した仕様）
+- 新規登録特典 1,000 MR（`MIRAIX_WELCOME_BONUS_MR`、0で終了）は `profiles.bonus_locked` により**サロンEPへ出金不可**（ロー・ウォーターマーク方式、migrate-012）。
+- GAS `add_ep` の冪等性は専用シート `miraix_idempotency` + LockService（wallet_ledger のヘッダー差異に依存しない）。
+- ⚠️ 既知の残課題: デイリーボーナス（最大400MR/日）はロック対象外でサロンEPへ出金可能（要判断）。GAS の `ADMIN_SECRET` が弱い値（要ローテーション）。
