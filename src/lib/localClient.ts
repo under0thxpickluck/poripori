@@ -8,6 +8,7 @@
 // ============================================================================
 import { costFn, currentPrice } from './lmsr'
 import { calcRTP, generateMultipliers, GROWTH, ROW_OPTIONS } from './plinko-odds'
+import { multiplierAt, GRID as MINES_GRID } from './mines-math'
 
 export const IS_LOCAL = import.meta.env.VITE_LOCAL_MODE === '1'
 
@@ -76,6 +77,21 @@ type PlinkoPlay = {
   payout: number
   created_at: string
 }
+type MinesConfig = { id: number; house_edge: number }
+type MinesGame = {
+  id: string
+  user_id: string
+  bet: number
+  mines_count: number
+  house_edge: number
+  revealed: number[]
+  status: 'active' | 'busted' | 'cashed'
+  multiplier: number
+  payout: number | null
+  mines: number[] | null // 終局まで null（migrate-015 と同じ公開ルール）
+  created_at: string
+  finished_at: string | null
+}
 
 type DB = {
   profiles: Profile[]
@@ -87,6 +103,8 @@ type DB = {
   ads: Ad[]
   plinko_config: PlinkoConfig[]
   plinko_plays: PlinkoPlay[]
+  mines_config: MinesConfig[]
+  mines_games: MinesGame[]
 }
 
 // --- 固定 ID（seed ユーザー）---
@@ -192,6 +210,8 @@ function seed(): DB {
     ads: [],
     plinko_config,
     plinko_plays: [],
+    mines_config: [{ id: 1, house_edge: 0.95 }],
+    mines_games: [],
   }
 }
 
@@ -331,6 +351,8 @@ export function resetLocalDb() {
     ;(db[k] as unknown[]).push(...(fresh[k] as unknown[]))
   })
   priceSeq = db.price_history.reduce((m, p) => Math.max(m, p.id), 0)
+  minesSecrets.clear()
+  persistMinesSecrets()
   save(db)
   currentUserId = ADMIN_ID
   persistCurrent()
@@ -520,6 +542,15 @@ async function rpc(name: string, params: Record<string, unknown>): Promise<Resul
         return { data: plinkoPlay(params), error: null }
       case 'admin_plinko_set_multipliers':
         adminPlinkoSetMultipliers(params)
+        return { data: null, error: null }
+      case 'mines_start':
+        return { data: minesStart(params), error: null }
+      case 'mines_reveal':
+        return { data: minesReveal(params), error: null }
+      case 'mines_cashout':
+        return { data: minesCashout(params), error: null }
+      case 'admin_mines_set_house_edge':
+        adminMinesSetHouseEdge(params)
         return { data: null, error: null }
       default:
         return { data: null, error: { message: 'UNKNOWN_RPC:' + name } }
@@ -723,6 +754,148 @@ function adminPlinkoSetMultipliers(params: Record<string, unknown>) {
   emit('plinko_config', 'UPDATE', cfg as unknown as Record<string, unknown>)
 }
 
+// ============================================================================
+// Mines（migrate-015 と同ロジック）
+// 地雷位置は from() で読める DB には置かず、モジュール内 Map に保持する
+// （デモモードのリロード復元のためだけに専用キーで永続化。select 面には出ない）
+// ============================================================================
+const MINES_SECRET_KEY = 'miraix_local_mines_secrets'
+const minesSecrets = new Map<string, number[]>()
+try {
+  const raw = localStorage.getItem(MINES_SECRET_KEY)
+  if (raw) for (const [k, v] of Object.entries(JSON.parse(raw))) minesSecrets.set(k, v as number[])
+} catch {
+  /* ignore（テスト環境等で localStorage が無い場合） */
+}
+function persistMinesSecrets() {
+  try {
+    localStorage.setItem(MINES_SECRET_KEY, JSON.stringify(Object.fromEntries(minesSecrets)))
+  } catch {
+    /* ignore */
+  }
+}
+
+function minesStart(params: Record<string, unknown>) {
+  const me = requireAuth()
+  const bet = Number(params.p_bet)
+  const m = Number(params.p_mines)
+  if (!Number.isInteger(bet) || bet < 1 || bet > 10000) throw new Error('BAD_BET')
+  if (!Number.isInteger(m) || m < 1 || m > 24) throw new Error('BAD_MINES')
+  if (db.mines_games.some((g) => g.user_id === me && g.status === 'active')) throw new Error('GAME_ACTIVE')
+  const p = profile(me)
+  if (!p) throw new Error('PROFILE_NOT_FOUND')
+  if (p.points < bet) throw new Error('INSUFFICIENT_POINTS')
+  const edge = db.mines_config.find((c) => c.id === 1)?.house_edge ?? 0.95
+
+  p.points = Math.round((p.points - bet) * 100) / 100
+
+  const cells = Array.from({ length: MINES_GRID }, (_, i) => i)
+  for (let i = cells.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[cells[i], cells[j]] = [cells[j], cells[i]]
+  }
+  const mines = cells.slice(0, m)
+
+  const game: MinesGame = {
+    id: uid(), user_id: me, bet, mines_count: m, house_edge: edge,
+    revealed: [], status: 'active', multiplier: 1, payout: null, mines: null,
+    created_at: nowIso(), finished_at: null,
+  }
+  db.mines_games.push(game)
+  minesSecrets.set(game.id, mines)
+  persistMinesSecrets()
+  save(db)
+  emit('profiles', 'UPDATE', p as unknown as Record<string, unknown>)
+  return {
+    id: game.id, bet, mines_count: m, house_edge: edge,
+    revealed: [], multiplier: 1, status: 'active', balance: p.points,
+  }
+}
+
+function minesReveal(params: Record<string, unknown>) {
+  const me = requireAuth()
+  const cell = Number(params.p_cell)
+  if (!Number.isInteger(cell) || cell < 0 || cell > 24) throw new Error('BAD_CELL')
+  const g = db.mines_games.find((x) => x.id === params.p_game && x.user_id === me)
+  if (!g) throw new Error('GAME_NOT_FOUND')
+  if (g.status !== 'active') throw new Error('GAME_FINISHED')
+  if (g.revealed.includes(cell)) throw new Error('ALREADY_REVEALED')
+  const mines = minesSecrets.get(g.id)
+  if (!mines) throw new Error('GAME_NOT_FOUND')
+
+  if (mines.includes(cell)) {
+    g.status = 'busted'
+    g.payout = 0
+    g.mines = mines
+    g.finished_at = nowIso()
+    minesSecrets.delete(g.id)
+    persistMinesSecrets()
+    save(db)
+    emit('mines_games', 'UPDATE', g as unknown as Record<string, unknown>)
+    return { safe: false, status: 'busted', multiplier: g.multiplier, revealed: g.revealed, mines }
+  }
+
+  g.revealed = [...g.revealed, cell]
+  const k = g.revealed.length
+  g.multiplier = multiplierAt(g.mines_count, k, g.house_edge)
+
+  if (k === MINES_GRID - g.mines_count) {
+    // 全ての安全マスを開け切った: 自動キャッシュアウト
+    const p = profile(me)!
+    g.payout = Math.round(g.bet * g.multiplier * 100) / 100
+    p.points = Math.round((p.points + g.payout) * 100) / 100
+    g.status = 'cashed'
+    g.mines = mines
+    g.finished_at = nowIso()
+    minesSecrets.delete(g.id)
+    persistMinesSecrets()
+    save(db)
+    emit('profiles', 'UPDATE', p as unknown as Record<string, unknown>)
+    return {
+      safe: true, status: 'cashed', multiplier: g.multiplier, payout: g.payout,
+      balance: p.points, revealed: g.revealed, mines,
+    }
+  }
+
+  save(db)
+  return { safe: true, status: 'active', multiplier: g.multiplier, revealed: g.revealed }
+}
+
+function minesCashout(params: Record<string, unknown>) {
+  const me = requireAuth()
+  const g = db.mines_games.find((x) => x.id === params.p_game && x.user_id === me)
+  if (!g) throw new Error('GAME_NOT_FOUND')
+  if (g.status !== 'active') throw new Error('GAME_FINISHED')
+  if (g.revealed.length < 1) throw new Error('NO_REVEAL')
+  const mines = minesSecrets.get(g.id) ?? []
+  const p = profile(me)!
+  g.payout = Math.round(g.bet * g.multiplier * 100) / 100
+  p.points = Math.round((p.points + g.payout) * 100) / 100
+  g.status = 'cashed'
+  g.mines = mines
+  g.finished_at = nowIso()
+  minesSecrets.delete(g.id)
+  persistMinesSecrets()
+  save(db)
+  emit('profiles', 'UPDATE', p as unknown as Record<string, unknown>)
+  return {
+    payout: g.payout, multiplier: g.multiplier, balance: p.points,
+    revealed: g.revealed, mines,
+  }
+}
+
+// migrate-015 の admin_mines_set_house_edge と同じ検証（0.10〜1.50）
+function adminMinesSetHouseEdge(params: Record<string, unknown>) {
+  requireAdmin()
+  const edge = Number(params.p_edge)
+  if (!Number.isFinite(edge) || edge < 0.1 || edge > 1.5) throw new Error('RTP_OUT_OF_RANGE')
+  const cfg = db.mines_config.find((c) => c.id === 1)
+  if (!cfg) throw new Error('BAD_ROWS')
+  cfg.house_edge = edge
+  save(db)
+  emit('mines_config', 'UPDATE', cfg as unknown as Record<string, unknown>)
+}
+
 function claimDailyBonus() {
   const p = profile(requireAuth())!
   const today = new Date().toISOString().slice(0, 10)
@@ -732,6 +905,8 @@ function claimDailyBonus() {
   const amount = 100 + Math.min(p.bonus_streak - 1, 6) * 50
   p.points += amount
   p.xp += amount
+  // ボーナス分は出金不可枠へ（migrate-013 と同じ。クランプトリガ相当で 0〜points に収める）
+  p.bonus_locked = Math.max(0, Math.min((p.bonus_locked ?? 0) + amount, p.points))
   p.last_bonus = today
   save(db)
   emit('profiles', 'UPDATE', p as unknown as Record<string, unknown>)

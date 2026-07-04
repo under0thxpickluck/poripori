@@ -23,6 +23,7 @@ const ADMIN_LINKS = [
   { to: '/admin/markets/new', label: '新規作成' },
   { to: '/admin/ads', label: '広告管理' },
   { to: '/admin/plinko', label: 'Plinko設定' },
+  { to: '/admin/mines', label: 'Mines設定' },
   { to: '/admin/users', label: 'ユーザー管理' },
 ]
 

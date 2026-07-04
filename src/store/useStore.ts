@@ -80,6 +80,13 @@ export function mapRpcError(msg: string): string {
   if (msg.includes('ADMIN_REQUIRED')) return '管理者権限が必要です'
   if (msg.includes('NOT_CLOSED')) return '締切済みの市場のみ延長できます'
   if (msg.includes('DEADLINE_IN_PAST')) return '新しい締切は未来の日時にしてください'
+  if (msg.includes('BAD_MINES')) return '罠の数は1〜24の範囲で設定してください'
+  if (msg.includes('GAME_ACTIVE')) return '進行中のゲームがあります。先に終了してください'
+  if (msg.includes('GAME_NOT_FOUND')) return 'ゲームが見つかりません'
+  if (msg.includes('GAME_FINISHED')) return 'このゲームは既に終了しています'
+  if (msg.includes('BAD_CELL')) return 'マスの指定が不正です'
+  if (msg.includes('ALREADY_REVEALED')) return 'そのマスは既に開いています'
+  if (msg.includes('NO_REVEAL')) return '1マス以上開けてからキャッシュアウトしてください'
   return msg || 'エラーが発生しました'
 }
 

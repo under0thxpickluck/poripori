@@ -7,7 +7,7 @@ import AdCard from '../components/AdCard'
 import FeaturedCarousel from '../components/FeaturedCarousel'
 import LiveTicker from '../components/LiveTicker'
 import BottomSheet from '../components/BottomSheet'
-import PlinkoBanner from '../components/PlinkoBanner'
+import GameCorner from '../components/GameCorner'
 import type { Category, Market } from '../types'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -261,7 +261,7 @@ export default function MarketList() {
       </div>
 
       {featured.length > 0 && <FeaturedCarousel markets={featured} />}
-      {isDefaultView && <PlinkoBanner />}
+      {isDefaultView && <GameCorner />}
 
       {open.length === 0 ? (
         <div className="text-center py-20 text-text-muted">

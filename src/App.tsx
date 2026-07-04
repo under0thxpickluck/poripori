@@ -18,6 +18,7 @@ const AdminMarketNew = lazy(() => import('./pages/admin/MarketNew'))
 const AdminAds = lazy(() => import('./pages/admin/Ads'))
 const AdminUsers = lazy(() => import('./pages/admin/Users'))
 const AdminPlinko = lazy(() => import('./pages/admin/Plinko'))
+const AdminMines = lazy(() => import('./pages/admin/Mines'))
 
 const LegalHub = lazy(() => import('./pages/legal/LegalHub'))
 const Terms = lazy(() => import('./pages/legal/Terms'))
@@ -35,6 +36,7 @@ const Press = lazy(() => import('./pages/Press'))
 const Faq = lazy(() => import('./pages/Faq'))
 const Developers = lazy(() => import('./pages/Developers'))
 const Plinko = lazy(() => import('./pages/Plinko'))
+const Mines = lazy(() => import('./pages/Mines'))
 const SalonLink = lazy(() => import('./pages/SalonLink'))
 const Wallet = lazy(() => import('./pages/Wallet'))
 
@@ -63,6 +65,7 @@ export default function App() {
             <Route path="/propose" element={<L><Propose /></L>} />
             <Route path="/ranking" element={<L><Ranking /></L>} />
             <Route path="/plinko" element={<L><Plinko /></L>} />
+            <Route path="/mines" element={<L><Mines /></L>} />
             <Route path="/salon-link" element={<L><SalonLink /></L>} />
             <Route path="/wallet" element={<L><Wallet /></L>} />
             <Route element={<AdminGuard />}>
@@ -73,6 +76,7 @@ export default function App() {
               <Route path="/admin/ads" element={<L><AdminAds /></L>} />
               <Route path="/admin/users" element={<L><AdminUsers /></L>} />
               <Route path="/admin/plinko" element={<L><AdminPlinko /></L>} />
+              <Route path="/admin/mines" element={<L><AdminMines /></L>} />
             </Route>
 
             <Route path="/legal" element={<L><LegalHub /></L>} />

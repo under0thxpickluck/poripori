@@ -35,6 +35,22 @@
   --c-scrollbar-thumb-hover: 156 163 175;
 }
 
+/* ライトテーマでも常にダークで描画する領域（Mines などのゲーム面）。
+   白アルファのガラスモーフィズムが背景色に依存するため、テーマ変数ごと固定する。 */
+.stage-dark {
+  --c-bg: 14 17 23;
+  --c-surface: 26 29 41;
+  --c-surface-hover: 34 38 50;
+  --c-border: 34 38 50;
+  --c-accent: 45 156 219;
+  --c-accent-hover: 37 137 196;
+  --c-yes: 39 174 96;
+  --c-no: 235 87 87;
+  --c-text: 230 232 236;
+  --c-text-muted: 138 143 152;
+  color: rgb(var(--c-text));
+}
+
 * {
   box-sizing: border-box;
 }

@@ -24,6 +24,11 @@ re-run (functions/policies are `create or replace` / `drop ... if exists`).
 8. `migrate-008-comment-guards.sql` — comment length guard (server-side defense-in-depth).
 9. `migrate-009-apply-pending.sql` — apply pending (catch-up bundle: 005/007/008).
 10. `migrate-010-ep-transfers.sql` — EPクロス連動: profiles連携列 / ep_transfers / 転送RPC（Studio SQL Editorで手動適用）
+11. `migrate-011-plinko.sql` — Plinko（設定テーブル + プレイRPC）。
+12. `migrate-012-bonus-lock.sql` — 新規登録特典のサロンEP出金ロック（`bonus_locked` + クランプトリガ + `ep_begin_withdraw` 差し替え）。
+13. `migrate-013-daily-bonus-lock.sql` — デイリーボーナスも `bonus_locked` に加算（サロンEP出金漏れ対策。012の後に適用）。
+14. `migrate-014-withdraw-daily-limit.sql` — サロンEP出金の日次上限（`ep_config` + `ep_begin_withdraw` 差し替え。012の後に適用）。
+15. `migrate-015-mines.sql` — Mines（宝石堀り）: 設定/台帳/秘密テーブル + プレイRPC 3本 + 管理RPC。
 
 > `schema.sql` already contains the final version of every function (including
 > the 005 changes). The `migrate-00X` files are incremental patches for projects
