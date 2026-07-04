@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Gem, LogIn, Volume2, VolumeX } from 'lucide-react'
+import { Cpu, LogIn, Volume2, VolumeX } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useMinesGame } from '../hooks/useMinesGame'
 import { isMuted, setMuted } from '../lib/sounds'
@@ -32,13 +32,13 @@ export default function Mines() {
     <div className="max-w-2xl mx-auto">
       {/* ヘッダー */}
       <div className="mb-5 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-emerald-400/15 text-emerald-400 flex items-center justify-center border border-emerald-400/20">
-          <Gem size={22} />
+        <div className="w-10 h-10 rounded-xl bg-cyan-400/15 text-cyan-300 flex items-center justify-center border border-cyan-400/25">
+          <Cpu size={22} />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-text">Mines</h1>
           <p className="text-text-muted text-sm">
-            罠を避けて宝石を掘り当てよう
+            グリッドに潜むトラップを避けて、データを採掘せよ
             <span className="ml-2">還元率 {(houseEdge * 100).toFixed(0)}%</span>
           </p>
         </div>
@@ -61,7 +61,7 @@ export default function Mines() {
       </div>
 
       {/* ゲーム面はライトテーマでも常にダーク（stage-dark でテーマ変数を固定） */}
-      <div className="stage-dark space-y-4 rounded-3xl border border-white/10 bg-bg p-3 sm:p-4 shadow-xl">
+      <div className="stage-dark space-y-4 rounded-3xl border border-cyan-400/15 bg-[#0a0a12] p-3 sm:p-4 shadow-xl">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <Board game={game} pendingCell={pendingCell} onReveal={reveal} />
         </motion.div>
@@ -92,7 +92,7 @@ export default function Mines() {
         <HistoryCards finished={finished} stats={stats} />
 
         <p className="text-[11px] text-text-muted">
-          MR はサイト内ポイントです。ベットは1回 1〜10,000 MR。罠の数が多いほど1マスあたりの倍率が上がります。
+          MR はサイト内ポイントです。ベットは1回 1〜10,000 MR。トラップの数が多いほど1マスあたりの倍率が上がります。
         </p>
       </div>
 

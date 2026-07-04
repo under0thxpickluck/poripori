@@ -24,11 +24,11 @@ function tileState(game: ActiveGame | null, cell: number): TileState {
 export function Board({ game, pendingCell, onReveal }: Props) {
   return (
     <div
-      className="grid grid-cols-5 gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-2xl border border-white/10
-                 bg-gradient-to-b from-white/[0.05] to-white/[0.015] backdrop-blur-md
-                 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+      className="grid grid-cols-5 gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-2xl border border-cyan-400/25
+                 neon-grid-bg neon-scanline
+                 shadow-[inset_0_0_40px_rgba(0,240,255,0.06),0_0_24px_rgba(0,240,255,0.08)]"
       role="grid"
-      aria-label="宝石堀りの盤面"
+      aria-label="データ採掘の盤面"
     >
       {Array.from({ length: GRID }, (_, i) => (
         <Tile

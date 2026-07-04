@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Dices, Gem, ArrowRight } from 'lucide-react'
+import { Dices, Cpu, ArrowRight } from 'lucide-react'
 
 // ホームのゲームコーナー（Plinko / Mines の2枚カード）。
 // 旧 PlinkoBanner を置き換えたもの。カードを増やすときはここに足す。
@@ -15,12 +15,12 @@ const GAMES = [
   },
   {
     to: '/mines',
-    Icon: Gem,
-    title: '罠を避けて、宝石を掘り当てろ',
-    desc: 'Mines 💎 開けるほど倍率アップ、引き際はキミ次第',
-    iconCls: 'bg-emerald-400/20 text-emerald-400',
-    cardCls: 'border-emerald-400/30 from-emerald-400/15 hover:border-emerald-400/60',
-    arrowCls: 'text-emerald-400',
+    Icon: Cpu,
+    title: 'グリッドに潜むトラップを避けろ',
+    desc: 'Mines 🕹 開けるほど倍率アップ、引き際はキミ次第',
+    iconCls: 'bg-cyan-400/20 text-cyan-300',
+    cardCls: 'border-cyan-400/30 from-cyan-400/15 hover:border-cyan-400/60',
+    arrowCls: 'text-cyan-300',
   },
 ] as const
 

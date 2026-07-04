@@ -61,31 +61,34 @@ function tone(spec: ToneSpec) {
   osc.stop(t0 + spec.duration + 0.02)
 }
 
-/** タイルを押した瞬間の微小なクリック音 */
+/** タイルを押した瞬間のブリップ（矩形波） */
 export function playClick() {
-  tone({ freq: 2200, type: 'triangle', duration: 0.03, gain: 0.025 })
+  tone({ freq: 1800, type: 'square', duration: 0.025, gain: 0.018 })
 }
 
-/** 宝石発見。開示数 k に応じて音程が上がっていく（気持ちよさの核） */
+/** データ採掘成功。開示数 k に応じて音程が上がっていく（気持ちよさの核）+ シンセアルペジオ */
 export function playGem(k: number) {
-  const base = 520 * Math.pow(1.06, Math.min(k, 20)) // 半音ずつ上昇
-  tone({ freq: base, type: 'sine', duration: 0.12, gain: 0.06 })
-  tone({ freq: base * 1.5, type: 'sine', duration: 0.1, gain: 0.03, delay: 0.03 })
+  const base = 480 * Math.pow(1.06, Math.min(k, 20)) // 半音ずつ上昇
+  tone({ freq: base, type: 'sawtooth', duration: 0.09, gain: 0.035 })
+  tone({ freq: base * 1.5, type: 'square', duration: 0.07, gain: 0.02, delay: 0.04 })
+  tone({ freq: base * 2, type: 'triangle', duration: 0.09, gain: 0.025, delay: 0.08 })
 }
 
-/** 倍率アップの控えめなアクセント（高倍率帯で playGem に重ねる） */
+/** 倍率アップのFM風ピコ（高倍率帯で playGem に重ねる） */
 export function playMultiplierUp() {
-  tone({ freq: 1180, to: 1560, type: 'triangle', duration: 0.09, gain: 0.03 })
+  tone({ freq: 1400, to: 2100, type: 'square', duration: 0.06, gain: 0.02 })
 }
 
-/** Cash Out 成功（2音の上昇コード） */
+/** Cash Out 成功（2音上昇シンセ + 高域キラ） */
 export function playCashout() {
-  tone({ freq: 660, type: 'sine', duration: 0.11, gain: 0.07 })
-  tone({ freq: 990, type: 'sine', duration: 0.16, gain: 0.06, delay: 0.09 })
+  tone({ freq: 620, type: 'sawtooth', duration: 0.1, gain: 0.05 })
+  tone({ freq: 930, type: 'sawtooth', duration: 0.14, gain: 0.045, delay: 0.08 })
+  tone({ freq: 1860, type: 'sine', duration: 0.18, gain: 0.02, delay: 0.12 })
 }
 
-/** 罠（低いスラム音。派手にしすぎない） */
+/** トラップ（ビットクラッシュ風: 矩形波の急降下 + 低域層） */
 export function playBust() {
-  tone({ freq: 150, to: 55, type: 'sawtooth', duration: 0.22, gain: 0.07 })
-  tone({ freq: 90, to: 40, type: 'sine', duration: 0.26, gain: 0.06, delay: 0.02 })
+  tone({ freq: 220, to: 40, type: 'square', duration: 0.2, gain: 0.05 })
+  tone({ freq: 120, to: 30, type: 'sawtooth', duration: 0.26, gain: 0.05, delay: 0.01 })
+  tone({ freq: 3200, to: 300, type: 'square', duration: 0.08, gain: 0.015 })
 }
