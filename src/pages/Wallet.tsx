@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowDownToLine, ArrowUpFromLine, RefreshCw, Landmark, Coins } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowDownToLine, ArrowUpFromLine, RefreshCw, Landmark, Coins, Gift, X, AlertTriangle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { IS_LOCAL } from '../lib/localClient'
 import { useAuth } from '../store/useAuth'
@@ -25,9 +25,11 @@ const MIN_EP = 1
 const MAX_EP = 10000
 const QUICK = [10, 100, 1000]
 
-// EPウォレット: サロンEP⇄MIRAIXポイントの転送と履歴
+// EPウォレット: サロンEP⇄MR（MIRAIXポイント）の転送と履歴
 export default function Wallet() {
   const { profile, loadProfile } = useAuth()
+  const [params, setParams] = useSearchParams()
+  const welcomeBonus = Number(params.get('welcome') ?? 0)
   const [direction, setDirection] = useState<'in' | 'out'>('in')
   const [amount, setAmount] = useState('')
   const [busy, setBusy] = useState(false)
@@ -97,7 +99,7 @@ export default function Wallet() {
         setMsgKind('error')
         setMsg(
           code === 'insufficient_ep' ? 'サロンのEP残高が不足しています。'
-          : code === 'INSUFFICIENT_POINTS' ? 'MIRAIXのポイントが不足しています。'
+          : code === 'INSUFFICIENT_POINTS' ? 'MR（MIRAIXポイント）が不足しています。'
           : code === 'duplicate' ? '同じ転送が既に処理されています。残高を確認してください。'
           : `転送に失敗しました（${code}）。残高は履歴で確認できます。`,
         )
@@ -105,7 +107,7 @@ export default function Wallet() {
       }
       setMsgKind('ok')
       setMsg(direction === 'in'
-        ? `${ep.toLocaleString()} EP をMIRAIXポイントに移しました。`
+        ? `${ep.toLocaleString()} EP をMRに移しました。`
         : `${ep.toLocaleString()} EP をサロンへ戻しました。`)
       setAmount('')
       if (typeof data.ep_balance === 'number') setEpBalance(data.ep_balance)
@@ -126,6 +128,38 @@ export default function Wallet() {
         </p>
       </div>
 
+      {/* 新規登録特典バナー（SSO初回作成時のみ表示） */}
+      {welcomeBonus > 0 && (
+        <div className="flex items-start gap-3 bg-accent/10 border border-accent/40 rounded-lg p-4">
+          <Gift size={18} className="text-accent shrink-0 mt-0.5" />
+          <div className="flex-1 text-sm">
+            <p className="font-semibold text-text">
+              新規登録特典として {welcomeBonus.toLocaleString()} MR をプレゼントしました🎉
+            </p>
+            <p className="text-xs text-text-muted mt-0.5">
+              期間限定キャンペーンです。MR（MIRAIXポイント）は予測やゲームにそのまま使えます。
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label="閉じる"
+            onClick={() => setParams({}, { replace: true })}
+            className="text-text-muted hover:text-text transition-colors shrink-0"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
+
+      {/* 外部サイト免責（サロン側の免責ゲートと同趣旨をMIRAIX側でも明記） */}
+      <div className="flex items-start gap-2.5 bg-surface border border-border rounded-lg p-3.5 text-xs text-text-muted">
+        <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+        <p>
+          MIRAIX は LIFAI（LIFAIOV / aisalon）とは関係のない外部サイトです。
+          MIRAIXへ転送したEP・MIRAIX上で消費したMRを、LIFAI側で補填・返金することはできません。
+        </p>
+      </div>
+
       {/* 残高（サロンEP / MIRAIXポイント） */}
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-surface border border-border rounded-lg p-4">
@@ -141,11 +175,11 @@ export default function Wallet() {
         <div className="bg-surface border border-border rounded-lg p-4">
           <div className="flex items-center gap-1.5 text-text-muted text-xs mb-1">
             <Coins size={13} />
-            <span>MIRAIXポイント</span>
+            <span>MR（MIRAIXポイント）</span>
           </div>
           <p className="text-xl font-bold text-text">
             {Math.floor(profile.points).toLocaleString()}
-            <span className="text-xs font-normal text-text-muted ml-1">pt</span>
+            <span className="text-xs font-normal text-text-muted ml-1">MR</span>
           </p>
         </div>
       </div>
@@ -181,8 +215,8 @@ export default function Wallet() {
         </div>
         <p className="text-xs text-text-muted">
           {direction === 'in'
-            ? `${salonName} のEPをMIRAIXポイントに移して予測やゲームに使えます（1 EP = 1 pt）。`
-            : `MIRAIXポイントを ${salonName} のEPに戻します（1 pt = 1 EP）。`}
+            ? `${salonName} のEPをMRに移して予測やゲームに使えます（1 EP = 1 MR）。`
+            : `MRを ${salonName} のEPに戻します（1 MR = 1 EP）。`}
         </p>
 
         {/* 金額 */}

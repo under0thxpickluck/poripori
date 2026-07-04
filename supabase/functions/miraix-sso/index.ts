@@ -50,6 +50,7 @@ Deno.serve(async (req) => {
 
     let userId = existing?.id as string | undefined
     let email = ''
+    let grantedBonus = 0 // 新規作成時のみ >0（期間限定の新規登録特典）
 
     if (userId) {
       const { data: u, error } = await admin.auth.admin.getUserById(userId)
@@ -74,15 +75,17 @@ Deno.serve(async (req) => {
         createdNew = true
       }
       // handle_new_user トリガが profiles を作るので、連携列をリンク。
-      // ⚠️ SSO新規アカウントは points=0 で開始する（既定の初期1000ptを無償でサロンEPへ
-      //    引き出せてしまう抜け穴を塞ぐ。原資は必ずサロンEPの入金で持ち込む）。
+      // 新規SSOアカウントの初期残高は「期間限定の新規登録特典」として付与する。
+      // 金額は MIRAIX_WELCOME_BONUS_MR（未設定なら1000）。キャンペーン終了時は 0 を設定。
+      const welcomeBonus = Math.max(0, Number(Deno.env.get('MIRAIX_WELCOME_BONUS_MR') ?? '1000') || 0)
       const patch: Record<string, unknown> = {
         salon_group: salonGroup,
         salon_login_id: payload.loginId,
-        ...(createdNew ? { points: 0 } : {}),
+        ...(createdNew ? { points: welcomeBonus } : {}),
       }
       const { error: linkErr } = await admin.from('profiles').update(patch).eq('id', userId)
       if (linkErr) return json({ ok: false, error: `link_failed: ${linkErr.message}` }, 500)
+      if (createdNew) grantedBonus = welcomeBonus
     }
 
     // マジックリンクの token_hash を発行（メール送信はしない）
@@ -93,7 +96,7 @@ Deno.serve(async (req) => {
     if (lErr || !link.properties?.hashed_token) {
       return json({ ok: false, error: `generate_link_failed: ${lErr?.message}` }, 500)
     }
-    return json({ ok: true, token_hash: link.properties.hashed_token, email })
+    return json({ ok: true, token_hash: link.properties.hashed_token, email, welcome_bonus: grantedBonus })
   } catch (e) {
     return json({ ok: false, error: String(e) }, 500)
   }

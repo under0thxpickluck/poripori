@@ -46,7 +46,8 @@ export default function SalonLink() {
         return
       }
       await loadProfile()
-      navigate('/wallet', { replace: true })
+      const bonus = Number(data.welcome_bonus ?? 0)
+      navigate(bonus > 0 ? `/wallet?welcome=${bonus}` : '/wallet', { replace: true })
     })()
   }, [params, navigate, loadProfile])
 
