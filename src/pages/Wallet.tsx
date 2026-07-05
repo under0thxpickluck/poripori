@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   ArrowDownToLine, ArrowUpFromLine, RefreshCw, Landmark, Coins, Gift, X, AlertTriangle,
@@ -47,6 +47,9 @@ export default function Wallet() {
   const [direction, setDirection] = useState<'in' | 'out'>('in')
   const [amount, setAmount] = useState('')
   const [busy, setBusy] = useState(false)
+  // 送信中フラグの同期版。busy(state) は再描画まで反映されないため、
+  // 反映前の高速二連打で transfer()/resume() が二重に走る（別 idempotencyKey → 二重転送）のを塞ぐ
+  const submittingRef = useRef(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [msgKind, setMsgKind] = useState<'ok' | 'error'>('ok')
   const [epBalance, setEpBalance] = useState<number | null>(null)
@@ -108,12 +111,14 @@ export default function Wallet() {
   const salonName = GROUP_LABEL[profile.salon_group ?? ''] ?? profile.salon_group
 
   const transfer = async () => {
+    if (submittingRef.current) return
     setMsg(null)
     if (!amountOk) {
       setMsgKind('error')
       setMsg(t('{min}〜{max} の整数で入力してください。', { min: MIN_EP, max: MAX_EP.toLocaleString() }))
       return
     }
+    submittingRef.current = true
     setBusy(true)
     try {
       const { data, error } = await supabase.functions.invoke('ep-transfer', {
@@ -151,6 +156,7 @@ export default function Wallet() {
       setAmount('')
       if (typeof result.ep_balance === 'number') setEpBalance(result.ep_balance)
     } finally {
+      submittingRef.current = false
       setBusy(false)
       await Promise.all([loadProfile(), loadHistory(), loadDailyQuota()])
     }
@@ -159,7 +165,9 @@ export default function Wallet() {
   // 「処理中」で止まった転送の再開。サーバー/GAS側の冪等キー照合により
   // 実行済み分は duplicated 扱いになるだけで、二重減算・二重付与は起きない
   const resume = async (transferId: string) => {
+    if (submittingRef.current) return
     setMsg(null)
+    submittingRef.current = true
     setBusy(true)
     try {
       const { data, error } = await supabase.functions.invoke('ep-transfer', {
@@ -188,6 +196,7 @@ export default function Wallet() {
       setMsg(t('止まっていた転送を完了しました。'))
       if (typeof result.ep_balance === 'number') setEpBalance(result.ep_balance)
     } finally {
+      submittingRef.current = false
       setBusy(false)
       await Promise.all([loadProfile(), loadHistory(), loadDailyQuota()])
     }

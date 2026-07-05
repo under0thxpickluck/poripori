@@ -43,13 +43,16 @@ Deno.serve(async (req) => {
     )
     const { data: profile } = await admin
       .from('profiles')
-      .select('id, points, salon_group, salon_login_id')
+      .select('id, points, salon_group, salon_login_id, residency')
       .eq('id', uid)
       .single()
     if (!profile?.salon_login_id || !profile?.salon_group) {
       return json({ ok: false, error: 'not_linked' }, 403)
     }
     const gasGroup = gasGroupFromSalon(profile.salon_group)
+    // 価値移転(入金/出金/再開)は JP 居住申告者を遮断（多層防御）。
+    // out は ep_begin_withdraw 内でも REGION_BLOCKED を課すが、ここで全パスを対称化する。
+    const regionBlocked = profile.residency === 'JP'
 
     // 現在のMIRAIX pointsを取り直して返すヘルパ（転送後の表示ズレ防止）
     const currentPoints = async (): Promise<number> => {
@@ -111,6 +114,8 @@ Deno.serve(async (req) => {
 
       // 入金の再開: 冪等キー付きで deduct した転送のみ対象。
       // （旧形式・補償失敗後の行は真値が不明なため手動対応 → docs/ops の手順書参照）
+      // 出金の再開は既に認可済み転送の回収なので通すが、入金は新規の価値移転扱いで JP を遮断。
+      if (regionBlocked) return json({ ok: false, error: 'REGION_BLOCKED' }, 400)
       const meta = (t.gas_result ?? {}) as Record<string, unknown>
       if (!meta.deduct_idempotent) return json({ ok: false, error: 'resume_unsupported' }, 409)
       let gasIn
@@ -157,6 +162,7 @@ Deno.serve(async (req) => {
     const points = ep * EP_TO_POINTS_RATE
 
     if (direction === 'in') {
+      if (regionBlocked) return json({ ok: false, error: 'REGION_BLOCKED' }, 400)
       // 冪等: 既存キーがあれば重複として返す
       const { data: dup } = await admin
         .from('ep_transfers').select('id, status').eq('idempotency_key', idempotencyKey).maybeSingle()
