@@ -21,7 +21,6 @@ const CAT_BAR: Record<string, string> = {
 export default function Portfolio() {
   const t = useT()
   const { currentUser, markets, positions, getUserTrades, trades } = useStore()
-  const salonProfile = useAuth((s) => s.profile)
   const user = currentUser()
 
   if (!user) {
@@ -141,8 +140,8 @@ export default function Portfolio() {
         </div>
       </div>
 
-      {/* EPウォレット導線（サロン連携ユーザーのみ。モバイルはここが入口） */}
-      {salonProfile?.salon_login_id && (
+      {/* ポイント購入導線（サインイン済み全員。モバイルはここが入口） */}
+      {user && (
         <Link
           to="/wallet"
           className="flex items-center justify-between bg-surface border border-border rounded-lg p-4 hover:border-accent/50 transition-colors"
@@ -152,8 +151,8 @@ export default function Portfolio() {
               <ArrowLeftRight size={16} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-text">{t('EPウォレット')}</p>
-              <p className="text-xs text-text-muted">{t('サロンEP ⇄ MIRAIXポイントの転送・履歴')}</p>
+              <p className="text-sm font-semibold text-text">{t('ポイント購入')}</p>
+              <p className="text-xs text-text-muted">{t('暗号通貨・LIFAI EP連携でポイントを購入')}</p>
             </div>
           </div>
           <span className="text-xs text-accent font-medium shrink-0">{t('開く')} →</span>
