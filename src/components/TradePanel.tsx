@@ -4,6 +4,7 @@ import { useStore } from '../store/useStore'
 import { buyCost, sellRefund, sharesForPoints, marketPrice } from '../lib/lmsr'
 import type { Market } from '../types'
 import Confetti from './Confetti'
+import { useT } from '../lib/i18n'
 
 type Tab = 'buy' | 'sell'
 type Side = 'YES' | 'NO'
@@ -13,6 +14,7 @@ type Props = { market: Market }
 const QUICK = [0.25, 0.5, 0.75, 1]
 
 export default function TradePanel({ market }: Props) {
+  const t = useT()
   const { currentUser, buyShares, sellShares, getPosition } = useStore()
   const user = currentUser()
   const [tab, setTab] = useState<Tab>('buy')
@@ -74,15 +76,15 @@ export default function TradePanel({ market }: Props) {
         success: true,
         message:
           tab === 'buy'
-            ? `${pv.shares.toFixed(2)} ${side} シェアを購入しました`
-            : `${pv.shares.toFixed(2)} ${side} シェアを売却しました`,
+            ? t('{n} {s} シェアを購入しました', { n: pv.shares.toFixed(2), s: side })
+            : t('{n} {s} シェアを売却しました', { n: pv.shares.toFixed(2), s: side }),
       })
       setAmount('')
       setBurst((b) => b + 1)
       navigator.vibrate?.(15) // スマホで軽い触覚フィードバック
     } else {
       navigator.vibrate?.([8, 40, 8])
-      setResult({ success: false, message: r.error ?? 'エラーが発生しました' })
+      setResult({ success: false, message: r.error ? t(r.error) : t('エラーが発生しました') })
     }
     setTimeout(() => setResult(null), 3000)
   }
@@ -105,18 +107,18 @@ export default function TradePanel({ market }: Props) {
     <div className="bg-surface border border-border rounded-lg overflow-hidden">
       <Confetti trigger={burst} />
       <div className="flex border-b border-border">
-        {(['buy', 'sell'] as Tab[]).map((t) => (
+        {(['buy', 'sell'] as Tab[]).map((tb) => (
           <button
-            key={t}
+            key={tb}
             onClick={() => {
-              setTab(t)
+              setTab(tb)
               setAmount('')
             }}
             className={`flex-1 py-3 text-sm font-semibold transition-colors ${
-              tab === t ? 'text-text border-b-2 border-accent bg-accent/10' : 'text-text-muted hover:text-text'
+              tab === tb ? 'text-text border-b-2 border-accent bg-accent/10' : 'text-text-muted hover:text-text'
             }`}
           >
-            {t === 'buy' ? '購入' : '売却'}
+            {tb === 'buy' ? t('購入') : t('売却')}
           </button>
         ))}
       </div>
@@ -124,10 +126,10 @@ export default function TradePanel({ market }: Props) {
       <div className="p-4 space-y-4">
         {!canTrade && (
           <div className="text-center py-4 text-text-muted text-sm">
-            {market.status === 'pending' && '承認待ちのためトレード不可'}
-            {market.status === 'open' && expired && '締切済み・解決待ち'}
-            {market.status === 'closed' && '締切済み・解決待ち'}
-            {market.status === 'resolved' && `解決済み: ${market.resolved}`}
+            {market.status === 'pending' && t('承認待ちのためトレード不可')}
+            {market.status === 'open' && expired && t('締切済み・解決待ち')}
+            {market.status === 'closed' && t('締切済み・解決待ち')}
+            {market.status === 'resolved' && `${t('解決済み')}: ${market.resolved}`}
           </div>
         )}
 
@@ -165,7 +167,7 @@ export default function TradePanel({ market }: Props) {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs text-text-muted">
-                  {tab === 'buy' ? (inputMode === 'points' ? 'ポイント額' : 'シェア数') : 'シェア数'}
+                  {tab === 'buy' ? (inputMode === 'points' ? t('ポイント額') : t('シェア数')) : t('シェア数')}
                 </label>
                 {tab === 'buy' && (
                   <button
@@ -175,7 +177,7 @@ export default function TradePanel({ market }: Props) {
                     }}
                     className="text-xs text-accent hover:text-accent-hover"
                   >
-                    {inputMode === 'points' ? 'シェア数で入力' : 'ポイントで入力'}
+                    {inputMode === 'points' ? t('シェア数で入力') : t('ポイントで入力')}
                   </button>
                 )}
               </div>
@@ -218,11 +220,11 @@ export default function TradePanel({ market }: Props) {
               </div>
 
               {user && tab === 'buy' && (
-                <p className="text-xs text-text-muted mt-2">残高: {user.points.toLocaleString()} pt</p>
+                <p className="text-xs text-text-muted mt-2">{t('残高')}: {user.points.toLocaleString()} pt</p>
               )}
               {tab === 'sell' && (
                 <p className="text-xs text-text-muted mt-2">
-                  保有: {held.toFixed(2)} {side} シェア
+                  {t('保有')}: {held.toFixed(2)} {side} {t('シェア')}
                 </p>
               )}
             </div>
@@ -230,15 +232,15 @@ export default function TradePanel({ market }: Props) {
             {pv && !notEnoughShares && (
               <div className="bg-surface-hover rounded-lg p-3 space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-text-muted">取引シェア数</span>
+                  <span className="text-text-muted">{t('取引シェア数')}</span>
                   <span className="text-text font-medium">{pv.shares.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-text-muted">平均単価</span>
+                  <span className="text-text-muted">{t('平均単価')}</span>
                   <span className="text-text font-medium">{(pv.pricePerShare * 100).toFixed(1)}¢</span>
                 </div>
                 <div className="flex justify-between text-xs border-t border-border pt-2">
-                  <span className="text-text-muted">{tab === 'buy' ? '支払い' : '受取'}</span>
+                  <span className="text-text-muted">{tab === 'buy' ? t('支払い') : t('受取')}</span>
                   <span className={`font-semibold ${tab === 'buy' ? 'text-no' : 'text-yes'}`}>
                     {tab === 'buy' ? '-' : '+'}
                     {pv.cost.toFixed(2)} pt
@@ -247,11 +249,11 @@ export default function TradePanel({ market }: Props) {
                 {tab === 'buy' && (
                   <>
                     <div className="flex justify-between text-xs">
-                      <span className="text-text-muted">的中時の受取</span>
+                      <span className="text-text-muted">{t('的中時の受取')}</span>
                       <span className="text-text font-medium">{payout.toFixed(2)} pt</span>
                     </div>
                     <div className="flex justify-between text-xs border-t border-border pt-2">
-                      <span className="text-text-muted">想定リターン（的中時）</span>
+                      <span className="text-text-muted">{t('想定リターン（的中時）')}</span>
                       <span className="text-yes font-bold">
                         +{profit.toFixed(2)} pt（+{roi.toFixed(0)}%）
                       </span>
@@ -264,12 +266,12 @@ export default function TradePanel({ market }: Props) {
             {notEnoughShares && (
               <p className="flex items-center justify-center gap-1 text-xs text-no">
                 <AlertTriangle size={12} />
-                保有シェア数が不足しています
+                {t('保有シェア数が不足しています')}
               </p>
             )}
 
             {!user ? (
-              <div className="text-center py-2 text-sm text-text-muted">トレードするにはログインしてください</div>
+              <div className="text-center py-2 text-sm text-text-muted">{t('トレードするにはログインしてください')}</div>
             ) : (
               <button
                 onClick={handleExecute}
@@ -280,7 +282,7 @@ export default function TradePanel({ market }: Props) {
                     : 'bg-no hover:bg-no/90 disabled:bg-no/30 disabled:text-no/50'
                 } text-white disabled:cursor-not-allowed`}
               >
-                {insufficient ? '残高不足' : tab === 'buy' ? `${side} を購入` : `${side} を売却`}
+                {insufficient ? t('残高不足') : tab === 'buy' ? t('{s} を購入', { s: side }) : t('{s} を売却', { s: side })}
               </button>
             )}
 
@@ -300,18 +302,18 @@ export default function TradePanel({ market }: Props) {
 
       {(pos.yesShares > 0 || pos.noShares > 0) && (
         <div className="border-t border-border px-4 py-3">
-          <p className="text-xs text-text-muted mb-2">保有ポジション</p>
+          <p className="text-xs text-text-muted mb-2">{t('保有ポジション')}</p>
           <div className="space-y-1.5">
             {pos.yesShares > 0 && (
               <div className="flex items-center justify-between text-xs">
                 <span className="text-yes font-medium">{pos.yesShares.toFixed(2)} YES</span>
-                {market.status === 'open' && <span className="text-text-muted">現在価値 {yesValue.toFixed(1)} pt</span>}
+                {market.status === 'open' && <span className="text-text-muted">{t('現在価値')} {yesValue.toFixed(1)} pt</span>}
               </div>
             )}
             {pos.noShares > 0 && (
               <div className="flex items-center justify-between text-xs">
                 <span className="text-no font-medium">{pos.noShares.toFixed(2)} NO</span>
-                {market.status === 'open' && <span className="text-text-muted">現在価値 {noValue.toFixed(1)} pt</span>}
+                {market.status === 'open' && <span className="text-text-muted">{t('現在価値')} {noValue.toFixed(1)} pt</span>}
               </div>
             )}
           </div>

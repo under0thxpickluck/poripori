@@ -4,6 +4,7 @@ import { ArrowDownToLine, ArrowUpFromLine, RefreshCw, Landmark, Coins, Gift, X, 
 import { supabase } from '../lib/supabase'
 import { IS_LOCAL } from '../lib/localClient'
 import { useAuth } from '../store/useAuth'
+import { useT } from '../lib/i18n'
 
 type Transfer = {
   id: string
@@ -27,6 +28,7 @@ const QUICK = [10, 100, 1000]
 
 // EPウォレット: サロンEP⇄MR（MIRAIXポイント）の転送と履歴
 export default function Wallet() {
+  const t = useT()
   const { profile, loadProfile } = useAuth()
   const [params, setParams] = useSearchParams()
   const welcomeBonus = Number(params.get('welcome') ?? 0)
@@ -83,18 +85,18 @@ export default function Wallet() {
   }, [linked, loadHistory, loadEpBalance, loadDailyQuota])
 
   if (IS_LOCAL) {
-    return <p className="py-24 text-center text-sm text-text-muted">ローカルデモモードではEPウォレットは利用できません。</p>
+    return <p className="py-24 text-center text-sm text-text-muted">{t('ローカルデモモードではEPウォレットは利用できません。')}</p>
   }
   if (!profile) {
-    return <p className="py-24 text-center text-sm text-text-muted">サインインしてください。</p>
+    return <p className="py-24 text-center text-sm text-text-muted">{t('サインインしてください。')}</p>
   }
   if (!linked) {
     return (
       <div className="py-24 text-center space-y-3 px-4">
         <p className="text-sm text-text-muted">
-          サロン連携がありません。LIFAIOV / aisalon の LIFAI Arcade から「MIRAIX」を開いてください。
+          {t('サロン連携がありません。LIFAIOV / aisalon の LIFAI Arcade から「MIRAIX」を開いてください。')}
         </p>
-        <Link to="/" className="inline-block text-sm text-accent hover:underline">ホームへ戻る</Link>
+        <Link to="/" className="inline-block text-sm text-accent hover:underline">{t('ホームへ戻る')}</Link>
       </div>
     )
   }
@@ -109,7 +111,7 @@ export default function Wallet() {
     setMsg(null)
     if (!amountOk) {
       setMsgKind('error')
-      setMsg(`${MIN_EP}〜${MAX_EP.toLocaleString()} の整数で入力してください。`)
+      setMsg(t('{min}〜{max} の整数で入力してください。', { min: MIN_EP, max: MAX_EP.toLocaleString() }))
       return
     }
     setBusy(true)
@@ -129,23 +131,23 @@ export default function Wallet() {
         const code = result?.error ?? error?.message ?? 'unknown'
         setMsgKind('error')
         setMsg(
-          code === 'insufficient_ep' ? 'サロンのEP残高が不足しています。'
-          : code === 'INSUFFICIENT_POINTS' ? 'MR（MIRAIXポイント）が不足しています。'
-          : code === 'BONUS_LOCKED' ? '新規登録特典分のMRはサロンEPへ出金できません。出金可能額の範囲で入力してください。'
-          : code === 'duplicate' ? '同じ転送が既に処理されています。残高を確認してください。'
-          : code === 'DAILY_LIMIT' ? `本日の出金上限に達しました。残り枠は明日（日本時間0時）リセットされます。`
-          : code === 'REGION_BLOCKED' ? 'ご申告の居住国では本サービスをご利用いただけません。'
-          : code === 'busy' ? 'サロン側が混み合っています。しばらく待ってから再度お試しください。'
-          : code === 'gas_unreachable_pending' ? 'サロンとの通信が確認できませんでした。この転送は「処理中」として記録されています。残高に反映されない場合は運営にお問い合わせください（再送はしないでください）。'
-          : code === 'credit_failed_revert_failed' ? '転送に失敗し、EPの自動返却も確認できませんでした。運営にお問い合わせください。'
-          : `転送に失敗しました（${code}）。残高は履歴で確認できます。`,
+          code === 'insufficient_ep' ? t('サロンのEP残高が不足しています。')
+          : code === 'INSUFFICIENT_POINTS' ? t('MR（MIRAIXポイント）が不足しています。')
+          : code === 'BONUS_LOCKED' ? t('新規登録特典分のMRはサロンEPへ出金できません。出金可能額の範囲で入力してください。')
+          : code === 'duplicate' ? t('同じ転送が既に処理されています。残高を確認してください。')
+          : code === 'DAILY_LIMIT' ? t('本日の出金上限に達しました。残り枠は明日（日本時間0時）リセットされます。')
+          : code === 'REGION_BLOCKED' ? t('ご申告の居住国では本サービスをご利用いただけません。')
+          : code === 'busy' ? t('サロン側が混み合っています。しばらく待ってから再度お試しください。')
+          : code === 'gas_unreachable_pending' ? t('サロンとの通信が確認できませんでした。この転送は「処理中」として記録されています。残高に反映されない場合は運営にお問い合わせください（再送はしないでください）。')
+          : code === 'credit_failed_revert_failed' ? t('転送に失敗し、EPの自動返却も確認できませんでした。運営にお問い合わせください。')
+          : t('転送に失敗しました（{code}）。残高は履歴で確認できます。', { code }),
         )
         return
       }
       setMsgKind('ok')
       setMsg(direction === 'in'
-        ? `${ep.toLocaleString()} EP をMRに移しました。`
-        : `${ep.toLocaleString()} EP をサロンへ戻しました。`)
+        ? t('{n} EP をMRに移しました。', { n: ep.toLocaleString() })
+        : t('{n} EP をサロンへ戻しました。', { n: ep.toLocaleString() }))
       setAmount('')
       if (typeof result.ep_balance === 'number') setEpBalance(result.ep_balance)
     } finally {
@@ -174,16 +176,16 @@ export default function Wallet() {
         const code = result?.error ?? error?.message ?? 'unknown'
         setMsgKind(code === 'not_pending' ? 'ok' : 'error')
         setMsg(
-          code === 'not_pending' ? 'この転送は既に処理済みです。履歴を更新しました。'
-          : code === 'resume_unsupported' ? 'この転送は自動再開できません。運営にお問い合わせください。'
-          : code === 'gas_unreachable_pending' ? 'サロンとの通信がまだ確認できません。時間をおいて再度お試しください。'
-          : code === 'insufficient_ep' ? 'サロンのEP残高が不足しているため、この転送は失敗として確定しました。'
-          : `再開に失敗しました（${code}）。`,
+          code === 'not_pending' ? t('この転送は既に処理済みです。履歴を更新しました。')
+          : code === 'resume_unsupported' ? t('この転送は自動再開できません。運営にお問い合わせください。')
+          : code === 'gas_unreachable_pending' ? t('サロンとの通信がまだ確認できません。時間をおいて再度お試しください。')
+          : code === 'insufficient_ep' ? t('サロンのEP残高が不足しているため、この転送は失敗として確定しました。')
+          : t('再開に失敗しました（{code}）。', { code }),
         )
         return
       }
       setMsgKind('ok')
-      setMsg('止まっていた転送を完了しました。')
+      setMsg(t('止まっていた転送を完了しました。'))
       if (typeof result.ep_balance === 'number') setEpBalance(result.ep_balance)
     } finally {
       setBusy(false)
@@ -196,9 +198,9 @@ export default function Wallet() {
   return (
     <div className="max-w-md mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text mb-1">EPウォレット</h1>
+        <h1 className="text-2xl font-bold text-text mb-1">{t('EPウォレット')}</h1>
         <p className="text-text-muted text-sm">
-          連携元: {salonName}（ID: {profile.salon_login_id}）
+          {t('連携元')}: {salonName}（ID: {profile.salon_login_id}）
         </p>
       </div>
 
@@ -208,16 +210,15 @@ export default function Wallet() {
           <Gift size={18} className="text-accent shrink-0 mt-0.5" />
           <div className="flex-1 text-sm">
             <p className="font-semibold text-text">
-              新規登録特典として {welcomeBonus.toLocaleString()} MR をプレゼントしました🎉
+              {t('新規登録特典として {n} MR をプレゼントしました🎉', { n: welcomeBonus.toLocaleString() })}
             </p>
             <p className="text-xs text-text-muted mt-0.5">
-              期間限定キャンペーンです。MR（MIRAIXポイント）は予測やゲームにそのまま使えます。
-              特典分はサロンEPへの出金には使えません（特典を使って増えた分は出金できます）。
+              {t('期間限定キャンペーンです。MR（MIRAIXポイント）は予測やゲームにそのまま使えます。特典分はサロンEPへの出金には使えません（特典を使って増えた分は出金できます）。')}
             </p>
           </div>
           <button
             type="button"
-            aria-label="閉じる"
+            aria-label={t('閉じる')}
             onClick={() => setParams({}, { replace: true })}
             className="text-text-muted hover:text-text transition-colors shrink-0"
           >
@@ -230,8 +231,7 @@ export default function Wallet() {
       <div className="flex items-start gap-2.5 bg-surface border border-border rounded-lg p-3.5 text-xs text-text-muted">
         <AlertTriangle size={14} className="shrink-0 mt-0.5" />
         <p>
-          MIRAIX は LIFAI（LIFAIOV / aisalon）とは関係のない外部サイトです。
-          MIRAIXへ転送したEP・MIRAIX上で消費したMRを、LIFAI側で補填・返金することはできません。
+          {t('MIRAIX は LIFAI（LIFAIOV / aisalon）とは関係のない外部サイトです。MIRAIXへ転送したEP・MIRAIX上で消費したMRを、LIFAI側で補填・返金することはできません。')}
         </p>
       </div>
 
@@ -240,7 +240,7 @@ export default function Wallet() {
         <div className="bg-surface border border-border rounded-lg p-4">
           <div className="flex items-center gap-1.5 text-text-muted text-xs mb-1">
             <Landmark size={13} />
-            <span>{salonName} のEP残高</span>
+            <span>{t('{s} のEP残高', { s: salonName ?? '' })}</span>
           </div>
           <p className="text-xl font-bold text-text">
             {epBalance === null ? '—' : epBalance.toLocaleString()}
@@ -250,7 +250,7 @@ export default function Wallet() {
         <div className="bg-surface border border-border rounded-lg p-4">
           <div className="flex items-center gap-1.5 text-text-muted text-xs mb-1">
             <Coins size={13} />
-            <span>MR（MIRAIXポイント）</span>
+            <span>{t('MR（MIRAIXポイント）')}</span>
           </div>
           <p className="text-xl font-bold text-text">
             {Math.floor(profile.points).toLocaleString()}
@@ -258,11 +258,11 @@ export default function Wallet() {
           </p>
           {locked > 0 && (
             <p className="text-[11px] text-text-muted mt-1">
-              うち特典・ボーナス・ゲーム獲得分 {locked.toLocaleString()} MR は出金不可（出金可能 {withdrawable.toLocaleString()} MR）
+              {t('うち特典・ボーナス・ゲーム獲得分 {l} MR は出金不可（出金可能 {w} MR）', { l: locked.toLocaleString(), w: withdrawable.toLocaleString() })}
             </p>
           )}
           <p className="text-[11px] text-text-muted mt-1">
-            ゲーム（Mines・Plinko）で増えた分は出金対象外です（出金可能額に含まれません）。
+            {t('ゲーム（Mines・Plinko）で増えた分は出金対象外です（出金可能額に含まれません）。')}
           </p>
         </div>
       </div>
@@ -281,7 +281,7 @@ export default function Wallet() {
             }`}
           >
             <ArrowDownToLine size={15} />
-            サロン → MIRAIX
+            {t('サロン → MIRAIX')}
           </button>
           <button
             type="button"
@@ -293,17 +293,17 @@ export default function Wallet() {
             }`}
           >
             <ArrowUpFromLine size={15} />
-            MIRAIX → サロン
+            {t('MIRAIX → サロン')}
           </button>
         </div>
         <p className="text-xs text-text-muted">
           {direction === 'in'
-            ? `${salonName} のEPをMRに移して予測やゲームに使えます（1 EP = 1 MR）。`
-            : `MRを ${salonName} のEPに戻します（1 MR = 1 EP）。出金可能: ${withdrawable.toLocaleString()} MR${
-                locked > 0 ? `（特典・ボーナス分 ${locked.toLocaleString()} MR は出金不可）` : ''
+            ? t('{s} のEPをMRに移して予測やゲームに使えます（1 EP = 1 MR）。', { s: salonName ?? '' })
+            : `${t('MRを {s} のEPに戻します（1 MR = 1 EP）。出金可能: {w} MR', { s: salonName ?? '', w: withdrawable.toLocaleString() })}${
+                locked > 0 ? t('（特典・ボーナス分 {l} MR は出金不可）', { l: locked.toLocaleString() }) : ''
               }${
                 dailyLimit != null
-                  ? `／本日の出金残り枠: ${Math.max(0, dailyLimit - todayOut).toLocaleString()} MR`
+                  ? t('／本日の出金残り枠: {n} MR', { n: Math.max(0, dailyLimit - todayOut).toLocaleString() })
                   : ''
               }`}
         </p>
@@ -317,7 +317,7 @@ export default function Wallet() {
             step={1}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder={`数量（${MIN_EP}〜${MAX_EP.toLocaleString()}）`}
+            placeholder={t('数量（{min}〜{max}）', { min: MIN_EP, max: MAX_EP.toLocaleString() })}
             className="w-full rounded-lg border border-border bg-bg px-4 py-2.5 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-accent"
           />
           <div className="flex gap-2">
@@ -341,10 +341,10 @@ export default function Wallet() {
           className="w-full py-2.5 rounded-lg bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
         >
           {busy
-            ? '転送中…'
+            ? t('転送中…')
             : direction === 'in'
-              ? `${amountOk ? `${ep.toLocaleString()} EP を` : ''}MIRAIXに移す`
-              : `${amountOk ? `${ep.toLocaleString()} EP を` : ''}サロンに戻す`}
+              ? `${amountOk ? t('{n} EP を', { n: ep.toLocaleString() }) : ''}${t('MIRAIXに移す')}`
+              : `${amountOk ? t('{n} EP を', { n: ep.toLocaleString() }) : ''}${t('サロンに戻す')}`}
         </button>
         {msg && (
           <p className={`text-sm ${msgKind === 'ok' ? 'text-yes' : 'text-no'}`}>{msg}</p>
@@ -354,41 +354,41 @@ export default function Wallet() {
       {/* 履歴 */}
       <div className="bg-surface border border-border rounded-lg p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-text">転送履歴</h2>
+          <h2 className="text-sm font-semibold text-text">{t('転送履歴')}</h2>
           <button
             type="button"
             onClick={() => { loadHistory(); loadEpBalance(); loadProfile() }}
             className="flex items-center gap-1 text-xs text-text-muted hover:text-text transition-colors"
           >
             <RefreshCw size={12} />
-            更新
+            {t('更新')}
           </button>
         </div>
         <ul className="space-y-2 text-xs">
-          {history.map((t) => (
-            <li key={t.id} className="flex items-center justify-between gap-2 border-b border-border/50 pb-2 last:border-0 last:pb-0">
+          {history.map((h) => (
+            <li key={h.id} className="flex items-center justify-between gap-2 border-b border-border/50 pb-2 last:border-0 last:pb-0">
               <div className="min-w-0">
                 <p className="text-text font-medium">
-                  {t.direction === 'in' ? 'サロン → MIRAIX' : 'MIRAIX → サロン'}　{Number(t.ep_amount).toLocaleString()} EP
+                  {h.direction === 'in' ? t('サロン → MIRAIX') : t('MIRAIX → サロン')}　{Number(h.ep_amount).toLocaleString()} EP
                 </p>
-                <p className="text-text-muted">{new Date(t.created_at).toLocaleString('ja-JP')}</p>
+                <p className="text-text-muted">{new Date(h.created_at).toLocaleString()}</p>
               </div>
-              <span className={`shrink-0 ${t.status === 'completed' ? 'text-yes' : t.status === 'pending' ? 'text-text-muted' : 'text-no'}`}>
-                {STATUS_LABEL[t.status] ?? t.status}
+              <span className={`shrink-0 ${h.status === 'completed' ? 'text-yes' : h.status === 'pending' ? 'text-text-muted' : 'text-no'}`}>
+                {STATUS_LABEL[h.status] ? t(STATUS_LABEL[h.status]) : h.status}
               </span>
-              {t.status === 'pending' && (
+              {h.status === 'pending' && (
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => resume(t.id)}
+                  onClick={() => resume(h.id)}
                   className="shrink-0 px-2 py-1 rounded-md border border-accent/50 text-accent hover:bg-accent/10 disabled:opacity-40 transition-colors"
                 >
-                  再開
+                  {t('再開')}
                 </button>
               )}
             </li>
           ))}
-          {history.length === 0 && <li className="text-text-muted">まだ履歴がありません。</li>}
+          {history.length === 0 && <li className="text-text-muted">{t('まだ履歴がありません。')}</li>}
         </ul>
       </div>
     </div>

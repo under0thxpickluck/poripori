@@ -1,6 +1,7 @@
 import { Tile, gemKind, type TileState } from './Tile'
 import type { ActiveGame } from '../../hooks/useMinesGame'
 import { GRID } from '../../lib/mines-math'
+import { useT } from '../../lib/i18n'
 
 type Props = {
   game: ActiveGame | null
@@ -22,13 +23,14 @@ function tileState(game: ActiveGame | null, cell: number): TileState {
 }
 
 export function Board({ game, pendingCell, onReveal }: Props) {
+  const t = useT()
   return (
     <div
       className="grid grid-cols-5 gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-2xl border border-cyan-400/25
                  neon-grid-bg neon-scanline
                  shadow-[inset_0_0_40px_rgba(0,240,255,0.06),0_0_24px_rgba(0,240,255,0.08)]"
       role="grid"
-      aria-label="データ採掘の盤面"
+      aria-label={t('データ採掘の盤面')}
     >
       {Array.from({ length: GRID }, (_, i) => (
         <Tile

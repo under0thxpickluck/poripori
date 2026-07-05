@@ -5,6 +5,7 @@ import type { Market } from '../types'
 import MarketImage from './MarketImage'
 import Countdown from './Countdown'
 import { useTilt } from '../hooks/useTilt'
+import { useT, type TFunc } from '../lib/i18n'
 
 const CATEGORY_COLORS: Record<string, string> = {
   Politics: 'text-blue-400 bg-blue-400/10',
@@ -16,14 +17,14 @@ const CATEGORY_COLORS: Record<string, string> = {
   Entertainment: 'text-pink-400 bg-pink-400/10',
 }
 
-function formatDeadline(iso: string) {
+function formatDeadline(iso: string, t: TFunc) {
   const d = new Date(iso)
   const now = new Date()
   const days = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  if (days < 0) return '締切済み'
-  if (days === 0) return '本日締切'
-  if (days <= 7) return `${days}日後`
-  return d.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })
+  if (days < 0) return t('締切済み')
+  if (days === 0) return t('本日締切')
+  if (days <= 7) return t('{n}日後', { n: days })
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
 const STATUS_BADGE: Record<string, string> = {
@@ -36,6 +37,7 @@ const STATUS_BADGE: Record<string, string> = {
 type Props = { market: Market; hot?: boolean; enterDelay?: number }
 
 export default function MarketCard({ market, hot = false, enterDelay = 0 }: Props) {
+  const t = useT()
   const price = marketPrice(market)
   const yesPct = Math.round(price.yes * 100)
   const noPct = 100 - yesPct
@@ -77,7 +79,7 @@ export default function MarketCard({ market, hot = false, enterDelay = 0 }: Prop
         </div>
         {market.status !== 'open' && (
           <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_BADGE[market.status]}`}>
-            {market.status === 'closed' ? '締切済み' : market.status === 'resolved' ? '解決済み' : '承認待ち'}
+            {market.status === 'closed' ? t('締切済み') : market.status === 'resolved' ? t('解決済み') : t('承認待ち')}
           </span>
         )}
       </div>
@@ -95,7 +97,7 @@ export default function MarketCard({ market, hot = false, enterDelay = 0 }: Prop
       </div>
 
       {market.status === 'pending' ? (
-        <div className="text-xs text-text-muted italic mb-4">承認待ちのため価格は未確定</div>
+        <div className="text-xs text-text-muted italic mb-4">{t('承認待ちのため価格は未確定')}</div>
       ) : (
         <>
           <div className="flex gap-2 mb-3">
@@ -124,7 +126,7 @@ export default function MarketCard({ market, hot = false, enterDelay = 0 }: Prop
           {market.status === 'open' ? (
             <Countdown deadline={market.deadline} />
           ) : (
-            <span>{formatDeadline(market.deadline)}</span>
+            <span>{formatDeadline(market.deadline, t)}</span>
           )}
         </div>
       </div>
@@ -137,7 +139,7 @@ export default function MarketCard({ market, hot = false, enterDelay = 0 }: Prop
               : 'bg-no/15 text-no'
           }`}
         >
-          結果: {market.resolved}
+          {t('結果')}: {market.resolved}
         </div>
       )}
       </div>

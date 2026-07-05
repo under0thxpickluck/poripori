@@ -1,13 +1,15 @@
 import { useStore } from '../../store/useStore'
 import { CheckCircle, XCircle } from 'lucide-react'
 import { format } from 'date-fns'
+import { useT } from '../../lib/i18n'
 
 export default function AdminProposals() {
+  const t = useT()
   const { markets, users, approveMarket, rejectMarket, currentUser } = useStore()
   const user = currentUser()
 
   if (user?.role !== 'admin') {
-    return <div className="text-center py-20 text-no">管理者権限が必要です</div>
+    return <div className="text-center py-20 text-no">{t('管理者権限が必要です')}</div>
   }
 
   const pending = markets.filter((m) => m.status === 'pending')
@@ -15,13 +17,13 @@ export default function AdminProposals() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text mb-1">提案の承認</h1>
-        <p className="text-text-muted text-sm">承認待ちのマーケット提案を審査してください</p>
+        <h1 className="text-2xl font-bold text-text mb-1">{t('提案の承認')}</h1>
+        <p className="text-text-muted text-sm">{t('承認待ちのマーケット提案を審査してください')}</p>
       </div>
 
       {pending.length === 0 ? (
         <div className="text-center py-20 text-text-muted">
-          <p>承認待ちの提案はありません</p>
+          <p>{t('承認待ちの提案はありません')}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -36,7 +38,7 @@ export default function AdminProposals() {
                         {m.category}
                       </span>
                       <span className="text-xs text-text-muted">
-                        提案者: {creator?.name ?? '不明'}
+                        {t('提案者')}: {creator?.name ?? t('不明')}
                       </span>
                     </div>
                     <h3 className="text-base font-semibold text-text mb-2">{m.question}</h3>
@@ -45,8 +47,8 @@ export default function AdminProposals() {
                 </div>
                 <div className="flex items-center justify-between pt-3 border-t border-border">
                   <div className="text-xs text-text-muted">
-                    締切: {format(new Date(m.deadline), 'yyyy/MM/dd')} ・
-                    提案: {format(new Date(m.createdAt), 'MM/dd HH:mm')}
+                    {t('締切')}: {format(new Date(m.deadline), 'yyyy/MM/dd')} ・
+                    {t('提案')}: {format(new Date(m.createdAt), 'MM/dd HH:mm')}
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -54,14 +56,14 @@ export default function AdminProposals() {
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-no/10 border border-no/30 text-no hover:bg-no/20 text-sm font-medium transition-colors"
                     >
                       <XCircle size={14} />
-                      却下
+                      {t('却下')}
                     </button>
                     <button
                       onClick={() => approveMarket(m.id)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yes/10 border border-yes/30 text-yes hover:bg-yes/20 text-sm font-medium transition-colors"
                     >
                       <CheckCircle size={14} />
-                      承認
+                      {t('承認')}
                     </button>
                   </div>
                 </div>

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { ImageIcon, Link2, Upload, X } from 'lucide-react'
+import { useT } from '../lib/i18n'
 
 type Props = {
   value: string | undefined
@@ -36,6 +37,7 @@ function compressToDataUrl(file: File): Promise<string> {
 }
 
 export default function ImagePicker({ value, onChange, aspect = 'wide' }: Props) {
+  const t = useT()
   const fileRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState('')
   const aspectClass = aspect === 'square' ? 'aspect-square w-32' : 'aspect-[16/9] w-full max-w-sm'
@@ -47,12 +49,12 @@ export default function ImagePicker({ value, onChange, aspect = 'wide' }: Props)
     try {
       const dataUrl = await compressToDataUrl(file)
       if (dataUrl.length > MAX_BYTES * 1.37) {
-        setError('画像が大きすぎます。別の画像を選んでください。')
+        setError(t('画像が大きすぎます。別の画像を選んでください。'))
         return
       }
       onChange(dataUrl)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '画像処理に失敗しました')
+      setError(err instanceof Error ? err.message : t('画像処理に失敗しました'))
     } finally {
       if (fileRef.current) fileRef.current.value = ''
     }
@@ -66,7 +68,7 @@ export default function ImagePicker({ value, onChange, aspect = 'wide' }: Props)
           type="text"
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="画像URLを入力（https://...）"
+          placeholder={t('画像URLを入力（https://...）')}
           className="w-full pl-9 pr-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-md text-sm text-text placeholder-text-muted outline-none transition-colors"
         />
       </div>
@@ -78,7 +80,7 @@ export default function ImagePicker({ value, onChange, aspect = 'wide' }: Props)
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface-hover border border-border text-text-muted hover:text-text text-xs transition-colors"
         >
           <Upload size={13} />
-          画像を選択
+          {t('画像を選択')}
         </button>
         {value && (
           <button
@@ -87,7 +89,7 @@ export default function ImagePicker({ value, onChange, aspect = 'wide' }: Props)
             className="flex items-center gap-1 px-2 py-1.5 rounded-md text-text-muted hover:text-no text-xs transition-colors"
           >
             <X size={13} />
-            クリア
+            {t('クリア')}
           </button>
         )}
         <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
@@ -97,7 +99,7 @@ export default function ImagePicker({ value, onChange, aspect = 'wide' }: Props)
 
       <div className={`${aspectClass} rounded-lg border border-border bg-surface-hover overflow-hidden flex items-center justify-center`}>
         {value ? (
-          <img src={value} alt="プレビュー" className="w-full h-full object-cover" />
+          <img src={value} alt={t('プレビュー')} className="w-full h-full object-cover" />
         ) : (
           <ImageIcon size={28} className="text-text-muted" />
         )}

@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { TrendingUp, TrendingDown, Wallet, PieChart, Layers, Activity, Flame, ArrowLeftRight } from 'lucide-react'
 import CountUp from '../components/CountUp'
 import { levelInfo, winStreak, resolvedRecord, achievements } from '../lib/gamification'
+import { useT } from '../lib/i18n'
 
 const CAT_BAR: Record<string, string> = {
   Politics: 'bg-blue-400',
@@ -18,6 +19,7 @@ const CAT_BAR: Record<string, string> = {
 }
 
 export default function Portfolio() {
+  const t = useT()
   const { currentUser, markets, positions, getUserTrades, trades } = useStore()
   const salonProfile = useAuth((s) => s.profile)
   const user = currentUser()
@@ -25,7 +27,7 @@ export default function Portfolio() {
   if (!user) {
     return (
       <div className="text-center py-20">
-        <p className="text-text-muted mb-3">ポートフォリオを表示するにはログインしてください</p>
+        <p className="text-text-muted mb-3">{t('ポートフォリオを表示するにはログインしてください')}</p>
       </div>
     )
   }
@@ -97,8 +99,8 @@ export default function Portfolio() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text mb-1">ポートフォリオ</h1>
-        <p className="text-text-muted text-sm">資産・保有シェア・取引履歴</p>
+        <h1 className="text-2xl font-bold text-text mb-1">{t('ポートフォリオ')}</h1>
+        <p className="text-text-muted text-sm">{t('資産・保有シェア・取引履歴')}</p>
       </div>
 
       {/* プロフィール / レベル */}
@@ -113,17 +115,17 @@ export default function Portfolio() {
               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-accent/15 text-accent">
                 Lv.{lvl.level}
               </span>
-              <span className={`text-xs font-semibold ${lvl.rank.color}`}>{lvl.rank.name}</span>
+              <span className={`text-xs font-semibold ${lvl.rank.color}`}>{t(lvl.rank.name)}</span>
               {streak > 0 && (
                 <span className="flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded-full bg-no/15 text-no">
                   <Flame size={11} className="animate-flame" />
-                  {streak}連勝
+                  {t('{n}連勝', { n: streak })}
                 </span>
               )}
             </div>
             <div className="mt-2">
               <div className="flex items-center justify-between text-[11px] text-text-muted mb-1">
-                <span>次のレベルまで</span>
+                <span>{t('次のレベルまで')}</span>
                 <span>
                   {Math.round(lvl.inLevel)} / {lvl.need} XP
                 </span>
@@ -150,31 +152,31 @@ export default function Portfolio() {
               <ArrowLeftRight size={16} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-text">EPウォレット</p>
-              <p className="text-xs text-text-muted">サロンEP ⇄ MIRAIXポイントの転送・履歴</p>
+              <p className="text-sm font-semibold text-text">{t('EPウォレット')}</p>
+              <p className="text-xs text-text-muted">{t('サロンEP ⇄ MIRAIXポイントの転送・履歴')}</p>
             </div>
           </div>
-          <span className="text-xs text-accent font-medium shrink-0">開く →</span>
+          <span className="text-xs text-accent font-medium shrink-0">{t('開く')} →</span>
         </Link>
       )}
 
       {/* 実績バッジ */}
       <div className="bg-surface border border-border rounded-lg p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-text">実績</h2>
-          <span className="text-xs text-text-muted">{unlockedCount} / {badges.length} 達成</span>
+          <h2 className="text-sm font-semibold text-text">{t('実績')}</h2>
+          <span className="text-xs text-text-muted">{t('{n} / {m} 達成', { n: unlockedCount, m: badges.length })}</span>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
           {badges.map((b) => (
             <div
               key={b.id}
-              title={b.desc}
+              title={t(b.desc)}
               className={`flex flex-col items-center text-center gap-1 rounded-lg border p-3 transition-colors ${
                 b.unlocked ? 'border-accent/40 bg-accent/5' : 'border-border opacity-50 grayscale'
               }`}
             >
               <span className="text-2xl leading-none">{b.emoji}</span>
-              <span className="text-[10px] font-medium text-text leading-tight">{b.label}</span>
+              <span className="text-[10px] font-medium text-text leading-tight">{t(b.label)}</span>
             </div>
           ))}
         </div>
@@ -187,14 +189,14 @@ export default function Portfolio() {
           <p className="text-2xl font-bold text-text">
             <CountUp value={Math.round(user.points)} />
           </p>
-          <p className="text-xs text-text-muted mt-1">残高 (pt)</p>
+          <p className="text-xs text-text-muted mt-1">{t('残高')} (pt)</p>
         </div>
         <div className="bg-surface border border-border rounded-lg p-5">
           <Layers size={16} className="text-accent mb-2" />
           <p className="text-2xl font-bold text-text">
             <CountUp value={Math.round(totalValue)} />
           </p>
-          <p className="text-xs text-text-muted mt-1">ポジション価値 (pt)</p>
+          <p className="text-xs text-text-muted mt-1">{t('ポジション価値')} (pt)</p>
         </div>
         <div className="bg-surface border border-border rounded-lg p-5">
           {totalPnl >= 0 ? (
@@ -205,14 +207,14 @@ export default function Portfolio() {
           <p className={`text-2xl font-bold ${totalPnl >= 0 ? 'text-yes' : 'text-no'}`}>
             <CountUp value={Math.round(totalPnl)} format={(n) => `${n >= 0 ? '+' : ''}${n.toLocaleString()}`} />
           </p>
-          <p className="text-xs text-text-muted mt-1">含み損益 (pt)</p>
+          <p className="text-xs text-text-muted mt-1">{t('含み損益')} (pt)</p>
         </div>
         <div className="bg-surface border border-border rounded-lg p-5">
           <PieChart size={16} className="text-accent mb-2" />
           <p className="text-2xl font-bold text-text">
             <CountUp value={Math.round(totalAssets)} />
           </p>
-          <p className="text-xs text-text-muted mt-1">総資産 (pt)</p>
+          <p className="text-xs text-text-muted mt-1">{t('総資産')} (pt)</p>
         </div>
       </div>
 
@@ -221,26 +223,26 @@ export default function Portfolio() {
         <div className="bg-surface border border-border rounded-lg p-5">
           <h2 className="text-sm font-semibold text-text mb-4 flex items-center gap-1.5">
             <Activity size={14} />
-            取引サマリー
+            {t('取引サマリー')}
           </h2>
           <div className="grid grid-cols-3 gap-3">
             <div>
               <p className="text-xl font-bold text-text">
                 <CountUp value={myTrades.length} />
               </p>
-              <p className="text-xs text-text-muted mt-0.5">取引回数</p>
+              <p className="text-xs text-text-muted mt-0.5">{t('取引回数')}</p>
             </div>
             <div>
               <p className="text-xl font-bold text-text">
                 <CountUp value={positionsWithValue.length} />
               </p>
-              <p className="text-xs text-text-muted mt-0.5">保有マーケット</p>
+              <p className="text-xs text-text-muted mt-0.5">{t('保有マーケット')}</p>
             </div>
             <div>
               <p className="text-xl font-bold text-text">
                 <CountUp value={winRate} format={(n) => `${n}%`} />
               </p>
-              <p className="text-xs text-text-muted mt-0.5">的中率（{rec.wins}勝{rec.losses}敗）</p>
+              <p className="text-xs text-text-muted mt-0.5">{t('的中率（{w}勝{l}敗）', { w: rec.wins, l: rec.losses })}</p>
             </div>
           </div>
         </div>
@@ -248,10 +250,10 @@ export default function Portfolio() {
         <div className="bg-surface border border-border rounded-lg p-5">
           <h2 className="text-sm font-semibold text-text mb-4 flex items-center gap-1.5">
             <PieChart size={14} />
-            保有内訳（カテゴリ別）
+            {t('保有内訳（カテゴリ別）')}
           </h2>
           {alloc.length === 0 ? (
-            <p className="text-sm text-text-muted py-2">保有ポジションがありません</p>
+            <p className="text-sm text-text-muted py-2">{t('保有ポジションがありません')}</p>
           ) : (
             <div className="space-y-2.5">
               {alloc.map((a) => {
@@ -278,13 +280,13 @@ export default function Portfolio() {
 
       <div className="bg-surface border border-border rounded-lg overflow-hidden">
         <div className="px-5 py-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-text">保有ポジション</h2>
+          <h2 className="text-sm font-semibold text-text">{t('保有ポジション')}</h2>
         </div>
         {positionsWithValue.length === 0 ? (
           <div className="py-12 text-center text-text-muted">
-            <p>保有ポジションがありません</p>
+            <p>{t('保有ポジションがありません')}</p>
             <Link to="/" className="text-accent hover:underline text-sm mt-2 inline-block">
-              マーケットを探す
+              {t('マーケットを探す')}
             </Link>
           </div>
         ) : (
@@ -300,16 +302,16 @@ export default function Portfolio() {
                   <div className="flex items-center gap-3 text-xs text-text-muted">
                     {pos.yesShares > 0 && (
                       <span className="text-yes font-medium">
-                        YES {pos.yesShares.toFixed(2)}枚
+                        YES {t('{n}枚', { n: pos.yesShares.toFixed(2) })}
                       </span>
                     )}
                     {pos.noShares > 0 && (
                       <span className="text-no font-medium">
-                        NO {pos.noShares.toFixed(2)}枚
+                        NO {t('{n}枚', { n: pos.noShares.toFixed(2) })}
                       </span>
                     )}
                     <span className="text-text-muted">
-                      現在 YES {Math.round(price.yes * 100)}%
+                      {t('現在')} YES {Math.round(price.yes * 100)}%
                     </span>
                   </div>
                 </div>
@@ -327,38 +329,38 @@ export default function Portfolio() {
 
       <div className="bg-surface border border-border rounded-lg overflow-hidden">
         <div className="px-5 py-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-text">取引履歴</h2>
+          <h2 className="text-sm font-semibold text-text">{t('取引履歴')}</h2>
         </div>
         {myTrades.length === 0 ? (
-          <div className="py-12 text-center text-text-muted text-sm">取引履歴がありません</div>
+          <div className="py-12 text-center text-text-muted text-sm">{t('取引履歴がありません')}</div>
         ) : (
           <div className="divide-y divide-border">
-            {myTrades.slice(0, 50).map((t) => {
-              const market = markets.find((m) => m.id === t.marketId)
+            {myTrades.slice(0, 50).map((tr) => {
+              const market = markets.find((m) => m.id === tr.marketId)
               return (
-                <div key={t.id} className="flex items-center gap-4 px-5 py-3">
+                <div key={tr.id} className="flex items-center gap-4 px-5 py-3">
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                      t.side === 'YES' ? 'bg-yes/20 text-yes' : 'bg-no/20 text-no'
+                      tr.side === 'YES' ? 'bg-yes/20 text-yes' : 'bg-no/20 text-no'
                     }`}
                   >
-                    {t.side}
+                    {tr.side}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-text truncate">
-                      {market?.question ?? 'マーケット不明'}
+                      {market?.question ?? t('マーケット不明')}
                     </p>
                     <p className="text-xs text-text-muted">
-                      {t.action === 'buy' ? '購入' : '売却'} {t.shares.toFixed(2)} シェア @{' '}
-                      {(t.pricePerShare * 100).toFixed(1)}¢
+                      {tr.action === 'buy' ? t('購入') : t('売却')} {tr.shares.toFixed(2)} {t('シェア')} @{' '}
+                      {(tr.pricePerShare * 100).toFixed(1)}¢
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className={`text-sm font-medium ${t.action === 'buy' ? 'text-no' : 'text-yes'}`}>
-                      {t.action === 'buy' ? '-' : '+'}{t.cost.toFixed(1)} pt
+                    <p className={`text-sm font-medium ${tr.action === 'buy' ? 'text-no' : 'text-yes'}`}>
+                      {tr.action === 'buy' ? '-' : '+'}{tr.cost.toFixed(1)} pt
                     </p>
                     <p className="text-xs text-text-muted">
-                      {format(new Date(t.timestamp), 'MM/dd HH:mm')}
+                      {format(new Date(tr.timestamp), 'MM/dd HH:mm')}
                     </p>
                   </div>
                 </div>

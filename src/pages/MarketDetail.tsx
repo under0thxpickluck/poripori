@@ -14,9 +14,10 @@ import Comments from '../components/Comments'
 import Countdown from '../components/Countdown'
 import { usePriceFlash } from '../hooks/usePriceFlash'
 import { format } from 'date-fns'
-import { ja } from 'date-fns/locale'
+import { useT } from '../lib/i18n'
 
 export default function MarketDetail() {
+  const t = useT()
   const { id } = useParams<{ id: string }>()
   const { markets, getMarketTrades, users, currentUserId } = useStore()
   const market = markets.find((m) => m.id === id)
@@ -28,9 +29,9 @@ export default function MarketDetail() {
   if (!market) {
     return (
       <div className="text-center py-20 text-text-muted">
-        <p>マーケットが見つかりません</p>
+        <p>{t('マーケットが見つかりません')}</p>
         <Link to="/" className="text-accent hover:underline mt-2 inline-block">
-          一覧に戻る
+          {t('一覧に戻る')}
         </Link>
       </div>
     )
@@ -48,7 +49,7 @@ export default function MarketDetail() {
         className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-text mb-6 transition-colors"
       >
         <ArrowLeft size={14} />
-        マーケット一覧
+        {t('マーケット一覧')}
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -69,12 +70,12 @@ export default function MarketDetail() {
                   {market.status === 'resolved' && (
                     <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yes/20 text-yes">
                       <CheckCircle size={10} />
-                      解決済み: {market.resolved}
+                      {t('解決済み')}: {market.resolved}
                     </span>
                   )}
                   {market.status === 'closed' && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-surface-hover text-text-muted">
-                      締切済み・解決待ち
+                      {t('締切済み・解決待ち')}
                     </span>
                   )}
                   {market.extendedCount > 0 && (
@@ -82,11 +83,11 @@ export default function MarketDetail() {
                       className="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent"
                       title={
                         market.lastExtendedAt
-                          ? `最終延長: ${format(new Date(market.lastExtendedAt), 'yyyy/MM/dd HH:mm', { locale: ja })}`
+                          ? `${t('最終延長')}: ${format(new Date(market.lastExtendedAt), 'yyyy/MM/dd HH:mm')}`
                           : undefined
                       }
                     >
-                      延長済み ×{market.extendedCount}
+                      {t('延長済み')} ×{market.extendedCount}
                     </span>
                   )}
                 </div>
@@ -120,7 +121,7 @@ export default function MarketDetail() {
               <div>
                 <p className="text-xs text-text-muted mb-1 flex items-center gap-1">
                   <BarChart2 size={10} />
-                  出来高
+                  {t('出来高')}
                 </p>
                 <p className="text-sm font-semibold text-text">
                   {market.volume.toLocaleString()} pt
@@ -129,10 +130,10 @@ export default function MarketDetail() {
               <div>
                 <p className="text-xs text-text-muted mb-1 flex items-center gap-1">
                   <Clock size={10} />
-                  締切
+                  {t('締切日')}
                 </p>
                 <p className="text-sm font-semibold text-text">
-                  {format(new Date(market.deadline), 'yyyy/MM/dd', { locale: ja })}
+                  {format(new Date(market.deadline), 'yyyy/MM/dd')}
                 </p>
                 {market.status === 'open' && (
                   <Countdown deadline={market.deadline} className="text-xs" />
@@ -141,20 +142,20 @@ export default function MarketDetail() {
               <div>
                 <p className="text-xs text-text-muted mb-1 flex items-center gap-1">
                   <Users size={10} />
-                  トレーダー
+                  {t('トレーダー')}
                 </p>
-                <p className="text-sm font-semibold text-text">{uniqueTraders} 人</p>
+                <p className="text-sm font-semibold text-text">{t('{n} 人', { n: uniqueTraders })}</p>
               </div>
             </div>
           </div>
 
           <div className="bg-surface border border-border rounded-lg p-5">
-            <h2 className="text-sm font-semibold text-text-muted mb-4">価格推移 (YES)</h2>
+            <h2 className="text-sm font-semibold text-text-muted mb-4">{t('価格推移 (YES)')}</h2>
             <PriceChart market={market} height={300} />
           </div>
 
           <div className="bg-surface border border-border rounded-lg p-5">
-            <h2 className="text-sm font-semibold text-text mb-2">ルール</h2>
+            <h2 className="text-sm font-semibold text-text mb-2">{t('ルール')}</h2>
             <p className="text-sm text-text-muted leading-relaxed">{market.description}</p>
           </div>
 
@@ -166,35 +167,35 @@ export default function MarketDetail() {
           {trades.length > 0 && (
             <div className="bg-surface border border-border rounded-lg overflow-hidden">
               <div className="px-5 py-4 border-b border-border">
-                <h2 className="text-sm font-semibold text-text">取引履歴</h2>
+                <h2 className="text-sm font-semibold text-text">{t('取引履歴')}</h2>
               </div>
               <div className="divide-y divide-border">
-                {trades.map((t) => {
-                  const trader = users.find((u) => u.id === t.userId)
+                {trades.map((tr) => {
+                  const trader = users.find((u) => u.id === tr.userId)
                   return (
-                    <div key={t.id} className="flex items-center gap-3 px-5 py-3">
+                    <div key={tr.id} className="flex items-center gap-3 px-5 py-3">
                       <div className="w-7 h-7 rounded-full bg-surface-hover flex items-center justify-center text-xs text-text shrink-0">
                         {trader?.name.charAt(0) ?? '?'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-xs text-text">{displayName(trader?.name ?? '不明', t.userId, currentUserId)}</span>
-                        <span className="text-xs text-text-muted mx-1.5">が</span>
+                        <span className="text-xs text-text">{displayName(trader?.name ?? t('不明'), tr.userId, currentUserId)}</span>
+                        <span className="text-xs text-text-muted mx-1.5">{t('が')}</span>
                         <span
                           className={`text-xs font-semibold ${
-                            t.side === 'YES' ? 'text-yes' : 'text-no'
+                            tr.side === 'YES' ? 'text-yes' : 'text-no'
                           }`}
                         >
-                          {t.side}
+                          {tr.side}
                         </span>
-                        <span className="text-xs text-text-muted mx-1">{t.action === 'buy' ? '購入' : '売却'}</span>
-                        <span className="text-xs text-text">{t.shares.toFixed(1)} シェア</span>
+                        <span className="text-xs text-text-muted mx-1">{tr.action === 'buy' ? t('購入') : t('売却')}</span>
+                        <span className="text-xs text-text">{t('{n} シェア', { n: tr.shares.toFixed(1) })}</span>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className={`text-xs font-medium ${t.action === 'buy' ? 'text-no' : 'text-yes'}`}>
-                          {t.action === 'buy' ? '-' : '+'}{t.cost.toFixed(1)} pt
+                        <p className={`text-xs font-medium ${tr.action === 'buy' ? 'text-no' : 'text-yes'}`}>
+                          {tr.action === 'buy' ? '-' : '+'}{tr.cost.toFixed(1)} pt
                         </p>
                         <p className="text-xs text-text-muted">
-                          {format(new Date(t.timestamp), 'MM/dd HH:mm')}
+                          {format(new Date(tr.timestamp), 'MM/dd HH:mm')}
                         </p>
                       </div>
                     </div>
@@ -224,13 +225,13 @@ export default function MarketDetail() {
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-accent hover:bg-accent-hover text-white font-bold shadow-lg active:scale-[0.99] transition-transform"
           >
             <TrendingUp size={18} />
-            トレードする（YES {yesPct}% / NO {100 - yesPct}%）
+            {t('トレードする（YES {y}% / NO {n}%）', { y: yesPct, n: 100 - yesPct })}
           </button>
         </div>
       )}
 
       {sheetOpen && (
-        <BottomSheet title="トレード" onClose={() => setSheetOpen(false)}>
+        <BottomSheet title={t('トレード')} onClose={() => setSheetOpen(false)}>
           <div className="p-4">
             <TradePanel market={market} />
           </div>

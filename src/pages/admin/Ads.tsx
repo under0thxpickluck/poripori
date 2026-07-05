@@ -2,14 +2,16 @@ import { useState } from 'react'
 import { Trash2, ExternalLink } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import ImagePicker from '../../components/ImagePicker'
+import { useT } from '../../lib/i18n'
 
 export default function Ads() {
+  const t = useT()
   const { ads, currentUser, addAd, toggleAd, deleteAd } = useStore()
   const user = currentUser()
   const [form, setForm] = useState({ title: '', imageUrl: '', linkUrl: '' })
 
   if (user?.role !== 'admin') {
-    return <div className="text-center py-20 text-no">管理者権限が必要です</div>
+    return <div className="text-center py-20 text-no">{t('管理者権限が必要です')}</div>
   }
 
   function handleAdd(e: React.FormEvent) {
@@ -22,14 +24,14 @@ export default function Ads() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text mb-1">広告管理</h1>
-        <p className="text-text-muted text-sm">マーケット一覧に挿入されるインフィード広告</p>
+        <h1 className="text-2xl font-bold text-text mb-1">{t('広告管理')}</h1>
+        <p className="text-text-muted text-sm">{t('マーケット一覧に挿入されるインフィード広告')}</p>
       </div>
 
       <form onSubmit={handleAdd} className="bg-surface border border-border rounded-lg p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-text">新規広告</h2>
+        <h2 className="text-sm font-semibold text-text">{t('新規広告')}</h2>
         <div>
-          <label className="block text-sm font-medium text-text mb-2">タイトル <span className="text-no">*</span></label>
+          <label className="block text-sm font-medium text-text mb-2">{t('タイトル')} <span className="text-no">*</span></label>
           <input
             type="text" required maxLength={80}
             value={form.title}
@@ -38,7 +40,7 @@ export default function Ads() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text mb-2">リンクURL <span className="text-no">*</span></label>
+          <label className="block text-sm font-medium text-text mb-2">{t('リンクURL')} <span className="text-no">*</span></label>
           <input
             type="url" required
             value={form.linkUrl}
@@ -48,17 +50,17 @@ export default function Ads() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text mb-2">画像</label>
+          <label className="block text-sm font-medium text-text mb-2">{t('画像')}</label>
           <ImagePicker value={form.imageUrl} onChange={(v) => setForm((f) => ({ ...f, imageUrl: v }))} />
         </div>
         <button type="submit" className="px-4 py-2 rounded-md bg-accent hover:bg-accent-hover text-white text-sm font-semibold transition-colors">
-          広告を追加
+          {t('広告を追加')}
         </button>
       </form>
 
       <div className="space-y-2">
         {ads.length === 0 ? (
-          <div className="text-center py-10 text-text-muted">広告がありません</div>
+          <div className="text-center py-10 text-text-muted">{t('広告がありません')}</div>
         ) : (
           ads.map((ad) => (
             <div key={ad.id} className="flex items-center gap-3 bg-surface border border-border rounded-lg p-3">
@@ -79,7 +81,7 @@ export default function Ads() {
                     : 'bg-surface-hover text-text-muted border-border'
                 }`}
               >
-                {ad.active ? '有効' : '無効'}
+                {ad.active ? t('有効') : t('無効')}
               </button>
               <button onClick={() => deleteAd(ad.id)} className="text-text-muted hover:text-no transition-colors p-1">
                 <Trash2 size={15} />

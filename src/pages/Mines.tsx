@@ -8,10 +8,12 @@ import { HUD } from '../components/mines/HUD'
 import { HistoryCards } from '../components/mines/HistoryCards'
 import { CelebrationOverlay } from '../components/mines/CelebrationOverlay'
 import LoginModal from '../components/LoginModal'
+import { useT } from '../lib/i18n'
 
 // Mines（宝石堀り）。抽選・残高はすべてサーバー権威（migrate-015）。
 // このページは useMinesGame の状態を並べるだけで、ロジックを持たない。
 export default function Mines() {
+  const t = useT()
   const {
     session, profile,
     houseEdge, game, finished, stats, derived,
@@ -38,21 +40,21 @@ export default function Mines() {
         <div>
           <h1 className="text-2xl font-bold text-text">Mines</h1>
           <p className="text-text-muted text-sm">
-            グリッドに潜むトラップを避けて、データを採掘せよ
-            <span className="ml-2">還元率 {(houseEdge * 100).toFixed(0)}%</span>
+            {t('グリッドに潜むトラップを避けて、データを採掘せよ')}
+            <span className="ml-2">{t('還元率')} {(houseEdge * 100).toFixed(0)}%</span>
           </p>
         </div>
         <div className="ml-auto flex items-center gap-3">
           <button
             type="button"
             onClick={toggleMute}
-            aria-label={muted ? 'サウンドをオンにする' : 'サウンドをオフにする'}
+            aria-label={muted ? t('サウンドをオンにする') : t('サウンドをオフにする')}
             className="text-text-muted hover:text-text transition-colors"
           >
             {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>
           <div className="text-right">
-            <p className="text-xs text-text-muted">残高</p>
+            <p className="text-xs text-text-muted">{t('残高')}</p>
             <p className="text-lg font-bold text-text tabular-nums">
               {balance != null ? `${balance.toLocaleString()} MR` : '—'}
             </p>
@@ -83,16 +85,16 @@ export default function Mines() {
             onClick={() => setShowLogin(true)}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent hover:bg-accent-hover text-white text-sm font-bold transition-colors"
           >
-            <LogIn size={15} /> ログインして遊ぶ
+            <LogIn size={15} /> {t('ログインして遊ぶ')}
           </button>
         )}
 
-        {error && <p className="text-sm text-no">{error}</p>}
+        {error && <p className="text-sm text-no">{t(error)}</p>}
 
         <HistoryCards finished={finished} stats={stats} />
 
         <p className="text-[11px] text-text-muted">
-          MR はサイト内ポイントです。ベットは1回 1〜10,000 MR。トラップの数が多いほど1マスあたりの倍率が上がります。
+          {t('MR はサイト内ポイントです。ベットは1回 1〜10,000 MR。トラップの数が多いほど1マスあたりの倍率が上がります。')}
         </p>
       </div>
 

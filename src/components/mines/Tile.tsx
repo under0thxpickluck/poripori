@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import { motion } from 'framer-motion'
 import { Gem, Diamond, Hexagon, Sparkles, Bug } from 'lucide-react'
+import { useT } from '../../lib/i18n'
 
 export type TileState =
   | 'hidden'      // 未開示（クリック可）
@@ -35,13 +36,14 @@ type Props = {
 }
 
 function TileImpl({ index, state, gem, appearDelay, pending, onClick }: Props) {
+  const t = useT()
   const g = GEMS[gem]
   const clickable = state === 'hidden' && !pending
 
   return (
     <motion.button
       type="button"
-      aria-label={`マス ${index + 1}`}
+      aria-label={t('マス {n}', { n: index + 1 })}
       disabled={!clickable}
       onClick={onClick}
       initial={{ opacity: 0, scale: 0.6, y: 8 }}

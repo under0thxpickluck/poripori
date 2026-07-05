@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore'
 import { sellRefund } from '../lib/lmsr'
 import { displayName } from '../lib/names'
 import { Crown, TrendingUp, Target, Coins } from 'lucide-react'
+import { useT } from '../lib/i18n'
 
 type MetricKey = 'assets' | 'pnl' | 'hit'
 
@@ -13,6 +14,7 @@ const TABS: { key: MetricKey; label: string; Icon: typeof Coins }[] = [
 ]
 
 export default function Ranking() {
+  const t = useT()
   const { users, markets, positions, getUserTrades, currentUser } = useStore()
   const me = currentUser()
   const [tab, setTab] = useState<MetricKey>('assets')
@@ -78,8 +80,8 @@ export default function Ranking() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text mb-1">ランキング</h1>
-        <p className="text-text-muted text-sm">トレーダーの成績ランキング</p>
+        <h1 className="text-2xl font-bold text-text mb-1">{t('ランキング')}</h1>
+        <p className="text-text-muted text-sm">{t('トレーダーの成績ランキング')}</p>
       </div>
 
       {/* タブ */}
@@ -93,7 +95,7 @@ export default function Ranking() {
             }`}
           >
             <Icon size={14} />
-            {label}
+            {t(label)}
           </button>
         ))}
       </div>
@@ -114,7 +116,7 @@ export default function Ranking() {
               {isFirst && (
                 <Crown size={20} className="text-yellow-400 mx-auto mb-1" />
               )}
-              <div className="text-xs font-bold text-text-muted mb-2">{rank + 1}位</div>
+              <div className="text-xs font-bold text-text-muted mb-2">{t('{n}位', { n: rank + 1 })}</div>
               <div
                 className={`w-12 h-12 rounded-full bg-accent/20 text-accent flex items-center justify-center text-lg font-bold mx-auto mb-2 ring-2 ${RING[rank]}`}
               >
@@ -135,7 +137,7 @@ export default function Ranking() {
           <div className="w-8 h-8 rounded-full bg-accent/20 text-accent flex items-center justify-center text-sm font-bold">
             {me.name.charAt(0)}
           </div>
-          <span className="text-sm font-medium text-text flex-1">{me.name}（あなた）</span>
+          <span className="text-sm font-medium text-text flex-1">{me.name}（{t('あなた')}）</span>
           <span className={`text-sm font-bold ${metric(sorted[myRank]).color}`}>
             {metric(sorted[myRank]).main}
             <span className="text-xs text-text-muted ml-1">{metric(sorted[myRank]).unit}</span>
@@ -146,7 +148,7 @@ export default function Ranking() {
       {/* 全ランキング */}
       <div className="bg-surface border border-border rounded-lg overflow-hidden">
         <div className="px-5 py-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-text">全ランキング</h2>
+          <h2 className="text-sm font-semibold text-text">{t('全ランキング')}</h2>
         </div>
         <div className="divide-y divide-border">
           {sorted.map((r, i) => {
@@ -176,7 +178,7 @@ export default function Ranking() {
                     <p className="text-sm font-medium text-text truncate">{displayName(r.user.name, r.user.id, me?.id)}</p>
                     {isMe && (
                       <span className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-full shrink-0">
-                        あなた
+                        {t('あなた')}
                       </span>
                     )}
                     {r.user.role === 'admin' && (
@@ -185,7 +187,7 @@ export default function Ranking() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-text-muted">{r.trades} トレード ・ 的中 {Math.round(r.hit * 100)}%</p>
+                  <p className="text-xs text-text-muted">{t('{n} トレード ・ 的中 {p}%', { n: r.trades, p: Math.round(r.hit * 100) })}</p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className={`text-sm font-bold ${m.color}`}>{m.main}</p>

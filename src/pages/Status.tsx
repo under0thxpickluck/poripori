@@ -1,6 +1,7 @@
 import { CheckCircle2 } from 'lucide-react'
 import InfoLayout from '../components/InfoLayout'
 import { COMPANY } from '../lib/company'
+import { useT } from '../lib/i18n'
 
 const COMPONENTS = [
   { name: 'Web アプリ', desc: 'マーケット閲覧・取引のフロントエンド' },
@@ -15,10 +16,11 @@ const HISTORY = [
 ]
 
 export default function Status() {
+  const t = useT()
   return (
     <InfoLayout
-      title="システムステータス"
-      subtitle={`${COMPANY.product} の各コンポーネントの稼働状況をお知らせします。`}
+      title={t('システムステータス')}
+      subtitle={t('{p} の各コンポーネントの稼働状況をお知らせします。', { p: COMPANY.product })}
     >
       <div className="rounded-lg border border-yes/40 bg-yes/5 p-5 mb-6 flex items-center gap-3">
         <span className="relative flex h-3 w-3">
@@ -26,8 +28,8 @@ export default function Status() {
           <span className="relative inline-flex h-3 w-3 rounded-full bg-yes" />
         </span>
         <div>
-          <p className="text-base font-bold text-text">すべてのシステムが正常に稼働中</p>
-          <p className="text-xs text-text-muted mt-0.5">最終確認: {COMPANY.lastUpdated}</p>
+          <p className="text-base font-bold text-text">{t('すべてのシステムが正常に稼働中')}</p>
+          <p className="text-xs text-text-muted mt-0.5">{t('最終確認')}: {COMPANY.lastUpdated}</p>
         </div>
       </div>
 
@@ -35,29 +37,29 @@ export default function Status() {
         {COMPONENTS.map((c) => (
           <div key={c.name} className="flex items-center gap-3 px-5 py-3.5">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-text">{c.name}</p>
-              <p className="text-xs text-text-muted">{c.desc}</p>
+              <p className="text-sm font-medium text-text">{t(c.name)}</p>
+              <p className="text-xs text-text-muted">{t(c.desc)}</p>
             </div>
             <span className="flex items-center gap-1 text-xs font-semibold text-yes shrink-0">
               <CheckCircle2 size={14} />
-              稼働中
+              {t('稼働中')}
             </span>
           </div>
         ))}
       </div>
 
-      <h2 className="text-lg font-bold text-text mt-10 mb-3 pb-2 border-b border-border">過去のインシデント</h2>
+      <h2 className="text-lg font-bold text-text mt-10 mb-3 pb-2 border-b border-border">{t('過去のインシデント')}</h2>
       <div className="space-y-3">
         {HISTORY.map((h, i) => (
           <div key={i} className="rounded-lg border border-border bg-surface p-4">
             <p className="text-xs font-semibold text-text-muted mb-1">{h.date}</p>
-            <p className="text-sm text-text-muted leading-7">{h.text}</p>
+            <p className="text-sm text-text-muted leading-7">{t(h.text)}</p>
           </div>
         ))}
       </div>
 
       <p className="text-xs text-text-muted leading-7 mt-8">
-        本ステータスページは {COMPANY.legalName} が提供する {COMPANY.product} の稼働状況の目安です。重大な障害が発生した場合は本ページおよびサービス上で告知します。お問い合わせ：{' '}
+        {t('本ステータスページは {legal} が提供する {product} の稼働状況の目安です。重大な障害が発生した場合は本ページおよびサービス上で告知します。お問い合わせ：', { legal: COMPANY.legalName, product: COMPANY.product })}{' '}
         <a href={`mailto:${COMPANY.emails.support}`} className="text-accent hover:underline">{COMPANY.emails.support}</a>
       </p>
     </InfoLayout>

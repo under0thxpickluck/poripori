@@ -3,6 +3,7 @@ import { Globe, LogOut, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../store/useAuth'
 import { supabase } from '../lib/supabase'
 import { mapRpcError } from '../store/useStore'
+import { useT } from '../lib/i18n'
 
 /** 同意文の版。文言を改定したらこの値を上げる(全ユーザーに再同意を要求する) */
 export const CONSENT_VERSION = 'v1-2026-07-05'
@@ -48,6 +49,7 @@ const CONSENT_CLAUSES: string[] = [
  * ログイン済みで現行版の同意記録が無いユーザーにブロッキング表示する(記録のみ・機能制限なし)。
  */
 export default function ResidencyGate() {
+  const t = useT()
   const profile = useAuth((s) => s.profile)
   const loadProfile = useAuth((s) => s.loadProfile)
   const signOut = useAuth((s) => s.signOut)
@@ -72,8 +74,7 @@ export default function ResidencyGate() {
             Based on your declared country of residence (Japan), this service is not available to you.
           </p>
           <p className="text-xs text-text-muted leading-relaxed">
-            ご申告いただいた居住国（日本）では、本サービスをご利用いただけません。
-            誤って選択した場合は運営までお問い合わせください。
+            {t('ご申告いただいた居住国（日本）では、本サービスをご利用いただけません。誤って選択した場合は運営までお問い合わせください。')}
           </p>
           <button
             type="button"
@@ -81,7 +82,7 @@ export default function ResidencyGate() {
             className="mx-auto inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-border text-text-muted hover:text-text text-sm transition-colors"
           >
             <LogOut size={14} />
-            サインアウト ／ Sign out
+            {t('サインアウト')} ／ Sign out
           </button>
         </div>
       </div>
@@ -120,7 +121,7 @@ export default function ResidencyGate() {
             <h2 className="text-lg font-bold text-text">Residency Declaration &amp; Terms of Participation</h2>
           </div>
           <p className="text-[11px] text-text-muted">
-            以下の英文が正文です（The English text below is the governing version）
+            {t('以下の英文が正文です')}（The English text below is the governing version）
           </p>
         </div>
 
@@ -136,7 +137,7 @@ export default function ResidencyGate() {
         <div className="p-5 space-y-3">
           <div>
             <label htmlFor="residency-country" className="block text-xs font-semibold text-text mb-1.5">
-              Country of residence ／ 居住国
+              Country of residence ／ {t('居住国')}
             </label>
             <select
               id="residency-country"
@@ -160,11 +161,11 @@ export default function ResidencyGate() {
             />
             <span>
               I have read and agree to all of the above.
-              <span className="text-text-muted">（上記すべてを読み、同意します）</span>
+              <span className="text-text-muted">（{t('上記すべてを読み、同意します')}）</span>
             </span>
           </label>
 
-          {error && <p className="text-xs text-no">{error}</p>}
+          {error && <p className="text-xs text-no">{t(error)}</p>}
 
           <div className="flex gap-2 pt-1">
             <button
@@ -174,7 +175,7 @@ export default function ResidencyGate() {
               className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ShieldCheck size={15} />
-              {busy ? '送信中…' : '同意して利用を続ける ／ Agree & Continue'}
+              {busy ? t('送信中…') : `${t('同意して利用を続ける')} ／ Agree & Continue`}
             </button>
             <button
               type="button"
@@ -183,7 +184,7 @@ export default function ResidencyGate() {
               className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-border text-text-muted hover:text-text text-xs transition-colors"
             >
               <LogOut size={13} />
-              同意しない
+              {t('同意しない')}
             </button>
           </div>
         </div>

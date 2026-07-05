@@ -5,6 +5,7 @@ import { useStore } from '../store/useStore'
 import type { Category } from '../types'
 import ImagePicker from '../components/ImagePicker'
 import MarketImage from '../components/MarketImage'
+import { useT } from '../lib/i18n'
 
 const CATEGORIES: Exclude<Category, 'All'>[] = [
   'Politics', 'Crypto', 'Sports', 'AI', 'Tech', 'Science', 'Entertainment',
@@ -21,6 +22,7 @@ const CAT_CHIP: Record<string, string> = {
 }
 
 export default function Propose() {
+  const t = useT()
   const { currentUser, proposeMarket } = useStore()
   const user = currentUser()
   const navigate = useNavigate()
@@ -37,7 +39,7 @@ export default function Propose() {
   if (!user) {
     return (
       <div className="text-center py-20 text-text-muted">
-        マーケットを提案するにはログインしてください
+        {t('マーケットを提案するにはログインしてください')}
       </div>
     )
   }
@@ -54,8 +56,8 @@ export default function Propose() {
     return (
       <div className="max-w-lg mx-auto text-center py-20">
         <CheckCircle2 size={48} className="text-yes mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-text mb-2">提案を送信しました！</h2>
-        <p className="text-text-muted text-sm">管理者が承認すると、マーケットが公開されます。</p>
+        <h2 className="text-xl font-bold text-text mb-2">{t('提案を送信しました！')}</h2>
+        <p className="text-text-muted text-sm">{t('管理者が承認すると、マーケットが公開されます。')}</p>
       </div>
     )
   }
@@ -66,18 +68,18 @@ export default function Propose() {
   const deadlineDate = form.deadline ? form.deadline.split('T')[0] : ''
 
   const checks = [
-    { ok: form.question.trim().length >= 8, label: '質問が具体的（8文字以上）' },
-    { ok: form.description.trim().length >= 30, label: '解決条件が明確（30文字以上）' },
-    { ok: !!form.deadline, label: '締切日が設定されている' },
-    { ok: /https?:\/\/|公式|情報源|発表|基準/.test(form.description), label: '判定の根拠・情報源がある' },
+    { ok: form.question.trim().length >= 8, label: t('質問が具体的（8文字以上）') },
+    { ok: form.description.trim().length >= 30, label: t('解決条件が明確（30文字以上）') },
+    { ok: !!form.deadline, label: t('締切日が設定されている') },
+    { ok: /https?:\/\/|公式|情報源|発表|基準/.test(form.description), label: t('判定の根拠・情報源がある') },
   ]
   const allOk = checks.every((c) => c.ok)
 
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text mb-1">マーケットを提案する</h1>
-        <p className="text-text-muted text-sm">提案は管理者が審査後、承認されると公開されます</p>
+        <h1 className="text-2xl font-bold text-text mb-1">{t('マーケットを提案する')}</h1>
+        <p className="text-text-muted text-sm">{t('提案は管理者が審査後、承認されると公開されます')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -86,7 +88,7 @@ export default function Propose() {
           <div className="bg-surface border border-border rounded-lg p-5 space-y-5">
             <div>
               <label className="block text-sm font-medium text-text mb-2">
-                質問 <span className="text-no">*</span>
+                {t('質問')} <span className="text-no">*</span>
               </label>
               <input
                 type="text"
@@ -94,7 +96,7 @@ export default function Propose() {
                 maxLength={100}
                 value={form.question}
                 onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
-                placeholder="例：2026年内にAGIは実現するか？"
+                placeholder={t('例：2026年内にAGIは実現するか？')}
                 className="w-full px-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-lg text-sm text-text placeholder-text-muted outline-none transition-colors"
               />
               <p className="text-xs text-text-muted mt-1">{form.question.length}/100</p>
@@ -102,7 +104,7 @@ export default function Propose() {
 
             <div>
               <label className="block text-sm font-medium text-text mb-2">
-                解決条件 <span className="text-no">*</span>
+                {t('解決条件')} <span className="text-no">*</span>
               </label>
               <textarea
                 required
@@ -110,7 +112,7 @@ export default function Propose() {
                 rows={4}
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="「誰が見ても明確な条件」を詳しく書いてください。&#10;例：〇〇社が公式に△△を発表した場合にYES。&#10;判断の根拠となる情報源も記載してください。"
+                placeholder={t('「誰が見ても明確な条件」を詳しく書いてください。\n例：〇〇社が公式に△△を発表した場合にYES。\n判断の根拠となる情報源も記載してください。')}
                 className="w-full px-4 py-2.5 bg-surface-hover border border-border focus:border-accent rounded-lg text-sm text-text placeholder-text-muted outline-none transition-colors resize-none"
               />
               <p className="text-xs text-text-muted mt-1">{form.description.length}/500</p>
@@ -118,7 +120,7 @@ export default function Propose() {
 
             <div>
               <label className="block text-sm font-medium text-text mb-2">
-                カテゴリ <span className="text-no">*</span>
+                {t('カテゴリ')} <span className="text-no">*</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map((c) => (
@@ -132,7 +134,7 @@ export default function Propose() {
                         : 'border-border text-text-muted hover:text-text hover:border-accent/40'
                     }`}
                   >
-                    {CAT_LABELS[c]}
+                    {t(CAT_LABELS[c])}
                   </button>
                 ))}
               </div>
@@ -140,7 +142,7 @@ export default function Propose() {
 
             <div>
               <label className="block text-sm font-medium text-text mb-2">
-                賭け締切日 <span className="text-no">*</span>
+                {t('賭け締切日')} <span className="text-no">*</span>
               </label>
               <input
                 type="date"
@@ -153,7 +155,7 @@ export default function Propose() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text mb-2">画像（任意）</label>
+              <label className="block text-sm font-medium text-text mb-2">{t('画像（任意）')}</label>
               <ImagePicker value={form.imageUrl} onChange={(v) => setForm((f) => ({ ...f, imageUrl: v }))} />
             </div>
           </div>
@@ -162,7 +164,7 @@ export default function Propose() {
             type="submit"
             className="w-full py-3 rounded-lg bg-accent hover:bg-accent-hover text-white font-semibold transition-colors"
           >
-            提案を送信する
+            {t('提案を送信する')}
           </button>
         </form>
 
@@ -170,7 +172,7 @@ export default function Propose() {
         <div className="lg:col-span-2">
           <div className="sticky top-20 space-y-4">
             <div>
-              <p className="text-xs font-semibold text-text-muted mb-2">プレビュー</p>
+              <p className="text-xs font-semibold text-text-muted mb-2">{t('プレビュー')}</p>
               <div className="bg-surface border border-border rounded-lg p-5">
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-surface-hover ${CAT_CHIP[form.category]}`}>
                   {form.category}
@@ -178,7 +180,7 @@ export default function Propose() {
                 <div className="flex gap-3 mt-3 mb-4">
                   <MarketImage src={form.imageUrl} yes={0.5} category={form.category} className="w-12 h-12 rounded-md shrink-0" />
                   <p className="text-sm font-medium text-text leading-snug line-clamp-3">
-                    {form.question || 'ここに質問が表示されます'}
+                    {form.question || t('ここに質問が表示されます')}
                   </p>
                 </div>
                 <div className="flex gap-2 mb-3">
@@ -197,14 +199,14 @@ export default function Propose() {
                   <span className="flex items-center gap-1"><BarChart2 size={11} />0 pt</span>
                   <span className="flex items-center gap-1">
                     <Clock size={11} />
-                    {deadlineDate || '締切未設定'}
+                    {deadlineDate || t('締切未設定')}
                   </span>
                 </div>
               </div>
             </div>
 
             <div className="bg-surface border border-border rounded-lg p-5">
-              <p className="text-xs font-semibold text-text mb-3">良い質問のチェック</p>
+              <p className="text-xs font-semibold text-text mb-3">{t('良い質問のチェック')}</p>
               <div className="space-y-2">
                 {checks.map((c) => (
                   <div key={c.label} className="flex items-center gap-2">
@@ -220,7 +222,7 @@ export default function Propose() {
               {!allOk && (
                 <div className="mt-3 flex items-start gap-2 text-xs text-yellow-400">
                   <AlertTriangle size={13} className="mt-0.5 shrink-0" />
-                  曖昧な条件は却下されることがあります。
+                  {t('曖昧な条件は却下されることがあります。')}
                 </div>
               )}
             </div>

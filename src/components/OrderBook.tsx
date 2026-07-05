@@ -1,10 +1,12 @@
 import { marketPrice } from '../lib/lmsr'
 import type { Market } from '../types'
+import { useT } from '../lib/i18n'
 
 const DEPTH = 6
 
 // LMSRの数式から、各価格(¢)に到達するまでに必要な累積シェア数を算出（実データ）
 export default function OrderBook({ market }: { market: Market }) {
+  const t = useT()
   const { q_yes, q_no, b } = market
   const mid = Math.min(99, Math.max(1, Math.round(marketPrice(market).yes * 100)))
 
@@ -42,8 +44,8 @@ export default function OrderBook({ market }: { market: Market }) {
   return (
     <div className="bg-surface border border-border rounded-lg p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-text">流動性（板）</h2>
-        <span className="text-xs text-text-muted">価格 / 必要シェア (YES)</span>
+        <h2 className="text-sm font-semibold text-text">{t('流動性（板）')}</h2>
+        <span className="text-xs text-text-muted">{t('価格 / 必要シェア (YES)')}</span>
       </div>
 
       <div className="space-y-0.5">
@@ -59,7 +61,7 @@ export default function OrderBook({ market }: { market: Market }) {
         ))}
 
         <div className="flex items-center justify-center py-2 my-1 border-y border-border">
-          <span className="text-sm font-bold text-text">現在値 {mid}¢</span>
+          <span className="text-sm font-bold text-text">{t('現在値')} {mid}¢</span>
         </div>
 
         {bids.map((r) => (
@@ -75,7 +77,7 @@ export default function OrderBook({ market }: { market: Market }) {
       </div>
 
       <p className="text-[10px] text-text-muted mt-3">
-        ※ LMSRの流動性曲線から、各価格に動かすのに必要なシェア数を算出した実データです。
+        {t('※ LMSRの流動性曲線から、各価格に動かすのに必要なシェア数を算出した実データです。')}
       </p>
     </div>
   )

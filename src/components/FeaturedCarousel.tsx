@@ -5,6 +5,7 @@ import { marketPrice } from '../lib/lmsr'
 import type { Market } from '../types'
 import MarketImage from './MarketImage'
 import MiniPriceChart from './MiniPriceChart'
+import { useT } from '../lib/i18n'
 
 const CATEGORY_COLORS: Record<string, string> = {
   Politics: 'text-blue-400 bg-blue-400/10',
@@ -124,6 +125,7 @@ const STACK_STYLE = [
 ]
 
 export default function FeaturedCarousel({ markets }: { markets: Market[] }) {
+  const t = useT()
   const slides = markets.slice(0, SLIDE_COUNT)
   const sideCards = markets.slice(SLIDE_COUNT)
 
@@ -147,7 +149,7 @@ export default function FeaturedCarousel({ markets }: { markets: Market[] }) {
 
   return (
     <div className="mb-8">
-      <h2 className="text-lg font-bold text-text mb-3">注目のマーケット</h2>
+      <h2 className="text-lg font-bold text-text mb-3">{t('注目のマーケット')}</h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* 左：プレート状に重なる大スライド */}
         <div
@@ -178,14 +180,14 @@ export default function FeaturedCarousel({ markets }: { markets: Market[] }) {
           {slides.length > 1 && (
             <>
               <button
-                aria-label="前へ"
+                aria-label={t('前へ')}
                 onClick={() => go(index - 1)}
                 className="absolute z-40 left-2 top-[172px] sm:top-[182px] -translate-y-1/2 w-8 h-8 rounded-full bg-bg/70 border border-border text-text flex items-center justify-center hover:bg-bg transition-colors"
               >
                 <ChevronLeft size={18} />
               </button>
               <button
-                aria-label="次へ"
+                aria-label={t('次へ')}
                 onClick={() => go(index + 1)}
                 className="absolute z-40 right-2 top-[172px] sm:top-[182px] -translate-y-1/2 w-8 h-8 rounded-full bg-bg/70 border border-border text-text flex items-center justify-center hover:bg-bg transition-colors"
               >
@@ -195,7 +197,7 @@ export default function FeaturedCarousel({ markets }: { markets: Market[] }) {
                 {slides.map((s, i) => (
                   <button
                     key={s.id}
-                    aria-label={`スライド ${i + 1}`}
+                    aria-label={t('スライド {n}', { n: i + 1 })}
                     onClick={() => go(i)}
                     className={`h-1.5 rounded-full transition-all ${
                       i === index ? 'w-5 bg-accent' : 'w-1.5 bg-text-muted/50 hover:bg-text-muted'

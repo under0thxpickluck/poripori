@@ -2,15 +2,17 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { format } from 'date-fns'
+import { useT } from '../../lib/i18n'
 
 export default function AdminUsers() {
+  const t = useT()
   const { users, addPoints, changeRole, currentUser } = useStore()
   const user = currentUser()
   const [addingTo, setAddingTo] = useState<string | null>(null)
   const [addAmount, setAddAmount] = useState('')
 
   if (user?.role !== 'admin') {
-    return <div className="text-center py-20 text-no">管理者権限が必要です</div>
+    return <div className="text-center py-20 text-no">{t('管理者権限が必要です')}</div>
   }
 
   function handleAdd(userId: string) {
@@ -24,19 +26,19 @@ export default function AdminUsers() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text mb-1">ユーザー管理</h1>
-        <p className="text-text-muted text-sm">ポイント付与・ロール変更</p>
+        <h1 className="text-2xl font-bold text-text mb-1">{t('ユーザー管理')}</h1>
+        <p className="text-text-muted text-sm">{t('ポイント付与・ロール変更')}</p>
       </div>
 
       <div className="bg-surface border border-border rounded-lg overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-xs text-text-muted">
-              <th className="text-left px-5 py-3 font-medium">ユーザー</th>
-              <th className="text-right px-4 py-3 font-medium">ポイント</th>
-              <th className="text-center px-4 py-3 font-medium hidden md:table-cell">ロール</th>
-              <th className="text-center px-4 py-3 font-medium hidden md:table-cell">登録日</th>
-              <th className="text-right px-5 py-3 font-medium">操作</th>
+              <th className="text-left px-5 py-3 font-medium">{t('ユーザー')}</th>
+              <th className="text-right px-4 py-3 font-medium">{t('ポイント')}</th>
+              <th className="text-center px-4 py-3 font-medium hidden md:table-cell">{t('ロール')}</th>
+              <th className="text-center px-4 py-3 font-medium hidden md:table-cell">{t('登録日')}</th>
+              <th className="text-right px-5 py-3 font-medium">{t('操作')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -94,7 +96,7 @@ export default function AdminUsers() {
                           onClick={() => handleAdd(u.id)}
                           className="text-xs px-2 py-1 rounded bg-yes/20 text-yes border border-yes/30 hover:bg-yes/30 transition-colors"
                         >
-                          付与
+                          {t('付与')}
                         </button>
                         <button
                           onClick={() => { setAddingTo(null); setAddAmount('') }}
@@ -109,7 +111,7 @@ export default function AdminUsers() {
                           onClick={() => setAddingTo(u.id)}
                           className="text-xs px-2.5 py-1 rounded-lg bg-yes/10 text-yes border border-yes/20 hover:bg-yes/20 transition-colors"
                         >
-                          + ポイント
+                          + {t('ポイント')}
                         </button>
                         {u.id !== user.id && (
                           <button
@@ -118,7 +120,7 @@ export default function AdminUsers() {
                             }
                             className="text-xs px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
                           >
-                            {u.role === 'admin' ? 'Userに変更' : 'Adminに変更'}
+                            {u.role === 'admin' ? t('Userに変更') : t('Adminに変更')}
                           </button>
                         )}
                       </>

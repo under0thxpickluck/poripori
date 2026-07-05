@@ -1,8 +1,10 @@
 import { ExternalLink } from 'lucide-react'
 import MarketImage from './MarketImage'
 import type { Ad } from '../types'
+import { useT } from '../lib/i18n'
 
 export default function AdCard({ ad }: { ad: Ad }) {
+  const t = useT()
   return (
     <a
       href={ad.linkUrl}
@@ -11,7 +13,7 @@ export default function AdCard({ ad }: { ad: Ad }) {
       className="block bg-surface hover:bg-surface-hover border border-border hover:border-accent/40 rounded-lg p-5 transition-colors duration-200 group relative"
     >
       <span className="absolute top-3 right-3 text-[10px] font-medium px-1.5 py-0.5 rounded bg-surface-hover text-text-muted border border-border">
-        広告
+        {t('広告')}
       </span>
       <div className="flex gap-3 mb-4">
         {ad.imageUrl ? (
@@ -23,7 +25,7 @@ export default function AdCard({ ad }: { ad: Ad }) {
       </div>
       <div className="flex items-center gap-1 text-xs text-accent">
         <ExternalLink size={11} />
-        <span>詳しく見る</span>
+        <span>{t('詳しく見る')}</span>
       </div>
     </a>
   )

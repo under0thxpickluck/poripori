@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import { Dices, ArrowRight } from 'lucide-react'
+import { useT } from '../lib/i18n'
 
 export default function PlinkoBanner() {
+  const t = useT()
   return (
     <Link
       to="/plinko"
@@ -15,8 +17,8 @@ export default function PlinkoBanner() {
           <Dices size={26} />
         </div>
         <div className="min-w-0 pr-8">
-          <p className="text-base font-bold text-text">たまには運任せにしてみる？</p>
-          <p className="text-xs text-text-muted mt-0.5">Plinko でポイントを増やそう 🎲 賭けて、落として、当てるだけ</p>
+          <p className="text-base font-bold text-text">{t('たまには運任せにしてみる？')}</p>
+          <p className="text-xs text-text-muted mt-0.5">{t('Plinko でポイントを増やそう 🎲 賭けて、落として、当てるだけ')}</p>
         </div>
         <ArrowRight size={18} className="ml-auto text-accent shrink-0 group-hover:translate-x-1 transition-transform" />
       </div>

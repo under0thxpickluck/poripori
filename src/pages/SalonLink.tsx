@@ -3,9 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { IS_LOCAL } from '../lib/localClient'
 import { useAuth } from '../store/useAuth'
+import { useT } from '../lib/i18n'
 
 // サロン（LIFAIOV / aisalon）からのSSO受け口。?sso=<token> を検証してセッションを確立する。
 export default function SalonLink() {
+  const t = useT()
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const loadProfile = useAuth((s) => s.loadProfile)
@@ -71,13 +73,13 @@ export default function SalonLink() {
       {status === 'working' && (
         <div className="w-8 h-8 rounded-full border-2 border-border border-t-accent animate-spin" />
       )}
-      <p className="text-sm text-text-muted text-center px-4">{message}</p>
+      <p className="text-sm text-text-muted text-center px-4">{t(message)}</p>
       {status === 'error' && (
         <button
           onClick={() => navigate('/', { replace: true })}
           className="px-4 py-2 rounded-lg border border-border text-sm text-text-muted hover:text-text transition-colors"
         >
-          ホームへ戻る
+          {t('ホームへ戻る')}
         </button>
       )}
     </div>

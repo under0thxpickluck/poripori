@@ -3,6 +3,7 @@ import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts'
 import { usePriceHistory } from '../hooks/usePriceHistory'
 import { marketPrice } from '../lib/lmsr'
 import type { Market } from '../types'
+import { useT } from '../lib/i18n'
 
 const RANGES = [
   { key: '1M', label: '1分', ms: 60_000 },
@@ -23,6 +24,7 @@ export default function MiniPriceChart({
   height?: number
   interactive?: boolean
 }) {
+  const t = useT()
   const points = usePriceHistory(market.id)
   const cur = marketPrice(market).yes
   const [range, setRange] = useState<RangeKey>('1H')
@@ -78,7 +80,7 @@ export default function MiniPriceChart({
                 range === r.key ? 'bg-accent text-white' : 'text-text-muted hover:text-text'
               }`}
             >
-              {r.label}
+              {t(r.label)}
             </button>
           ))}
         </div>

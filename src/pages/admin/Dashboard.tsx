@@ -15,6 +15,7 @@ import { useStore } from '../../store/useStore'
 import { marketPrice } from '../../lib/lmsr'
 import { useTheme } from '../../store/useTheme'
 import CountUp from '../../components/CountUp'
+import { useT } from '../../lib/i18n'
 
 const CAT_COLOR: Record<string, string> = {
   Politics: '#60a5fa',
@@ -27,11 +28,12 @@ const CAT_COLOR: Record<string, string> = {
 }
 
 export default function Dashboard() {
+  const t = useT()
   const { markets, users, comments, currentUser } = useStore()
   const theme = useTheme((s) => s.theme)
   const user = currentUser()
   if (user?.role !== 'admin') {
-    return <div className="text-center py-20 text-no">管理者権限が必要です</div>
+    return <div className="text-center py-20 text-no">{t('管理者権限が必要です')}</div>
   }
 
   const axis = theme === 'light' ? '#6B7280' : '#8A8F98'
@@ -40,12 +42,12 @@ export default function Dashboard() {
   const resolved = markets.filter((m) => m.status === 'resolved').length
 
   const stats = [
-    { label: '総マーケット数', value: markets.length, suffix: '', Icon: BarChart3 },
-    { label: '総ユーザー数', value: users.length, suffix: '', Icon: Users },
-    { label: '総出来高', value: totalVolume, suffix: ' pt', Icon: TrendingUp },
-    { label: '承認待ち', value: pending, suffix: '', Icon: Clock },
-    { label: '解決済み', value: resolved, suffix: '', Icon: CheckCircle2 },
-    { label: 'コメント数', value: comments.length, suffix: '', Icon: MessageSquare },
+    { label: t('総マーケット数'), value: markets.length, suffix: '', Icon: BarChart3 },
+    { label: t('総ユーザー数'), value: users.length, suffix: '', Icon: Users },
+    { label: t('総出来高'), value: totalVolume, suffix: ' pt', Icon: TrendingUp },
+    { label: t('承認待ち'), value: pending, suffix: '', Icon: Clock },
+    { label: t('解決済み'), value: resolved, suffix: '', Icon: CheckCircle2 },
+    { label: t('コメント数'), value: comments.length, suffix: '', Icon: MessageSquare },
   ]
 
   // カテゴリ別出来高
@@ -57,10 +59,10 @@ export default function Dashboard() {
 
   // ステータス内訳
   const statusData = [
-    { name: '受付中', value: markets.filter((m) => m.status === 'open').length, color: '#2D9CDB' },
-    { name: '締切', value: markets.filter((m) => m.status === 'closed').length, color: axis },
-    { name: '解決済み', value: resolved, color: '#27AE60' },
-    { name: '承認待ち', value: pending, color: '#eab308' },
+    { name: t('受付中'), value: markets.filter((m) => m.status === 'open').length, color: '#2D9CDB' },
+    { name: t('締切'), value: markets.filter((m) => m.status === 'closed').length, color: axis },
+    { name: t('解決済み'), value: resolved, color: '#27AE60' },
+    { name: t('承認待ち'), value: pending, color: '#eab308' },
   ].filter((s) => s.value > 0)
 
   const topMarkets = [...markets].sort((a, b) => b.volume - a.volume).slice(0, 5)
@@ -68,7 +70,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-text">管理ダッシュボード</h1>
+      <h1 className="text-2xl font-bold text-text">{t('管理ダッシュボード')}</h1>
 
       {/* KPI */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -87,7 +89,7 @@ export default function Dashboard() {
       {/* チャート2枚 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-surface border border-border rounded-lg p-5">
-          <h2 className="text-sm font-semibold text-text mb-4">カテゴリ別 出来高</h2>
+          <h2 className="text-sm font-semibold text-text mb-4">{t('カテゴリ別 出来高')}</h2>
           <div style={{ height: 240 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={catData} layout="vertical" margin={{ top: 0, right: 16, left: 8, bottom: 0 }}>
@@ -108,7 +110,7 @@ export default function Dashboard() {
                     borderRadius: 8,
                     fontSize: 12,
                   }}
-                  formatter={(v: number) => [`${v.toLocaleString()} pt`, '出来高']}
+                  formatter={(v: number) => [`${v.toLocaleString()} pt`, t('出来高')]}
                 />
                 <Bar dataKey="volume" radius={[0, 4, 4, 0]}>
                   {catData.map((d) => (
@@ -121,7 +123,7 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-surface border border-border rounded-lg p-5">
-          <h2 className="text-sm font-semibold text-text mb-4">ステータス内訳</h2>
+          <h2 className="text-sm font-semibold text-text mb-4">{t('ステータス内訳')}</h2>
           <div style={{ height: 240 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -155,7 +157,7 @@ export default function Dashboard() {
       {/* トップ＆最近 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-surface border border-border rounded-lg p-4">
-          <h2 className="text-sm font-semibold text-text mb-3">出来高トップ</h2>
+          <h2 className="text-sm font-semibold text-text mb-3">{t('出来高トップ')}</h2>
           <div className="space-y-2">
             {topMarkets.map((m, i) => (
               <Link
@@ -172,7 +174,7 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-surface border border-border rounded-lg p-4">
-          <h2 className="text-sm font-semibold text-text mb-3">最近のマーケット</h2>
+          <h2 className="text-sm font-semibold text-text mb-3">{t('最近のマーケット')}</h2>
           <div className="space-y-2">
             {recent.map((m) => (
               <div key={m.id} className="flex items-center gap-3 bg-surface-hover rounded-md p-3">
@@ -183,7 +185,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <Link to="/admin/markets" className="text-xs text-accent hover:underline shrink-0">
-                  管理
+                  {t('管理')}
                 </Link>
               </div>
             ))}

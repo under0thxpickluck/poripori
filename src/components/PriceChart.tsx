@@ -12,6 +12,7 @@ import type { Market } from '../types'
 import { marketPrice } from '../lib/lmsr'
 import { useTheme } from '../store/useTheme'
 import { usePriceHistory } from '../hooks/usePriceHistory'
+import { useT } from '../lib/i18n'
 
 type Props = { market: Market; height?: number }
 
@@ -45,6 +46,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 }
 
 export default function PriceChart({ market, height = 200 }: Props) {
+  const t = useT()
   const theme = useTheme((s) => s.theme)
   const points = usePriceHistory(market.id)
   const [range, setRange] = useState<RangeKey>('1H')
@@ -112,7 +114,7 @@ export default function PriceChart({ market, height = 200 }: Props) {
                 range === r.key ? 'bg-accent text-white' : 'text-text-muted hover:text-text'
               }`}
             >
-              {r.label}
+              {t(r.label)}
             </button>
           ))}
         </div>
@@ -161,8 +163,8 @@ export default function PriceChart({ market, height = 200 }: Props) {
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <span className="text-xs text-text-muted bg-surface/70 px-2 py-1 rounded">
               {points.length === 0
-                ? `現在 ${Math.round(cur * 100)}%（取引が始まると変動します）`
-                : 'この期間の取引はありません'}
+                ? t('現在 {n}%（取引が始まると変動します）', { n: Math.round(cur * 100) })
+                : t('この期間の取引はありません')}
             </span>
           </div>
         )}

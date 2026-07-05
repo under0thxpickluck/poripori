@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { useModalBehavior } from '../hooks/useModalBehavior'
+import { useT } from '../lib/i18n'
 
 type Props = {
   title?: string
@@ -10,6 +11,7 @@ type Props = {
 
 // スマホ向けのボトムシート（下から せり上がる）。md以上では中央モーダル表示。
 export default function BottomSheet({ title, onClose, children }: Props) {
+  const t = useT()
   useModalBehavior(onClose)
   return (
     <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center">
@@ -20,7 +22,7 @@ export default function BottomSheet({ title, onClose, children }: Props) {
           <h2 className="text-sm font-semibold text-text">{title}</h2>
           <button
             onClick={onClose}
-            aria-label="閉じる"
+            aria-label={t('閉じる')}
             className="w-9 h-9 -mr-2 flex items-center justify-center text-text-muted hover:text-text transition-colors"
           >
             <X size={20} />

@@ -1,5 +1,6 @@
 import { useStore } from '../store/useStore'
 import { displayName } from '../lib/names'
+import { useT } from '../lib/i18n'
 
 function HolderColumn({
   title,
@@ -10,11 +11,12 @@ function HolderColumn({
   color: string
   rows: { name: string; shares: number }[]
 }) {
+  const t = useT()
   return (
     <div className="flex-1">
       <h3 className={`text-xs font-semibold mb-2 ${color}`}>{title}</h3>
       {rows.length === 0 ? (
-        <p className="text-xs text-text-muted py-2">保有者なし</p>
+        <p className="text-xs text-text-muted py-2">{t('保有者なし')}</p>
       ) : (
         <div className="space-y-1.5">
           {rows.map((r, i) => (
@@ -34,9 +36,10 @@ function HolderColumn({
 }
 
 export default function TopHolders({ marketId }: { marketId: string }) {
+  const t = useT()
   const { positions, users, currentUserId } = useStore()
   const name = (id: string) =>
-    displayName(users.find((u) => u.id === id)?.name ?? '不明', id, currentUserId)
+    displayName(users.find((u) => u.id === id)?.name ?? t('不明'), id, currentUserId)
 
   const market = positions.filter((p) => p.marketId === marketId)
   const yes = market
@@ -52,11 +55,11 @@ export default function TopHolders({ marketId }: { marketId: string }) {
 
   return (
     <div className="bg-surface border border-border rounded-lg p-5">
-      <h2 className="text-sm font-semibold text-text mb-4">トップホルダー</h2>
+      <h2 className="text-sm font-semibold text-text mb-4">{t('トップホルダー')}</h2>
       <div className="flex gap-6">
-        <HolderColumn title="YES 保有" color="text-yes" rows={yes} />
+        <HolderColumn title={t('YES 保有')} color="text-yes" rows={yes} />
         <div className="w-px bg-border" />
-        <HolderColumn title="NO 保有" color="text-no" rows={no} />
+        <HolderColumn title={t('NO 保有')} color="text-no" rows={no} />
       </div>
     </div>
   )

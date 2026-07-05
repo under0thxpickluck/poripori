@@ -6,6 +6,7 @@ import { mapRpcError } from '../store/useStore'
 import { createPlinkoEngine, type PlinkoEngine } from '../lib/plinko-engine'
 import { calcRTP } from '../lib/plinko-odds'
 import LoginModal from '../components/LoginModal'
+import { useT } from '../lib/i18n'
 
 type PlayResult = { bucket: number; multiplier: number; payout: number; balance: number }
 type BallPayload = PlayResult & { bet: number }
@@ -21,6 +22,7 @@ function clampBet(v: number): number {
 }
 
 export default function Plinko() {
+  const t = useT()
   const session = useAuth((s) => s.session)
   const profile = useAuth((s) => s.profile)
   const loadProfile = useAuth((s) => s.loadProfile)
@@ -113,12 +115,12 @@ export default function Plinko() {
         <div>
           <h1 className="text-2xl font-bold text-text">Plinko</h1>
           <p className="text-text-muted text-sm">
-            たまには運任せ。ポイントを賭けて玉を落とそう
-            {rtp != null && <span className="ml-2">還元率 {(rtp * 100).toFixed(1)}%</span>}
+            {t('たまには運任せ。ポイントを賭けて玉を落とそう')}
+            {rtp != null && <span className="ml-2">{t('還元率')} {(rtp * 100).toFixed(1)}%</span>}
           </p>
         </div>
         <div className="ml-auto text-right">
-          <p className="text-xs text-text-muted">残高</p>
+          <p className="text-xs text-text-muted">{t('残高')}</p>
           <p className="text-lg font-bold text-text">
             {balance != null ? `${balance.toLocaleString()} pt` : '—'}
           </p>
@@ -132,7 +134,7 @@ export default function Plinko() {
       <div className="bg-surface border border-border rounded-lg p-4 mb-4">
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="block text-xs text-text-muted mb-1">ベット(pt)</label>
+            <label className="block text-xs text-text-muted mb-1">{t('ベット(pt)')}</label>
             <div className="flex gap-1">
               <input
                 type="number"
@@ -149,7 +151,7 @@ export default function Plinko() {
             </div>
           </div>
           <div>
-            <label className="block text-xs text-text-muted mb-1">段数</label>
+            <label className="block text-xs text-text-muted mb-1">{t('段数')}</label>
             <select
               value={rows}
               onChange={(e) => setRows(parseInt(e.target.value, 10))}
@@ -161,7 +163,7 @@ export default function Plinko() {
                   .sort((a, b) => a - b)
                   .map((r) => (
                     <option key={r} value={r}>
-                      {r} 段
+                      {t('{n} 段', { n: r })}
                     </option>
                   ))}
             </select>
@@ -179,11 +181,11 @@ export default function Plinko() {
               onClick={() => setShowLogin(true)}
               className="ml-auto flex items-center gap-2 px-6 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-bold transition-colors"
             >
-              <LogIn size={15} /> ログインして遊ぶ
+              <LogIn size={15} /> {t('ログインして遊ぶ')}
             </button>
           )}
         </div>
-        {error && <p className="mt-3 text-sm text-no">{error}</p>}
+        {error && <p className="mt-3 text-sm text-no">{t(error)}</p>}
       </div>
 
       {history.length > 0 && (

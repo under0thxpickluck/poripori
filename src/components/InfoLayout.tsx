@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import { useT } from '../lib/i18n'
 
 type Props = {
   title: string
@@ -10,6 +11,7 @@ type Props = {
 
 // マーケティング／情報系ページ用の軽量レイアウト
 export default function InfoLayout({ title, subtitle, children }: Props) {
+  const t = useT()
   return (
     <div className="max-w-3xl mx-auto">
       <Link
@@ -17,7 +19,7 @@ export default function InfoLayout({ title, subtitle, children }: Props) {
         className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-text mb-6 transition-colors"
       >
         <ArrowLeft size={14} />
-        ホームに戻る
+        {t('ホームに戻る')}
       </Link>
 
       <header className="mb-6 pb-6 border-b border-border">

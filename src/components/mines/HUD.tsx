@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Pickaxe, HandCoins } from 'lucide-react'
 import type { ActiveGame } from '../../hooks/useMinesGame'
 import { MIN_BET, MAX_BET, MIN_MINES, MAX_MINES, multiplierAt } from '../../lib/mines-math'
+import { useT } from '../../lib/i18n'
 
 type Derived = {
   k: number
@@ -48,6 +49,7 @@ function CornerBrackets() {
 
 /** ベット・トラップ数・倍率表示・開始/CashOut。すべての操作が3クリック以内で完結する */
 export function HUD({ game, derived, houseEdge, balance, busy, onStart, onCashout, onNewGame }: Props) {
+  const t = useT()
   const [bet, setBet] = useState(10)
   const [mines, setMines] = useState(3)
   const reduced = useReducedMotion()
@@ -60,7 +62,7 @@ export function HUD({ game, derived, houseEdge, balance, busy, onStart, onCashou
       {/* 倍率パネル */}
       <div className="grid grid-cols-3 gap-3 text-center">
         <div>
-          <p className="text-[11px] text-text-muted mb-0.5">現在倍率</p>
+          <p className="text-[11px] text-text-muted mb-0.5">{t('現在倍率')}</p>
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.p
               key={game ? game.multiplier : 'idle'}
@@ -76,13 +78,13 @@ export function HUD({ game, derived, houseEdge, balance, busy, onStart, onCashou
           </AnimatePresence>
         </div>
         <div>
-          <p className="text-[11px] text-text-muted mb-0.5">次のマス成功で</p>
+          <p className="text-[11px] text-text-muted mb-0.5">{t('次のマス成功で')}</p>
           <p className="text-2xl sm:text-3xl font-bold font-mono tabular-nums text-fuchsia-400">
             {playing && derived ? fmtX(derived.next) : fmtX(multiplierAt(mines, 1, houseEdge))}
           </p>
         </div>
         <div>
-          <p className="text-[11px] text-text-muted mb-0.5">獲得予定</p>
+          <p className="text-[11px] text-text-muted mb-0.5">{t('獲得予定')}</p>
           <p className="text-2xl sm:text-3xl font-bold font-mono tabular-nums text-text">
             {playing && derived ? derived.expected.toLocaleString() : '—'}
             <span className="text-xs font-normal text-text-muted ml-1">MR</span>
@@ -93,8 +95,11 @@ export function HUD({ game, derived, houseEdge, balance, busy, onStart, onCashou
       {playing ? (
         <>
           <p className="text-xs text-text-muted text-center">
-            トラップ {game!.minesCount} ／ 残り安全マス {derived?.safeLeft} ／ 次にトラップを踏む確率{' '}
-            {derived ? `${(derived.bust * 100).toFixed(0)}%` : '—'}
+            {t('トラップ {m} ／ 残り安全マス {s} ／ 次にトラップを踏む確率 {p}', {
+              m: game!.minesCount,
+              s: derived?.safeLeft ?? '—',
+              p: derived ? `${(derived.bust * 100).toFixed(0)}%` : '—',
+            })}
           </p>
           <motion.button
             type="button"
@@ -118,7 +123,7 @@ export function HUD({ game, derived, houseEdge, balance, busy, onStart, onCashou
             )}
             <span className="relative inline-flex items-center gap-2">
               <HandCoins size={16} />
-              Cash Out{derived && derived.k > 0 ? `（${derived.expected.toLocaleString()} MR 獲得）` : ''}
+              Cash Out{derived && derived.k > 0 ? t('（{n} MR 獲得）', { n: derived.expected.toLocaleString() }) : ''}
             </span>
           </motion.button>
         </>
@@ -126,7 +131,7 @@ export function HUD({ game, derived, houseEdge, balance, busy, onStart, onCashou
         <>
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex-1 min-w-[180px]">
-              <label className="block text-[11px] text-text-muted mb-1">ベット（MR）</label>
+              <label className="block text-[11px] text-text-muted mb-1">{t('ベット（MR）')}</label>
               <div className="flex gap-1.5">
                 <input
                   type="number"
@@ -144,7 +149,7 @@ export function HUD({ game, derived, houseEdge, balance, busy, onStart, onCashou
               </div>
             </div>
             <div>
-              <label className="block text-[11px] text-text-muted mb-1">トラップ数（多いほど高倍率）</label>
+              <label className="block text-[11px] text-text-muted mb-1">{t('トラップ数（多いほど高倍率）')}</label>
               <select
                 value={mines}
                 onChange={(e) => setMines(parseInt(e.target.value, 10))}
@@ -169,7 +174,7 @@ export function HUD({ game, derived, houseEdge, balance, busy, onStart, onCashou
           >
             <span className="inline-flex items-center gap-2">
               <Pickaxe size={16} />
-              {busy ? '準備中…' : '採掘開始'}
+              {busy ? t('準備中…') : t('採掘開始')}
             </span>
           </motion.button>
         </>

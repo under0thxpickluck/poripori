@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Dices, Cpu, ArrowRight } from 'lucide-react'
+import { useT } from '../lib/i18n'
 
 // ホームのゲームコーナー（Plinko / Mines の2枚カード）。
 // 旧 PlinkoBanner を置き換えたもの。カードを増やすときはここに足す。
@@ -25,6 +26,7 @@ const GAMES = [
 ] as const
 
 export default function GameCorner() {
+  const t = useT()
   return (
     <div className="grid sm:grid-cols-2 gap-3 mb-6">
       {GAMES.map(({ to, Icon, title, desc, iconCls, cardCls, arrowCls }) => (
@@ -41,8 +43,8 @@ export default function GameCorner() {
               <Icon size={26} />
             </div>
             <div className="min-w-0 pr-6">
-              <p className="text-sm font-bold text-text">{title}</p>
-              <p className="text-xs text-text-muted mt-0.5">{desc}</p>
+              <p className="text-sm font-bold text-text">{t(title)}</p>
+              <p className="text-xs text-text-muted mt-0.5">{t(desc)}</p>
             </div>
             <ArrowRight size={18} className={`ml-auto shrink-0 group-hover:translate-x-1 transition-transform ${arrowCls}`} />
           </div>

@@ -9,6 +9,7 @@ import LiveTicker from '../components/LiveTicker'
 import BottomSheet from '../components/BottomSheet'
 import GameCorner from '../components/GameCorner'
 import type { Category, Market } from '../types'
+import { useT } from '../lib/i18n'
 
 const STATUS_LABELS: Record<string, string> = {
   open: '受付中',
@@ -63,6 +64,7 @@ function momentum(m: Market): number {
 }
 
 export default function MarketList() {
+  const t = useT()
   const { markets, ads, comments } = useStore()
   const [cat, setCat] = useState<Category>('All')
   const [query, setQuery] = useState('')
@@ -118,7 +120,7 @@ export default function MarketList() {
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
         <input
           type="text"
-          placeholder="マーケットを検索..."
+          placeholder={t('マーケットを検索...')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full pl-9 pr-4 py-2.5 bg-surface border border-border focus:border-accent rounded-lg text-sm text-text placeholder-text-muted outline-none transition-colors"
@@ -126,7 +128,7 @@ export default function MarketList() {
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xs font-semibold text-text-muted mb-2">注目のトピック</h2>
+        <h2 className="text-xs font-semibold text-text-muted mb-2">{t('注目のトピック')}</h2>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {TRENDING_TOPICS.map((topic) => (
             <button
@@ -157,7 +159,7 @@ export default function MarketList() {
                   : 'text-text-muted hover:text-text'
               }`}
             >
-              {STATUS_LABELS[s]}
+              {t(STATUS_LABELS[s])}
             </button>
           ))}
         </div>
@@ -172,7 +174,7 @@ export default function MarketList() {
               }`}
             >
               <Icon size={12} />
-              {label}
+              {t(label)}
             </button>
           ))}
         </div>
@@ -185,18 +187,18 @@ export default function MarketList() {
       >
         <span className="flex items-center gap-2 font-medium">
           <SlidersHorizontal size={15} className="text-accent" />
-          並び替え・絞り込み
+          {t('並び替え・絞り込み')}
         </span>
         <span className="text-xs text-text-muted">
-          {STATUS_LABELS[statusFilter]} ・ {SORTS.find((s) => s.key === sort)?.label}
+          {t(STATUS_LABELS[statusFilter])} ・ {t(SORTS.find((s) => s.key === sort)?.label ?? '')}
         </span>
       </button>
 
       {filterSheet && (
-        <BottomSheet title="並び替え・絞り込み" onClose={() => setFilterSheet(false)}>
+        <BottomSheet title={t('並び替え・絞り込み')} onClose={() => setFilterSheet(false)}>
           <div className="p-4 space-y-5">
             <div>
-              <p className="text-xs font-semibold text-text-muted mb-2">表示するマーケット</p>
+              <p className="text-xs font-semibold text-text-muted mb-2">{t('表示するマーケット')}</p>
               <div className="grid grid-cols-2 gap-2">
                 {(['open', 'closed', 'resolved', 'all'] as const).map((s) => (
                   <button
@@ -208,14 +210,14 @@ export default function MarketList() {
                         : 'border-border text-text-muted'
                     }`}
                   >
-                    {STATUS_LABELS[s]}
+                    {t(STATUS_LABELS[s])}
                     {statusFilter === s && <Check size={15} />}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold text-text-muted mb-2">並び替え</p>
+              <p className="text-xs font-semibold text-text-muted mb-2">{t('並び替え')}</p>
               <div className="grid grid-cols-1 gap-2">
                 {SORTS.map(({ key, label, Icon }) => (
                   <button
@@ -228,7 +230,7 @@ export default function MarketList() {
                     }`}
                   >
                     <Icon size={15} />
-                    {label}
+                    {t(label)}
                     {sort === key && <Check size={15} className="ml-auto" />}
                   </button>
                 ))}
@@ -238,7 +240,7 @@ export default function MarketList() {
               onClick={() => setFilterSheet(false)}
               className="w-full py-3 rounded-lg bg-accent text-white text-sm font-semibold"
             >
-              この条件で表示
+              {t('この条件で表示')}
             </button>
           </div>
         </BottomSheet>
@@ -255,7 +257,7 @@ export default function MarketList() {
                 : 'border-border text-text-muted hover:text-text hover:border-border'
             }`}
           >
-            {CAT_LABELS[c]}
+            {t(CAT_LABELS[c])}
           </button>
         ))}
       </div>
@@ -265,15 +267,15 @@ export default function MarketList() {
 
       {open.length === 0 ? (
         <div className="text-center py-20 text-text-muted">
-          <p className="text-lg">マーケットが見つかりません</p>
-          <p className="text-sm mt-1">別のカテゴリやキーワードで検索してみてください</p>
+          <p className="text-lg">{t('マーケットが見つかりません')}</p>
+          <p className="text-sm mt-1">{t('別のカテゴリやキーワードで検索してみてください')}</p>
         </div>
       ) : rest.length > 0 ? (
         <div>
           <h2 className="text-lg font-bold text-text mb-3">
             {sort === 'volume'
-              ? 'すべてのマーケット'
-              : `${SORTS.find((s) => s.key === sort)?.label}のマーケット`}
+              ? t('すべてのマーケット')
+              : t('{s}のマーケット', { s: t(SORTS.find((s) => s.key === sort)?.label ?? '') })}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {(() => {
