@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
-import { useAuth } from '../store/useAuth'
 import { marketPrice, sellRefund } from '../lib/lmsr'
 import { format } from 'date-fns'
 import { TrendingUp, TrendingDown, Wallet, PieChart, Layers, Activity, Flame, ArrowLeftRight } from 'lucide-react'
