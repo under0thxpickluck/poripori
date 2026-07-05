@@ -30,6 +30,7 @@ re-run (functions/policies are `create or replace` / `drop ... if exists`).
 14. `migrate-014-withdraw-daily-limit.sql` — サロンEP出金の日次上限（`ep_config` + `ep_begin_withdraw` 差し替え。012の後に適用）。
 15. `migrate-015-mines.sql` — Mines（宝石堀り）: 設定/台帳/秘密テーブル + プレイRPC 3本 + 管理RPC。
 16. `migrate-016-residency-winnings-lock.sql` — 居住国申告の記録（`declare_residency`）+ ゲーム勝ち分の出金不可ロック（012/015 の後に適用）。
+17. `migrate-017-plinko-integer-bet.sql` — Plinko のベットを整数限定に（`plinko_play` 差し替え。Mines と挙動を揃える。016 の後に適用）。
 
 > `schema.sql` already contains the final version of every function (including
 > the 005 changes). The `migrate-00X` files are incremental patches for projects

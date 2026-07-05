@@ -88,7 +88,9 @@ export function mapRpcError(msg: string): string {
   if (msg.includes('ALREADY_REVEALED')) return 'そのマスは既に開いています'
   if (msg.includes('NO_REVEAL')) return '1マス以上開けてからキャッシュアウトしてください'
   if (msg.includes('REGION_BLOCKED')) return 'ご申告の居住国では本サービスをご利用いただけません'
-  return msg || 'エラーが発生しました'
+  // 未マップの生Postgresメッセージは画面に出さず汎用文言へ丸める(詳細はコンソールへ)
+  if (msg) console.warn('[mapRpcError] unmapped:', msg)
+  return 'エラーが発生しました。しばらくして再度お試しください'
 }
 
 type StoreState = {

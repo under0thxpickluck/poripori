@@ -98,6 +98,12 @@ describe('migrate-016 ゲーム勝ち分ロック', () => {
       if ((await myProfile()).points < 50) break
     }
   })
+
+  it('Plinko: 小数ベットは弾く(BAD_BET。Mines と挙動を揃える/migrate-017)', async () => {
+    switchLocalUser(AYANO_ID)
+    const { error } = await client.rpc('plinko_play', { p_bet: 1.5, p_rows: 8 })
+    expect(error?.message).toContain('BAD_BET')
+  })
 })
 
 // migrate-016: declare_residency(居住国申告の記録)
