@@ -87,4 +87,14 @@ export const dict: Record<string, string> = {
   '再読み込み': 'Recarregar',
   '締切': 'Encerrado',
   '{n}日': '{n}d',
+
+  // --- ポイント購入ハブ ---
+  'ポイント購入': 'Comprar pontos',
+  '購入方法': 'Método de pagamento',
+  '整備中': 'Em breve',
+  'クレジットカード': 'Cartão de crédito',
+  'LIFAI EP連携': 'LIFAI EP',
+  '現在のMR残高: {n} MR': 'Saldo de MR atual: {n} MR',
+  'ローカルデモモードではLIFAI EP連携は利用できません。': 'O LIFAI EP não está disponível no modo demo local.',
+  '暗号通貨・LIFAI EP連携でポイントを購入': 'Compre pontos com cripto ou LIFAI EP',
 }

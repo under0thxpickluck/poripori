@@ -640,4 +640,14 @@ export const dict: Record<string, string> = {
   '購入': 'Buy',
   '売却': 'Sell',
   '罠 {n} 個': '{n} traps',
+
+  // --- ポイント購入ハブ ---
+  'ポイント購入': 'Buy points',
+  '購入方法': 'Payment method',
+  '整備中': 'Coming soon',
+  'クレジットカード': 'Credit card',
+  'LIFAI EP連携': 'LIFAI EP',
+  '現在のMR残高: {n} MR': 'Current MR balance: {n} MR',
+  'ローカルデモモードではLIFAI EP連携は利用できません。': 'LIFAI EP is unavailable in local demo mode.',
+  '暗号通貨・LIFAI EP連携でポイントを購入': 'Buy points with crypto or LIFAI EP',
 }
