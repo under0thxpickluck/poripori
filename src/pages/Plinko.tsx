@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 import { mapRpcError } from '../store/useStore'
 import { createPlinkoEngine, type PlinkoEngine } from '../lib/plinko-engine'
-import { calcRTP } from '../lib/plinko-odds'
 import LoginModal from '../components/LoginModal'
 import { useT } from '../lib/i18n'
 
@@ -103,9 +102,6 @@ export default function Plinko() {
     engineRef.current?.drop(res.bucket, { ...res, bet: b } satisfies BallPayload)
   }
 
-  const multipliers = config?.[rows]
-  const rtp = multipliers ? calcRTP(rows, multipliers) : null
-
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-5 flex items-center gap-3">
@@ -116,13 +112,12 @@ export default function Plinko() {
           <h1 className="text-2xl font-bold text-text">Plinko</h1>
           <p className="text-text-muted text-sm">
             {t('たまには運任せ。ポイントを賭けて玉を落とそう')}
-            {rtp != null && <span className="ml-2">{t('還元率')} {(rtp * 100).toFixed(1)}%</span>}
           </p>
         </div>
         <div className="ml-auto text-right">
           <p className="text-xs text-text-muted">{t('残高')}</p>
           <p className="text-lg font-bold text-text">
-            {balance != null ? `${balance.toLocaleString()} pt` : '—'}
+            {balance != null ? `${balance.toLocaleString()} MR` : '—'}
           </p>
         </div>
       </div>
@@ -134,7 +129,7 @@ export default function Plinko() {
       <div className="bg-surface border border-border rounded-lg p-4 mb-4">
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="block text-xs text-text-muted mb-1">{t('ベット(pt)')}</label>
+            <label className="block text-xs text-text-muted mb-1">{t('ベット（MR）')}</label>
             <div className="flex gap-1">
               <input
                 type="number"

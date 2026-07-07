@@ -151,7 +151,7 @@ export default function Portfolio() {
             </div>
             <div>
               <p className="text-sm font-semibold text-text">{t('ポイント購入')}</p>
-              <p className="text-xs text-text-muted">{t('暗号通貨・LIFAI EP連携でポイントを購入')}</p>
+              <p className="text-xs text-text-muted">{t('他サービスのEP連携でMRを購入')}</p>
             </div>
           </div>
           <span className="text-xs text-accent font-medium shrink-0">{t('開く')} →</span>

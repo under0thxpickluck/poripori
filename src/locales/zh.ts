@@ -91,10 +91,8 @@ export const dict: Record<string, string> = {
   // --- ポイント購入ハブ ---
   'ポイント購入': '购买积分',
   '購入方法': '支付方式',
-  '整備中': '筹备中',
-  'クレジットカード': '信用卡',
-  'LIFAI EP連携': 'LIFAI EP 关联',
+  'EP連携（他サービス）': 'EP (other service) 关联',
   '現在のMR残高: {n} MR': '当前 MR 余额：{n} MR',
-  'ローカルデモモードではLIFAI EP連携は利用できません。': '本地演示模式下无法使用 LIFAI EP 关联。',
-  '暗号通貨・LIFAI EP連携でポイントを購入': '通过加密货币或 LIFAI EP 购买积分',
+  'ローカルデモモードではEP連携（他サービス）は利用できません。': '本地演示模式下无法使用 EP (other service) 关联。',
+  '他サービスのEP連携でMRを購入': '通过加密货币或 EP (other service) 购买积分',
 }

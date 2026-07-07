@@ -166,11 +166,7 @@ export default function Ranking() {
                 >
                   {i + 1}
                 </div>
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
-                    r.user.role === 'admin' ? 'bg-amber-500/20 text-amber-400' : 'bg-accent/20 text-accent'
-                  }`}
-                >
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-accent/20 text-accent">
                   {r.user.name.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -179,11 +175,6 @@ export default function Ranking() {
                     {isMe && (
                       <span className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-full shrink-0">
                         {t('あなた')}
-                      </span>
-                    )}
-                    {r.user.role === 'admin' && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded-full shrink-0">
-                        Admin
                       </span>
                     )}
                   </div>

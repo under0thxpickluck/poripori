@@ -25,7 +25,8 @@ const NAV_ITEMS: Item[] = [
 export default function CommandPalette() {
   const t = useT()
   const navigate = useNavigate()
-  const { markets } = useStore()
+  const { markets, currentUser } = useStore()
+  const isAdmin = currentUser()?.role === 'admin'
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
@@ -71,13 +72,15 @@ export default function CommandPalette() {
         icon: Search,
         group: 'マーケット' as const,
       }))
-    const all = [...NAV_ITEMS, ...marketItems]
+    // 管理ダッシュボードは管理者のみに表示（一般ユーザーには管理画面の存在を露出しない）
+    const navItems = isAdmin ? NAV_ITEMS : NAV_ITEMS.filter((it) => it.id !== 'nav-admin')
+    const all = [...navItems, ...marketItems]
     if (!q.trim()) return all.slice(0, 8)
     const lq = q.toLowerCase()
     return all
       .filter((it) => it.label.toLowerCase().includes(lq) || it.sub?.toLowerCase().includes(lq))
       .slice(0, 12)
-  }, [q, markets])
+  }, [q, markets, isAdmin])
 
   useEffect(() => {
     setActive(0)

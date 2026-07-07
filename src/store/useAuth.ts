@@ -10,10 +10,10 @@ export type Profile = {
   role: 'user' | 'admin'
   last_bonus: string | null
   bonus_streak: number
-  // 新規登録特典のロック枠（この分はサロンEPへ出金不可。出金可能 = points - bonus_locked）
+  // 新規登録特典のロック枠（この分は他サービスのEPへ出金不可。出金可能 = points - bonus_locked）
   bonus_locked: number
   created_at: string
-  // サロン連携（LIFAIOV / aisalon）。未連携なら null
+  // 他サービス連携（LIFAIOV / aisalon）。未連携なら null
   salon_group: string | null
   salon_login_id: string | null
   // 居住国申告（migrate-016。ISO 3166-1 alpha-2 国コード。未申告なら null / 旧データは undefined）

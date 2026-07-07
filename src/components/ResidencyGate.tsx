@@ -32,13 +32,13 @@ const COUNTRIES: Array<{ code: string; name: string }> = (() => {
 /** 英文が正文(仕様書 §3.3)。翻訳・要約は参考情報の位置づけ */
 const CONSENT_CLAUSES: string[] = [
   'MIRAIX Points ("MR") are virtual points provided solely for entertainment purposes within this site. MR is not money, electronic money, or a financial instrument of any kind.',
-  'The mini-games on this site (including Mines and Plinko) are entertainment features. Any MR gained through these games is locked as non-withdrawable and can never be transferred or exchanged outside this site, including to partner salon EP.',
+  'The mini-games on this site (including Mines and Plinko) are entertainment features. Any MR gained through these games is locked as non-withdrawable and can never be transferred or exchanged outside this site, including to the EP (points) of the partner service.',
   'This service is not available to residents of Japan. If you declare that you reside in Japan, you will not be able to participate in this service.',
   'You must truthfully declare your country of residence. Deliberately false or misleading declarations are prohibited.',
   'If we recognise that a declaration is false, we may restrict, suspend or terminate the relevant account and any associated features without prior notice.',
   'We may, at any time and at our sole discretion, require you to complete identity verification (KYC), including the submission of government-issued identification documents. Failure to cooperate may result in restriction of features.',
   'You are solely responsible for ensuring that your use of this site complies with all laws and regulations applicable in your country or region of residence.',
-  'Transfers between MR and partner salon points (EP) are provided on an as-is basis. Consumed EP or MR will not be compensated or restored under any circumstances.',
+  'Transfers between MR and the points (EP) of a partner service are provided on an as-is basis. Consumed EP or MR will not be compensated or restored under any circumstances.',
   'We may amend these terms from time to time. Continued use of the site after an amendment requires renewed agreement.',
   'You confirm that you are of legal age to use this service in your jurisdiction of residence.',
   'This English text is the governing version of this notice. Any translations or summaries are provided for convenience only.',

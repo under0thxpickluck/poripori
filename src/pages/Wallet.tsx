@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   ArrowDownToLine, ArrowUpFromLine, RefreshCw, Landmark, Coins, Gift, X, AlertTriangle,
-  Bitcoin, CircleDollarSign, CreditCard, Wallet as WalletIcon, Sparkles, ChevronDown,
+  Sparkles, ChevronDown,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { IS_LOCAL } from '../lib/localClient'
@@ -18,7 +18,7 @@ type Transfer = {
   created_at: string
 }
 
-const GROUP_LABEL: Record<string, string> = { '5000': 'LIFAIOV', aisalon: 'aisalon' }
+const GROUP_LABEL: Record<string, string> = { '5000': '他サービス', aisalon: '他サービス' }
 const STATUS_LABEL: Record<string, string> = {
   completed: '完了',
   pending: '処理中',
@@ -29,15 +29,7 @@ const MIN_EP = 1
 const MAX_EP = 10000
 const QUICK = [10, 100, 1000]
 
-// 整備中の決済手段（押下無反応のダミー）。BTC/USDT/MetaMask は固有名詞なので t() を通さない
-const PLACEHOLDER_METHODS = [
-  { key: 'btc', label: 'BTC', translate: false, Icon: Bitcoin },
-  { key: 'usdt', label: 'USDT', translate: false, Icon: CircleDollarSign },
-  { key: 'metamask', label: 'MetaMask', translate: false, Icon: WalletIcon },
-  { key: 'card', label: 'クレジットカード', translate: true, Icon: CreditCard },
-] as const
-
-// ポイント購入ハブ: 決済手段の一つとして LIFAI EP 連携（サロンEP⇄MR転送）を提供
+// ポイント購入ハブ: EP (other service) 連携（他サービスのEP⇄MR転送）でMRを入手する
 export default function Wallet() {
   const t = useT()
   const { profile, loadProfile } = useAuth()
@@ -84,7 +76,7 @@ export default function Wallet() {
     setTodayOut((outs ?? []).reduce((s, r) => s + Number(r.ep_amount), 0))
   }, [])
 
-  // サロン側のEP残高を照会（読み取りのみ）
+  // 他サービス側のEP残高を照会（読み取りのみ）
   const loadEpBalance = useCallback(async () => {
     const { data } = await supabase.functions.invoke('ep-transfer', {
       body: { direction: 'balance' },
@@ -105,7 +97,7 @@ export default function Wallet() {
 
   const ep = Number(amount)
   const amountOk = Number.isInteger(ep) && ep >= MIN_EP && ep <= MAX_EP
-  // 特典ロック枠: この分はサロンEPへ出金不可（特典で増えた分・入金分は出金可）
+  // 特典ロック枠: この分は他サービスのEPへ出金不可（特典で増えた分・入金分は出金可）
   const locked = Math.max(0, Math.floor(Number(profile.bonus_locked ?? 0)))
   const withdrawable = Math.max(0, Math.floor(profile.points) - locked)
   const salonName = GROUP_LABEL[profile.salon_group ?? ''] ?? profile.salon_group
@@ -136,14 +128,14 @@ export default function Wallet() {
         const code = result?.error ?? error?.message ?? 'unknown'
         setMsgKind('error')
         setMsg(
-          code === 'insufficient_ep' ? t('サロンのEP残高が不足しています。')
+          code === 'insufficient_ep' ? t('他サービスのEP残高が不足しています。')
           : code === 'INSUFFICIENT_POINTS' ? t('MR（MIRAIXポイント）が不足しています。')
-          : code === 'BONUS_LOCKED' ? t('新規登録特典分のMRはサロンEPへ出金できません。出金可能額の範囲で入力してください。')
+          : code === 'BONUS_LOCKED' ? t('新規登録特典分のMRは他サービスのEPへ出金できません。出金可能額の範囲で入力してください。')
           : code === 'duplicate' ? t('同じ転送が既に処理されています。残高を確認してください。')
           : code === 'DAILY_LIMIT' ? t('本日の出金上限に達しました。残り枠は明日（日本時間0時）リセットされます。')
           : code === 'REGION_BLOCKED' ? t('ご申告の居住国では本サービスをご利用いただけません。')
-          : code === 'busy' ? t('サロン側が混み合っています。しばらく待ってから再度お試しください。')
-          : code === 'gas_unreachable_pending' ? t('サロンとの通信が確認できませんでした。この転送は「処理中」として記録されています。残高に反映されない場合は運営にお問い合わせください（再送はしないでください）。')
+          : code === 'busy' ? t('他サービス側が混み合っています。しばらく待ってから再度お試しください。')
+          : code === 'gas_unreachable_pending' ? t('他サービスとの通信が確認できませんでした。この転送は「処理中」として記録されています。残高に反映されない場合は運営にお問い合わせください（再送はしないでください）。')
           : code === 'credit_failed_revert_failed' ? t('転送に失敗し、EPの自動返却も確認できませんでした。運営にお問い合わせください。')
           : t('転送に失敗しました（{code}）。残高は履歴で確認できます。', { code }),
         )
@@ -152,7 +144,7 @@ export default function Wallet() {
       setMsgKind('ok')
       setMsg(direction === 'in'
         ? t('{n} EP をMRに移しました。', { n: ep.toLocaleString() })
-        : t('{n} EP をサロンへ戻しました。', { n: ep.toLocaleString() }))
+        : t('{n} EP を他サービスへ戻しました。', { n: ep.toLocaleString() }))
       setAmount('')
       if (typeof result.ep_balance === 'number') setEpBalance(result.ep_balance)
     } finally {
@@ -186,8 +178,8 @@ export default function Wallet() {
         setMsg(
           code === 'not_pending' ? t('この転送は既に処理済みです。履歴を更新しました。')
           : code === 'resume_unsupported' ? t('この転送は自動再開できません。運営にお問い合わせください。')
-          : code === 'gas_unreachable_pending' ? t('サロンとの通信がまだ確認できません。時間をおいて再度お試しください。')
-          : code === 'insufficient_ep' ? t('サロンのEP残高が不足しているため、この転送は失敗として確定しました。')
+          : code === 'gas_unreachable_pending' ? t('他サービスとの通信がまだ確認できません。時間をおいて再度お試しください。')
+          : code === 'insufficient_ep' ? t('他サービスのEP残高が不足しているため、この転送は失敗として確定しました。')
           : t('再開に失敗しました（{code}）。', { code }),
         )
         return
@@ -221,7 +213,7 @@ export default function Wallet() {
               {t('新規登録特典として {n} MR をプレゼントしました🎉', { n: welcomeBonus.toLocaleString() })}
             </p>
             <p className="text-xs text-text-muted mt-0.5">
-              {t('期間限定キャンペーンです。MR（MIRAIXポイント）は予測やゲームにそのまま使えます。特典分はサロンEPへの出金には使えません（特典を使って増えた分は出金できます）。')}
+              {t('期間限定キャンペーンです。MR（MIRAIXポイント）は予測やゲームにそのまま使えます。特典分は他サービスのEPへの出金には使えません（特典を使って増えた分は出金できます）。')}
             </p>
           </div>
           <button
@@ -239,24 +231,7 @@ export default function Wallet() {
       <div className="space-y-2">
         <h2 className="text-sm font-semibold text-text">{t('購入方法')}</h2>
 
-        {/* 整備中のダミー手段（押下無反応） */}
-        {PLACEHOLDER_METHODS.map((m) => (
-          <div
-            key={m.key}
-            aria-disabled="true"
-            className="flex items-center justify-between bg-surface border border-border rounded-lg p-4 opacity-50 cursor-not-allowed select-none"
-          >
-            <div className="flex items-center gap-3">
-              <m.Icon size={18} className="text-text-muted" />
-              <span className="text-sm font-medium text-text">{m.translate ? t(m.label) : m.label}</span>
-            </div>
-            <span className="text-[11px] px-2 py-0.5 rounded-full border border-border text-text-muted">
-              {t('整備中')}
-            </span>
-          </div>
-        ))}
-
-        {/* LIFAI EP連携（選択可能・展開トグル） */}
+        {/* EP連携（他サービス）（選択可能・展開トグル） */}
         <button
           type="button"
           onClick={() => setMethod((prev) => (prev === 'lifai' ? null : 'lifai'))}
@@ -266,7 +241,7 @@ export default function Wallet() {
         >
           <div className="flex items-center gap-3">
             <Sparkles size={18} className={method === 'lifai' ? 'text-accent' : 'text-text-muted'} />
-            <span className="text-sm font-medium text-text">{t('LIFAI EP連携')}</span>
+            <span className="text-sm font-medium text-text">{t('EP連携（他サービス）')}</span>
           </div>
           <ChevronDown
             size={16}
@@ -275,16 +250,16 @@ export default function Wallet() {
         </button>
       </div>
 
-      {/* LIFAI EP を選択したときの詳細 */}
+      {/* EP (other service) を選択したときの詳細 */}
       {method === 'lifai' && (
         IS_LOCAL ? (
           <p className="py-6 text-center text-sm text-text-muted">
-            {t('ローカルデモモードではLIFAI EP連携は利用できません。')}
+            {t('ローカルデモモードではEP連携（他サービス）は利用できません。')}
           </p>
         ) : !linked ? (
           <div className="bg-surface border border-border rounded-lg p-5 text-center space-y-3">
             <p className="text-sm text-text-muted">
-              {t('サロン連携がありません。LIFAIOV / aisalon の LIFAI Arcade から「MIRAIX」を開いてください。')}
+              {t('他サービス連携がありません。他サービスのアーケードから「MIRAIX」を開いてください。')}
             </p>
             <Link to="/" className="inline-block text-sm text-accent hover:underline">{t('ホームへ戻る')}</Link>
           </div>
@@ -295,15 +270,15 @@ export default function Wallet() {
               {t('連携元')}: {salonName}（ID: {profile.salon_login_id}）
             </p>
 
-            {/* 外部サイト免責（サロン側の免責ゲートと同趣旨をMIRAIX側でも明記） */}
+            {/* コラボ免責（別運営である旨と補填・返金不可をMIRAIX側でも明記） */}
             <div className="flex items-start gap-2.5 bg-surface border border-border rounded-lg p-3.5 text-xs text-text-muted">
               <AlertTriangle size={14} className="shrink-0 mt-0.5" />
               <p>
-                {t('MIRAIX は LIFAI（LIFAIOV / aisalon）とは関係のない外部サイトです。MIRAIXへ転送したEP・MIRAIX上で消費したMRを、LIFAI側で補填・返金することはできません。')}
+                {t('MIRAIX は他サービスとコラボレーション中の別運営サービスです。MIRAIXへ転送したEP・MIRAIX上で消費したMRを、他サービス側で補填・返金することはできません。')}
               </p>
             </div>
 
-            {/* 残高（サロンEP / MIRAIXポイント） */}
+            {/* 残高（他サービスのEP / MIRAIXポイント） */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-surface border border-border rounded-lg p-4">
                 <div className="flex items-center gap-1.5 text-text-muted text-xs mb-1">
@@ -349,7 +324,7 @@ export default function Wallet() {
                   }`}
                 >
                   <ArrowDownToLine size={15} />
-                  {t('サロン → MIRAIX')}
+                  {t('他サービス → MIRAIX')}
                 </button>
                 <button
                   type="button"
@@ -361,7 +336,7 @@ export default function Wallet() {
                   }`}
                 >
                   <ArrowUpFromLine size={15} />
-                  {t('MIRAIX → サロン')}
+                  {t('MIRAIX → 他サービス')}
                 </button>
               </div>
               <p className="text-xs text-text-muted">
@@ -412,7 +387,7 @@ export default function Wallet() {
                   ? t('転送中…')
                   : direction === 'in'
                     ? `${amountOk ? t('{n} EP を', { n: ep.toLocaleString() }) : ''}${t('MIRAIXに移す')}`
-                    : `${amountOk ? t('{n} EP を', { n: ep.toLocaleString() }) : ''}${t('サロンに戻す')}`}
+                    : `${amountOk ? t('{n} EP を', { n: ep.toLocaleString() }) : ''}${t('他サービスに戻す')}`}
               </button>
               {msg && (
                 <p className={`text-sm ${msgKind === 'ok' ? 'text-yes' : 'text-no'}`}>{msg}</p>
@@ -437,7 +412,7 @@ export default function Wallet() {
                   <li key={h.id} className="flex items-center justify-between gap-2 border-b border-border/50 pb-2 last:border-0 last:pb-0">
                     <div className="min-w-0">
                       <p className="text-text font-medium">
-                        {h.direction === 'in' ? t('サロン → MIRAIX') : t('MIRAIX → サロン')}　{Number(h.ep_amount).toLocaleString()} EP
+                        {h.direction === 'in' ? t('他サービス → MIRAIX') : t('MIRAIX → 他サービス')}　{Number(h.ep_amount).toLocaleString()} EP
                       </p>
                       <p className="text-text-muted">{new Date(h.created_at).toLocaleString()}</p>
                     </div>

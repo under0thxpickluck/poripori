@@ -54,6 +54,7 @@ export default function Terms() {
         <LI>Virtual Points are not redeemable, refundable, withdrawable, interest-bearing, transferable for value, or inheritable.</LI>
         <LI>We may grant, adjust, expire, or correct Virtual Point balances to a reasonable extent as necessary to operate the Service.</LI>
         <LI>We may reverse Virtual Points obtained through fraud, error, or malfunction.</LI>
+        <LI><Strong>Mini-games.</Strong> The Service may offer mini-games (such as Plinko and Mines) as entertainment features played solely with Virtual Points. Each mini-game is configured with an expected long-run payout rate (return to player, or “RTP”) of less than 100% — currently approximately 90–95% — which we may adjust at any time without prior notice. Outcomes are determined on a server-authoritative basis, we do not guarantee any winnings, and Virtual Points staked in or won from mini-games have no monetary value.</LI>
       </OL>
 
       <H2 id="art6">6. Markets — Creation, Participation &amp; Resolution</H2>

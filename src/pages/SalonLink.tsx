@@ -5,14 +5,14 @@ import { IS_LOCAL } from '../lib/localClient'
 import { useAuth } from '../store/useAuth'
 import { useT } from '../lib/i18n'
 
-// サロン（LIFAIOV / aisalon）からのSSO受け口。?sso=<token> を検証してセッションを確立する。
+// 他サービス（LIFAIOV / aisalon）からのSSO受け口。?sso=<token> を検証してセッションを確立する。
 export default function SalonLink() {
   const t = useT()
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const loadProfile = useAuth((s) => s.loadProfile)
   const [status, setStatus] = useState<'working' | 'error'>('working')
-  const [message, setMessage] = useState('サロンアカウントを確認しています…')
+  const [message, setMessage] = useState('他サービスアカウントを確認しています…')
   const ran = useRef(false) // StrictMode等での二重実行防止（token_hashは1回しか使えない）
 
   useEffect(() => {
@@ -22,13 +22,13 @@ export default function SalonLink() {
     // ローカルデモモードには Edge Functions が無い
     if (IS_LOCAL) {
       setStatus('error')
-      setMessage('ローカルデモモードではサロン連携は利用できません。')
+      setMessage('ローカルデモモードでは他サービス連携は利用できません。')
       return
     }
     const token = params.get('sso')
     if (!token) {
       setStatus('error')
-      setMessage('連携トークンがありません。サロンのアーケードからやり直してください。')
+      setMessage('連携トークンがありません。他サービスのアーケードからやり直してください。')
       return
     }
     ;(async () => {
@@ -46,10 +46,10 @@ export default function SalonLink() {
         setStatus('error')
         setMessage(
           code === 'salon_mismatch'
-            ? '連携を中止しました。サロンとグループ情報が一致しません（安全のため処理していません）。サロンの運営にお問い合わせください。'
+            ? '連携を中止しました。他サービスとグループ情報が一致しません（安全のため処理していません）。他サービスの運営にお問い合わせください。'
             : code === 'already_linked_other'
-              ? 'このメールアドレスは既に別のサロンアカウントと連携されています。'
-              : '連携に失敗しました。トークンの有効期限（5分）が切れている場合は、サロンからやり直してください。',
+              ? 'このメールアドレスは既に別の他サービスアカウントと連携されています。'
+              : '連携に失敗しました。トークンの有効期限（5分）が切れている場合は、他サービスからやり直してください。',
         )
         return
       }

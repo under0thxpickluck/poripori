@@ -41,7 +41,6 @@ export default function Mines() {
           <h1 className="text-2xl font-bold text-text">Mines</h1>
           <p className="text-text-muted text-sm">
             {t('グリッドに潜むトラップを避けて、データを採掘せよ')}
-            <span className="ml-2">{t('還元率')} {(houseEdge * 100).toFixed(0)}%</span>
           </p>
         </div>
         <div className="ml-auto flex items-center gap-3">
