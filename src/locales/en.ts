@@ -477,7 +477,7 @@ export const dict: Record<string, string> = {
   '自分の名前は他の人に見えますか？': 'Can others see my name?',
   'ランキングやコメント等の公開表示では、プライバシー保護のため表示名を伏字化しています（先頭1文字＋●●●）。自分自身の画面ではフル表示されます。': 'In public displays like rankings and comments, display names are masked for privacy (first character + ●●●). On your own screen they appear in full.',
   'データはどこに保存されますか？': 'Where is my data stored?',
-  '残高・ポジション・取引履歴などは主にお使いのブラウザのローカルストレージに保存されます。ブラウザのデータを消去するといつでも削除できます。詳細は': 'Balances, positions, trade history, and so on are stored mainly in your browser’s local storage. You can delete them anytime by clearing your browser data. For details, see the ',
+  '残高・ポジション・取引履歴などは当社のクラウドサーバー（主に米国）に保存され、端末をまたいで同期されます。ブラウザのデータ消去だけではサーバー上のデータは削除されません。アカウントと保存データの削除をご希望の場合はサポートへご連絡ください。詳しくは': 'Balances, positions, trade history, and so on are stored on our cloud servers (primarily in the United States) and sync across devices. Clearing your browser data alone does not delete data held on our servers; to delete your account and stored data, please contact support. For details, see the ',
   'プライバシーポリシー': 'Privacy Policy',
   '困ったときの連絡先は？': 'Who do I contact for help?',
   '（一般）へご連絡ください。目的別の窓口は': ' (general). Purpose-specific contacts are listed on the ',

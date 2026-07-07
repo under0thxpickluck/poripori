@@ -56,7 +56,7 @@ function buildFaqs(t: TFunc): { group: string; items: QA[] }[] {
     group: t('プライバシーとデータ'),
     items: [
       { q: t('自分の名前は他の人に見えますか？'), a: t('ランキングやコメント等の公開表示では、プライバシー保護のため表示名を伏字化しています（先頭1文字＋●●●）。自分自身の画面ではフル表示されます。') },
-      { q: t('データはどこに保存されますか？'), a: <>{t('残高・ポジション・取引履歴などは主にお使いのブラウザのローカルストレージに保存されます。ブラウザのデータを消去するといつでも削除できます。詳細は')} <Link to="/legal/privacy" className="text-accent hover:underline">{t('プライバシーポリシー')}</Link> {t('をご覧ください。')}</> },
+      { q: t('データはどこに保存されますか？'), a: <>{t('残高・ポジション・取引履歴などは当社のクラウドサーバー（主に米国）に保存され、端末をまたいで同期されます。ブラウザのデータ消去だけではサーバー上のデータは削除されません。アカウントと保存データの削除をご希望の場合はサポートへご連絡ください。詳しくは')} <Link to="/legal/privacy" className="text-accent hover:underline">{t('プライバシーポリシー')}</Link> {t('をご覧ください。')}</> },
       { q: t('困ったときの連絡先は？'), a: <><a href={`mailto:${COMPANY.emails.support}`} className="text-accent hover:underline">{COMPANY.emails.support}</a>{t('（一般）へご連絡ください。目的別の窓口は')} <Link to="/contact" className="text-accent hover:underline">{t('お問い合わせ')}</Link> {t('ページにまとめています。')}</> },
     ],
   },

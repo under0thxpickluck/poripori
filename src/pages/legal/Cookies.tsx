@@ -8,9 +8,11 @@ export default function Cookies() {
       subtitle={`This policy explains how ${COMPANY.product} uses cookies, local storage, and similar technologies, and how you can control them. It supplements our Privacy Policy.`}
     >
       <Callout>
-        {COMPANY.product} relies primarily on your browser’s <Strong>local storage</Strong> (not server-side
-        accounts) to remember your session, balance, positions, and preferences. Clearing your browser storage will
-        reset your local data.
+        {COMPANY.product} uses your browser’s <Strong>local storage</Strong> mainly to keep you signed in and to
+        remember preferences such as your theme and language. Your account data — including your Virtual Point
+        balance, positions, and trade history — is stored on <Strong>our servers</Strong>, not in your browser.
+        Clearing your browser storage signs you out and resets local preferences, but does not delete your
+        server-side account data.
       </Callout>
 
       <H2 id="c1">1. What These Technologies Are</H2>
@@ -22,7 +24,7 @@ export default function Cookies() {
 
       <H2 id="c2">2. Categories We Use</H2>
       <UL>
-        <LI><Strong>Strictly necessary.</Strong> Required to operate the Service — for example, keeping you signed in, storing your Virtual Point balance, positions, theme, and settings in local storage. These cannot be switched off without breaking the Service.</LI>
+        <LI><Strong>Strictly necessary.</Strong> Required to operate the Service — for example, keeping you signed in and storing local preferences such as your theme and settings. (Your Virtual Point balance, positions, and trade history are held on our servers, not in local storage.) These cannot be switched off without breaking the Service.</LI>
         <LI><Strong>Functional.</Strong> Remember your preferences (such as light/dark theme and filters) to improve usability.</LI>
         <LI><Strong>Analytics / performance.</Strong> Help us understand aggregate usage and improve the Service. Where required, these are used only with your consent.</LI>
       </UL>
@@ -34,7 +36,7 @@ export default function Cookies() {
       <H2 id="c4">4. Managing Your Choices</H2>
       <UL>
         <LI><Strong>Browser controls.</Strong> Most browsers let you view, block, or delete cookies and clear site storage in their settings. Blocking strictly necessary storage may prevent the Service from working.</LI>
-        <LI><Strong>Clearing local data.</Strong> Clearing site data for {COMPANY.product} resets your local balance, positions, and preferences.</LI>
+        <LI><Strong>Clearing local data.</Strong> Clearing site data for {COMPANY.product} signs you out and resets local preferences; it does not delete your server-side account data (balance, positions, and trade history).</LI>
         <LI><Strong>Consent.</Strong> Where consent is required for non-essential technologies, you can grant or withdraw it through the in-service controls when available.</LI>
       </UL>
 

@@ -9,9 +9,11 @@ export default function Privacy() {
     >
       <Callout>
         <Strong>How data is stored.</Strong> The Service stores your activity data — such as your display name,
-        Virtual Point balance, positions, trade history, and comments — primarily in your <Strong>browser’s local
-        storage on your device</Strong>. You can delete this data at any time by clearing your browser data. Where
-        we process personal data on our servers, we handle it in accordance with this Policy.
+        Virtual Point balance, positions, trade history, and comments — on <Strong>our cloud servers</Strong>
+        (operated through our infrastructure providers, primarily in the United States), so it persists across
+        devices and sessions. Your browser stores only limited data locally, such as your sign-in session and
+        language preference. Clearing your browser data does not delete data held on our servers; to delete your
+        account and associated data, contact us at {COMPANY.emails.privacy}.
       </Callout>
 
       <H2 id="p1">1. Information We Collect</H2>
@@ -61,7 +63,7 @@ export default function Privacy() {
       <P>We are located in {COMPANY.jurisdiction}, and your information may be processed and stored in the United States and other countries whose laws may not provide the same level of protection as your home country. For transfers from the EEA and the UK, we rely on appropriate safeguards such as Standard Contractual Clauses (SCCs).</P>
 
       <H2 id="p6">6. Retention</H2>
-      <P>We retain information for as long as necessary to fulfill the purposes described, or as required by law, after which we delete or anonymize it appropriately. Data stored in your browser’s local storage is deleted when you clear your browser data or delete your Account.</P>
+      <P>We retain information for as long as necessary to fulfill the purposes described, or as required by law, after which we delete or anonymize it appropriately. To request deletion of your Account and associated server-side data, contact {COMPANY.emails.privacy}. Data cached in your browser (such as your sign-in session) is cleared when you sign out or clear your browser data.</P>
 
       <H2 id="p7">7. Security</H2>
       <P>We implement reasonable technical and organizational measures to protect personal data against leakage, loss, damage, and unauthorized access. However, we cannot guarantee absolute security for transmission over the internet or electronic storage. You are responsible for safeguarding your credentials and device.</P>
